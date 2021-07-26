@@ -51,6 +51,8 @@ def load_data_dros(msFile, ancFile, n_sites = 64, up_sample = False, up_sample_p
                     
         k = np.random.choice(range(x.shape[1] - n_sites))
         
+        print(y.shape)
+        
         pop1_x = x[:20, k:k + n_sites]
         pop2_x = x[20:, k:k + n_sites]
 
