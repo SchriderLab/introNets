@@ -30,7 +30,7 @@ def load_npz(ifile):
 class H5DisDataGenerator(object):
     def __init__(self, ifile, idir, n_chunks = 8):
         self.ifile = h5py.File(ifile, 'r')
-        self.Xs = sorted([load_npz(os.path.join(idir, u)) for u in os.listdir(idir)])
+        self.Xs = [load_npz(os.path.join(idir, u)) for u in sorted(os.listdir(idir))]
         
         self.Xs_val = self.Xs[-3:]
         del self.Xs[-3:]
@@ -118,8 +118,10 @@ if __name__ == '__main__':
     ifile = sys.argv[1]
     idir = sys.argv[2]
     
+    print('instantiatig object...')
     gen = H5DisDataGenerator(ifile, idir)
     
+    print('getting batch...')
     x1, x2, y = gen.get_batch()
     
     print(x1.shape, x2.shape, y.shape)
