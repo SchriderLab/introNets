@@ -3,6 +3,24 @@ import numpy as np
 
 import sys
 
+def load_npz(ifile):
+    ifile = np.load(ifile)
+    pop1_x = ifile['simMatrix'].T
+    pop2_x = ifile['sechMatrix'].T
+
+    x = np.vstack((pop1_x, pop2_x))
+    
+    # destroy the perfect information regarding
+    # which allele is the ancestral one
+    for k in range(x.shape[1]):
+        if np.sum(x[:,k]) > 17:
+            x[:,k] = 1 - x[:,k]
+        elif np.sum(x[:,k]) == 17:
+            if np.random.choice([0, 1]) == 0:
+                x[:,k] = 1 - x[:,k]
+
+    return x
+
 def split(word):
     return [char for char in word]
 
@@ -49,7 +67,7 @@ def load_data_dros(msFile, ancFile, n_sites = 64, up_sample = False, up_sample_p
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
                     
-        k = np.random.choice(range(x.shape[1] - n_sites))
+        ii = np.random.choice(range(x.shape[1] - n_sites))
         
         if len(y.shape) > 1:
             
@@ -62,11 +80,11 @@ def load_data_dros(msFile, ancFile, n_sites = 64, up_sample = False, up_sample_p
                     if np.random.choice([0, 1]) == 0:
                         x[:,k] = 1 - x[:,k]
         
-            pop1_x = x[:20, k:k + n_sites]
-            pop2_x = x[20:, k:k + n_sites]
+            pop1_x = x[:20, ii:ii + n_sites]
+            pop2_x = x[20:, ii:ii + n_sites]
     
-            pop1_y = y[:20, k:k + n_sites]
-            pop2_y = y[20:, k:k + n_sites]
+            pop1_y = y[:20, ii:ii + n_sites]
+            pop2_y = y[20:, ii:ii + n_sites]
             
             X1.append(pop1_x)
             X2.append(pop2_x)
