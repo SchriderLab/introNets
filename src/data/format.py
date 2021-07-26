@@ -84,8 +84,8 @@ def main():
                 del X2[-chunk_size:]
                 
                 logging.info('writing chunk {} to validation set...'.format(ix_val))
-                ofile.create_dataset('train/{}/x1'.format(ix_val), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('train/{}/x2'.format(ix_val), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('val/{}/x1'.format(ix_val), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('val/{}/x2'.format(ix_val), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
                 
                 ix_val += 1
                 
