@@ -35,8 +35,8 @@ class H5DisDataGenerator(object):
         self.Xs_val = self.Xs[-3:]
         del self.Xs[-3:]
         
-        self.keys = list(ifile['train'].keys())
-        self.val_keys = list(ifile['val'].keys())        
+        self.keys = list(self.ifile['train'].keys())
+        self.val_keys = list(self.ifile['val'].keys())        
         
         self.on_epoch_end()
     
