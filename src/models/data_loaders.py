@@ -72,6 +72,8 @@ class H5DisDataGenerator(object):
             X1.extend(np.array(self.ifile['train'][k]['x1']))
             X2.extend(np.array(self.ifile['train'][k]['x2']))
             
+            print(np.concatenate(X1).shape)
+            
             y.extend([0 for u in range(X1[-1].shape[0])])
             
             # real data
