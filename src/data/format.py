@@ -55,7 +55,6 @@ def main():
         ms_file = os.path.join(idir, 'mig.msOut')
         
         if os.path.exists(anc_file) and os.path.exists(ms_file):
-            print(ms_file, anc_file)
             x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
             
             X1.extend(x1)
