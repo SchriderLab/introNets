@@ -89,6 +89,9 @@ def main():
                 
                 ix_val += 1
                 
+            if (ix * chunk_size >= n_train) and (ix_val * chunk_size >= n_val):
+                break
+                
         if (ix * chunk_size >= n_train) and (ix_val * chunk_size >= n_val):
             break
         
