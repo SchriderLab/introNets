@@ -5,7 +5,7 @@ import logging
 import h5py
 import numpy as np
 
-from data_functions import load_data_dros
+from data_functions import load_data_dros, load_npz
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -17,6 +17,7 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None", help = "directory with simulation directories in it")
+    
     parser.add_argument("--ofile", default = "None", help = "hdf5 file for pre-chunked data to go into")
     
     parser.add_argument("--n_replicates", default = "5000", help = "the number of simulation replicates to include in the output file")
