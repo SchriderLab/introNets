@@ -35,6 +35,7 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--ifile", default = "BA_10e6_seriated.hdf5")
+    parser.add_argument("--idir", default = "None")
 
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
 
@@ -87,7 +88,7 @@ def main():
 
     # define the generator
     print('reading data keys...')
-    generator = H5DisDataGenerator(args.ifile)
+    generator = H5DisDataGenerator(args.ifile, args.idir)
     
     l, vl = len(generator)
 
@@ -191,42 +192,6 @@ def main():
 
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
-
-
-    
-    # evaluate the model
-    model.eval()
-
-    ifiles = [os.path.join(args.idir_a, u) for u in os.listdir(args.idir_a)]
-
-    P = []
-    Y = []
-
-    for ifile in ifiles:
-        x = np.load(ifile)['x']
-        p = np.load(ifile)['p']
-
-        X = []
-
-        for k in range(x.shape[1] - 128):
-            X.append(x[:,k:k + 128])
-            
-        if len(np.array(X).shape) == 3:   
-            X = torch.FloatTensor(np.array(X).transpose(2, 0, 1)).to(device)
-        else:
-            continue
-
-        with torch.no_grad():
-            y = model(X).detach().cpu().numpy()
-
-        y = y[:,1].mean()
-        
-        print(y)
-
-        Y.append(y)
-        P.append(p)
-
-    np.savez(args.ofile, y = np.array(Y), p = np.array(P))
 
 
 if __name__ == '__main__':
