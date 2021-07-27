@@ -69,8 +69,10 @@ class H5DisDataGenerator(object):
         for ix in range(self.n_chunks):
             k = self.keys_.pop()
                 
-            X1.extend(np.array(self.ifile['train'][k]['x1']))
-            X2.extend(np.array(self.ifile['train'][k]['x2']))
+            print(np.array(self.ifile['train'][k]['x1']).shape)    
+        
+            X1.append(np.array(self.ifile['train'][k]['x1']))
+            X2.append(np.array(self.ifile['train'][k]['x2']))
             
             print(np.concatenate(X1).shape)
             
