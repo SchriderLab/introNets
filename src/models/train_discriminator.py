@@ -157,7 +157,6 @@ def main():
     
                 y_pred = model(x1, x2)
 
-                y_pred = model(x)
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
                 y_pred = np.exp(y_pred.detach().cpu().numpy())
