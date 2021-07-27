@@ -68,8 +68,6 @@ class H5DisDataGenerator(object):
         
         for ix in range(self.n_chunks):
             k = self.keys_.pop()
-                
-            print(np.array(self.ifile['train'][k]['x1']).shape)    
         
             X1.append(np.array(self.ifile['train'][k]['x1']))
             X2.append(np.array(self.ifile['train'][k]['x2']))
@@ -82,12 +80,10 @@ class H5DisDataGenerator(object):
             k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), 4, replace = False)
             
             for ii in k:
-                X1.append(X[:20, ii: ii + X1[-1].shape[-1]])
-                X2.append(X[20:, ii: ii + X1[-1].shape[-1]])
+                X1.append(np.expand_dims(X[:20, ii: ii + X1[-1].shape[-1]], axis = 0))
+                X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
                 
-                y.append(1)
-        
-        print([u.shape for u in X1], [u.shape for u in X2])    
+                y.append(1) 
         
         return torch.FloatTensor(np.concatenate(X1).reshape(len(X1), 1, X1[0].shape[0], X1[0].shape[1])), torch.FloatTensor(np.concatenate(X2).reshape(len(X1), 1, X2[0].shape[0], X1[0].shape[1])), torch.LongTensor(y)
     
