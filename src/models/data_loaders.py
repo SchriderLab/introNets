@@ -85,7 +85,7 @@ class H5DisDataGenerator(object):
                 
                 y.append(1) 
         
-        return torch.FloatTensor(np.concatenate(X1).reshape(len(X1), 1, X1[0].shape[0], X1[0].shape[1])), torch.FloatTensor(np.concatenate(X2).reshape(len(X1), 1, X2[0].shape[0], X1[0].shape[1])), torch.LongTensor(y)
+        return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
     
     def get_val_batch(self):
         X1 = []
