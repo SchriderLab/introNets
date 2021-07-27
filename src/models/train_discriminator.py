@@ -193,7 +193,7 @@ def main():
                 break
 
         scheduler.step(val_loss)
-        #generator.on_epoch_end()
+        generator.on_epoch_end()
 
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
