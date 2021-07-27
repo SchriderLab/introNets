@@ -24,7 +24,7 @@ class PermInvariantClassifier(nn.Module):
         self.n2 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
                                 nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
         
-        self.out = nn.Sequential(nn.Linear(8192, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
+        self.out = nn.Sequential(nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 2), nn.LogSoftmax(dim = -1))
         
