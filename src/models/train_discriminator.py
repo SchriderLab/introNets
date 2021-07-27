@@ -90,7 +90,7 @@ def main():
     print('reading data keys...')
     generator = H5DisDataGenerator(args.ifile, args.idir)
     
-    l, vl = len(generator)
+    l, vl = generator.get_lengths()
 
     criterion = NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr = 0.001)

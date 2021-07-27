@@ -54,7 +54,7 @@ class H5DisDataGenerator(object):
         
         return
     
-    def __len__(self):
+    def get_lengths(self):
         length = len(self.keys) // self.n_chunks
         val_length = len(self.val_keys) // self.n_chunks
         
