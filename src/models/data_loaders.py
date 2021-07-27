@@ -74,8 +74,6 @@ class H5DisDataGenerator(object):
             X1.append(np.array(self.ifile['train'][k]['x1']))
             X2.append(np.array(self.ifile['train'][k]['x2']))
             
-            print(np.concatenate(X1).shape)
-            
             y.extend([0 for u in range(X1[-1].shape[0])])
             
             # real data
@@ -88,7 +86,9 @@ class H5DisDataGenerator(object):
                 X2.append(X[20:, ii: ii + X1[-1].shape[-1]])
                 
                 y.append(1)
-            
+        
+        print([u.shape for u in X1], [u.shape for u in X2])    
+        
         return torch.FloatTensor(np.concatenate(X1).reshape(len(X1), 1, X1[0].shape[0], X1[0].shape[1])), torch.FloatTensor(np.concatenate(X2).reshape(len(X1), 1, X2[0].shape[0], X1[0].shape[1])), torch.LongTensor(y)
     
     def get_val_batch(self):
