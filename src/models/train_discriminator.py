@@ -114,12 +114,14 @@ def main():
 
         for ij in range(l):
             optimizer.zero_grad()
-            x, y = generator.get_batch()
+            x1, x2, y = generator.get_batch()
 
-            x = x.to(device)
+            x1 = x1.to(device)
+            x2 = x2.to(device)
+            
             y = y.to(device)
 
-            y_pred = model(x)
+            y_pred = model(x1, x2)
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -146,10 +148,14 @@ def main():
         val_accs = []
         for step in range(vl):
             with torch.no_grad():
-                x, y = generator.get_val_batch()
+                x1, x2, y = generator.get_val_batch()
 
-                x = x.to(device)
+                x1 = x1.to(device)
+                x2 = x2.to(device)
+                
                 y = y.to(device)
+    
+                y_pred = model(x1, x2)
 
                 y_pred = model(x)
                 loss = criterion(y_pred, y)
