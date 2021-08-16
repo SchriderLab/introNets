@@ -83,7 +83,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
 
-    idirs = sorted(glob.glob(os.path.join(args.idir, '*/out*/out*')))
+    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
 
     if comm.rank != 0:
@@ -120,7 +120,7 @@ def main():
                 ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.flush()
 
-                logging.debug('0: wrote chunk {0}'.format(current_chunk))
+                logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
                 current_chunk += 1
                 
