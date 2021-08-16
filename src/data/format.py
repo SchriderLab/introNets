@@ -47,6 +47,7 @@ def main():
     
     X1 = []
     X2 = []
+    P = []
     
     ix = 0
     ix_val = 0
@@ -60,19 +61,23 @@ def main():
             
             X1.extend(x1)
             X2.extend(x2)
+            P.extend(p)
             
         while len(X1) > chunk_size * 2:
             if ix * chunk_size < n_train:
                 # training
                 x1 = np.array(X1[-chunk_size:])
                 x2 = np.array(X2[-chunk_size:])
+                p = np.array(P[-chunk_size:])
                 
                 del X1[-chunk_size:]
                 del X2[-chunk_size:]
+                del P[-chunk_size:]
                 
                 logging.info('writing chunk {} to training set...'.format(ix))
                 ofile.create_dataset('train/{}/x1'.format(ix), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('train/{}/x2'.format(ix), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('train/{}/p'.format(ix), data = p, compression = 'lzf')
                 
                 ix += 1
             
@@ -80,13 +85,16 @@ def main():
                 # validation
                 x1 = np.array(X1[-chunk_size:])
                 x2 = np.array(X2[-chunk_size:])
+                p = np.array(P[-chunk_size:])
                 
                 del X1[-chunk_size:]
                 del X2[-chunk_size:]
+                del P[-chunk_size:]
                 
                 logging.info('writing chunk {} to validation set...'.format(ix_val))
                 ofile.create_dataset('val/{}/x1'.format(ix_val), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('val/{}/x2'.format(ix_val), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('val/{}/p'.format(ix_val), data = p, compression = 'lzf')
                 
                 ix_val += 1
                 

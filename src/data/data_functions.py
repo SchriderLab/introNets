@@ -3,6 +3,8 @@ import numpy as np
 
 import sys
 
+
+
 def load_npz(ifile):
     ifile = np.load(ifile)
     pop1_x = ifile['simMatrix'].T
@@ -24,7 +26,53 @@ def load_npz(ifile):
 def split(word):
     return [char for char in word]
 
-def load_data_dros(msFile, ancFile, n_sites = 64, up_sample = False, up_sample_pop_size = 32):
+######
+# generic function for msmodified
+# ----------------
+def load_data(msFile, ancFile):
+    msFile = open(msFile, 'r')
+
+    # no migration case
+    try:
+        ancFile = open(ancFile, 'r')
+    except:
+        ancFile = None
+
+    ms_lines = msFile.readlines()[:-1]
+
+    if ancFile is not None:
+        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
+    else:
+        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
+
+    ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list) - 1)]
+    ms_chunks[-1] += ['\n']
+
+    if ancFile is not None:
+        anc_lines = ancFile.readlines()
+    else:
+        anc_lines = None
+        
+    X = []
+    Y = []
+    for chunk in ms_chunks:
+        pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
+
+        x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:-1]], dtype = np.uint8)
+        if anc_lines is not None:
+            y = np.array([list(map(int, split(u.replace('\n', '')))) for u in anc_lines[:len(pos)]], dtype = np.uint8)
+            y = y.T
+
+            del anc_lines[:len(pos)]
+        else:
+            y = np.zeros(x.shape, dtype = np.uint8)
+            
+        X.append(x)
+        Y.append(y)
+        
+    return X, Y
+
+def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_pop_size = 32):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
     msFile = open(msFile, 'r')
 
