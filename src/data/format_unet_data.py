@@ -38,7 +38,9 @@ class Formatter(object):
             x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
             x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
             
-            print(x.shape, y.shape)
+            if y.shape != x.shape:
+                continue
+            
             x1 = x[x1_indices, :]
             x2 = x[x2_indices, :]
             
