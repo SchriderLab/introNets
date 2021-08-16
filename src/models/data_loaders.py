@@ -27,6 +27,62 @@ def load_npz(ifile):
 
     return x
 
+class H5UDataGenerator(object):
+    def __init__(self, ifile, keys = None, val_prop = 0.05, batch_size = 16, chunk_size = 4):
+        if keys is None:
+            self.keys = list(ifile.keys())
+            
+            n_val = int(len(self.keys) * val_prop)
+            random.shuffle(self.keys)
+            
+            self.val_keys = self.keys[:n_val]
+            del self.keys[:n_val]
+            
+        self.ifile = ifile
+            
+        self.length = len(self.keys) // (batch_size // chunk_size)
+        self.val_length = len(self.val_keys) // (batch_size // chunk_size)
+        
+        self.n_per = batch_size // chunk_size
+        
+        self.ix = 0
+        self.ix_val = 0
+            
+    def get_batch(self):
+        X = []
+        Y = []
+        
+        for key in self.keys[self.ix : self.ix + self.n_per]:
+            x = np.array(self.ifile[key]['x'])
+            y = np.array(self.ifile[key]['y'])
+            
+            X.append(x)
+            Y.append(y)
+            
+        self.ix += self.n_per
+        return torch.FloatTensor(np.array(X)), torch.FloatTensor(np.array(Y))
+    
+    def on_epoch_end(self):
+        self.ix = 0
+        self.ix_val = 0
+        
+        random.shuffle(self.keys)
+        
+    def get_val_batch(self):
+        X = []
+        Y = []
+        
+        for key in self.val_keys[self.val_ix : self.val_ix + self.n_per]:
+            x = np.array(self.ifile[key]['x'])
+            y = np.array(self.ifile[key]['y'])
+            
+            X.append(x)
+            Y.append(y)
+            
+        self.val_ix += self.n_per
+        return torch.FloatTensor(np.array(X)), torch.FloatTensor(np.array(Y))
+        
+
 class H5DisDataGenerator(object):
     def __init__(self, ifile, idir, n_chunks = 8):
         self.ifile = h5py.File(ifile, 'r')

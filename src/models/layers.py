@@ -155,7 +155,7 @@ class AttUNet(nn.Module):
     Attention Unet implementation
     Paper: https://arxiv.org/abs/1804.03999
     """
-    def __init__(self, img_ch=1, output_ch=1, out = 'sigmoid'):
+    def __init__(self, img_ch=2, output_ch=2, out = 'sigmoid'):
         super(AttUNet, self).__init__()
 
         n1 = 64
