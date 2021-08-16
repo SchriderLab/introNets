@@ -90,7 +90,7 @@ def main():
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
             idir = idirs[ix]
             
-            msFile = os.path.join(idir, '{}.txt'.format(idir.split('.')[-1]))
+            msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
             ancFile = os.path.join(idir, 'out.anc')
             
             x, y = load_data(msFile, ancFile)
