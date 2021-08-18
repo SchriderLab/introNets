@@ -122,6 +122,9 @@ def main():
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.flush()
+                
+                del X[-chunk_size:]
+                del Y[-chunk_size:]
 
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
