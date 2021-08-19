@@ -15,6 +15,7 @@ import subprocess
 SIZE_A = 20
 SIZE_B = 14
 N_SITES = 10000
+MU = 
 
 bounds = dict()
 bounds[0] = (20., 150.) # theta
@@ -57,6 +58,23 @@ def parameters(n, sample = False):
 
     return p
 
+def parameters_df(df, ix, rho, migTime, migProb, n):
+    u = 3.5e-9
+    L = 10000
+    thetaOverRho = 0.2
+    
+    ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, 2Nref_m12, 2Nref_m21 = df[ix]
+    
+    theta = 4 * Nref * u * L
+    rho = theta / thetaOverRho
+    
+    alpha1 = numpy.log(nu1/nu1_0)/T
+    alpha2 = numpy.log(nu2/nu2_0)/T
+    
+    p = np.tile(np.array([theta, rho, nu1, nu2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1))
+    
+    return
+
 def writeTbsFile(params, outFileName):
     with open(outFileName, "w") as outFile:
         for paramVec in params:
@@ -67,8 +85,10 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--n_samples", default = "10")
+    parser.add_argument("--n_samples", default = "1000")
     parser.add_argument("--n_jobs", default = "1")
+    
+    parser.add_argument("--ifile", default = "None")
 
     parser.add_argument("--sample", action = "store_true")
     # ${args}
@@ -92,24 +112,36 @@ def parse_args():
 
 def main():
     args = parse_args()
+    
+    df = np.loadtxt(args.ifile, delimiter = '\t')
 
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=1G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
-
-    for ix in range(int(args.n_jobs)):
-        P = parameters(n)
+    
+    rho = [0.1, 0.2, 0.3]
+    migTime = np.linspace(0.1, 1, 3)
+    migProb = np.linspace(0.1, 1, 3)
+    
+    p = list(itertools.product(rho, migTime, migProb))
+    
+    for ix in range(df.shape[0]):
+        for p_ in p:
+            rho, migTime, migProb = p_
+            
+            P = parameters_df(df, ix, rho, migTime, migProb)
+            
+            odir = os.path.join(args.odir, 'iter{0:06d}'.format(ix))
+            os.system('mkdir -p {}'.format(odir))
         
-        odir = os.path.join(args.odir, 'iter{0:06d}'.format(ix))
-        os.system('mkdir -p {}'.format(odir))
-
-        writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
-
-        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-        print('simulating via the recommended parameters...')
-        sys.stdout.flush()
-
-        fout = os.path.join(odir, 'mig.msOut')
-        os.system(slurm_cmd.format(fout, cmd))
+            writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
+        
+            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+            print('simulating via the recommended parameters...')
+            sys.stdout.flush()
+        
+            fout = os.path.join(odir, 'mig.msOut')
+            os.system(slurm_cmd.format(fout, cmd))
+            
 
 if __name__ == '__main__':
     main()
