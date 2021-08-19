@@ -123,7 +123,7 @@ def main():
     
     p = list(itertools.product(rho, migTime, migProb))
     
-    for ix in range(df.shape[0]):
+    for ix in range(1):
         for p_ in p:
             rho, migTime, migProb = p_
             
