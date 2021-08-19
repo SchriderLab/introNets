@@ -123,6 +123,7 @@ def main():
     migProb = np.linspace(0.1, 1, 3)
     
     p = list(itertools.product(rho, migTime, migProb))
+    counter = 0
     
     for ix in range(1):
         for p_ in p:
@@ -130,7 +131,9 @@ def main():
             
             P = parameters_df(df, ix, rho, migTime, migProb, n)
             
-            odir = os.path.join(args.odir, 'iter{0:06d}'.format(ix))
+            odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+            counter += 1
+            
             os.system('mkdir -p {}'.format(odir))
         
             writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
