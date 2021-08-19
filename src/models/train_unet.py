@@ -139,7 +139,7 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(y_pred.detach().cpu().numpy())
+            y_pred = np.round(np.exp(y_pred.detach().cpu().numpy()))
             y = y.detach().cpu().numpy()
 
             # append metrics for this epoch
@@ -165,7 +165,7 @@ def main():
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
-                y_pred = np.round(y_pred.detach().cpu().numpy())
+                y_pred = np.round(np.exp(y_pred.detach().cpu().numpy()))
                 y = y.detach().cpu().numpy()
 
                 # append metrics for this epoch
