@@ -137,7 +137,7 @@ class UNet(nn.Module):
         output = self.final(x0_4)
         return output
 
-
+# https://arxiv.org/pdf/1807.10165.pdf
 class NestedUNet(nn.Module):
     def __init__(self, num_classes, input_channels=3, deep_supervision=False, **kwargs):
         super().__init__()
