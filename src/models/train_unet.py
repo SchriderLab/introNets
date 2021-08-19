@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import AttUNet
+from layers import NestedUNet
 from data_loaders import H5UDataGenerator
 import h5py
 
@@ -28,6 +28,11 @@ import pandas as pd
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
+
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 
 
 def parse_args():
@@ -43,7 +48,7 @@ def parse_args():
     parser.add_argument("--devices", default = "0")
     parser.add_argument("--n_plateau", default = "5")
     parser.add_argument("--rl_factor", default = "0.5")
-    parser.add_argument("--n_epochs", default = "10")
+    parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
 
     parser.add_argument("--batch_size", default = "16")
@@ -76,7 +81,9 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = AttUNet()
+    model = NestedUNet(2, 2)
+    print(model)
+    
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -89,9 +96,10 @@ def main():
 
     # define the generator
     print('reading data keys...')
-    generator = H5UDataGenerator(args.ifile)
+    generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = int(args.batch_size))
     
-    l, vl = generator.get_lengths()
+    l = generator.length
+    vl = generator.val_length
 
     criterion = BCELoss()
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
@@ -105,6 +113,9 @@ def main():
     history['loss'] = []
     history['val_loss'] = []
     # ${define_extra_history}
+    
+    # for plotting
+    os.system('mkdir -p {}'.format(os.path.join(args.odir, '{}_plots'.format(args.tag))))
 
     print('training...')
     for ix in range(int(args.n_epochs)):
@@ -128,13 +139,11 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.exp(y_pred.detach().cpu().numpy())
+            y_pred = np.round(y_pred.detach().cpu().numpy())
             y = y.detach().cpu().numpy()
 
-            y_pred = np.argmax(y_pred, axis=1)
-
             # append metrics for this epoch
-            accuracies.append(accuracy_score(y, y_pred))
+            accuracies.append(accuracy_score(y.flatten(), y_pred.flatten()))
 
             if (ij + 1) % 100 == 0:
                 logging.info(
@@ -156,13 +165,25 @@ def main():
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
-                y_pred = y_pred.detach().cpu().numpy()
+                y_pred = np.round(y_pred.detach().cpu().numpy())
                 y = y.detach().cpu().numpy()
 
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y.flatten(), y_pred.flatten()))
                 val_losses.append(loss.detach().item())
 
+        for k in range(y_pred.shape[0]):
+            fig, axes = plt.subplots(nrows = 2, ncols = 2, sharex = True)
+            
+            axes[0,0].imshow(y[k,0,:,:], cmap = 'gray')
+            axes[0,1].imshow(y[k,1,:,:], cmap = 'gray')
+            
+            axes[1,0].imshow(y_pred[k,0,:,:], cmap = 'gray')
+            axes[1,1].imshow(y_pred[k,1,:,:], cmap = 'gray')
+            
+            plt.savefig(os.path.join(os.path.join(args.odir, '{}_plots'.format(args.tag)), '{0:03d}.png'.format(k)), dpi = 100)
+            plt.close()
+            
         val_loss = np.mean(val_losses)
 
         logging.info(
