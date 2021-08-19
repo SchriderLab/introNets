@@ -15,7 +15,6 @@ import subprocess
 SIZE_A = 20
 SIZE_B = 14
 N_SITES = 10000
-MU = 
 
 bounds = dict()
 bounds[0] = (20., 150.) # theta
@@ -63,17 +62,17 @@ def parameters_df(df, ix, rho, migTime, migProb, n):
     L = 10000
     thetaOverRho = 0.2
     
-    ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, 2Nref_m12, 2Nref_m21 = df[ix]
+    ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, Nref_m12, Nref_m21 = df[ix]
     
     theta = 4 * Nref * u * L
     rho = theta / thetaOverRho
     
-    alpha1 = numpy.log(nu1/nu1_0)/T
-    alpha2 = numpy.log(nu2/nu2_0)/T
+    alpha1 = np.log(nu1/nu1_0)/T
+    alpha2 = np.log(nu2/nu2_0)/T
     
-    p = np.tile(np.array([theta, rho, nu1, nu2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1))
+    p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1))
     
-    return
+    return p
 
 def writeTbsFile(params, outFileName):
     with open(outFileName, "w") as outFile:
@@ -135,7 +134,7 @@ def main():
         
             writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
         
-            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
             print('simulating via the recommended parameters...')
             sys.stdout.flush()
         
