@@ -177,7 +177,7 @@ class NestedUNet(nn.Module):
         else:
             self.final = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
 
-        self.out = nn.Sigmoid()
+        self.out = nn.LogSigmoid()
 
     def forward(self, input):
         x0_0 = self.conv0_0(input)

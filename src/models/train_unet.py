@@ -101,7 +101,7 @@ def main():
     l = generator.length
     vl = generator.val_length
 
-    criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([1., 6.66666]))
+    criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([6.66666]).to(device))
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
