@@ -7,6 +7,7 @@ import os
 import argparse
 import logging
 import subprocess
+import itertools
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -112,7 +113,7 @@ def parse_args():
 def main():
     args = parse_args()
     
-    df = np.loadtxt(args.ifile, delimiter = '\t')
+    df = np.loadtxt(args.ifile)
 
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=1G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
