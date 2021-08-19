@@ -53,14 +53,14 @@ class H5UDataGenerator(object):
         Y = []
         
         for key in self.keys[self.ix : self.ix + self.n_per]:
-            x = np.array(self.ifile[key]['x'])
+            x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
             
             X.append(x)
             Y.append(y)
             
         self.ix += self.n_per
-        return torch.FloatTensor(np.array(X)), torch.FloatTensor(np.array(Y))
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))
     
     def on_epoch_end(self):
         self.ix = 0
@@ -72,15 +72,15 @@ class H5UDataGenerator(object):
         X = []
         Y = []
         
-        for key in self.val_keys[self.val_ix : self.val_ix + self.n_per]:
-            x = np.array(self.ifile[key]['x'])
+        for key in self.val_keys[self.ix_val : self.ix_val + self.n_per]:
+            x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
             
             X.append(x)
             Y.append(y)
             
-        self.val_ix += self.n_per
-        return torch.FloatTensor(np.array(X)), torch.FloatTensor(np.array(Y))
+        self.ix_val += self.n_per
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))
         
 
 class H5DisDataGenerator(object):
