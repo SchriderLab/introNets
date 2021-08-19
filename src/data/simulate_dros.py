@@ -128,7 +128,7 @@ def main():
         for p_ in p:
             rho, migTime, migProb = p_
             
-            P = parameters_df(df, ix, rho, migTime, migProb)
+            P = parameters_df(df, ix, rho, migTime, migProb, n)
             
             odir = os.path.join(args.odir, 'iter{0:06d}'.format(ix))
             os.system('mkdir -p {}'.format(odir))
