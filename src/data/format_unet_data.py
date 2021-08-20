@@ -14,8 +14,18 @@ import h5py
 # where to insert certain parts of the script
 # ${imports}
 
+from seriate import seriate
+from scipy.spatial.distance import pdist
+
+def seriate_x(x):
+    Dx = pdist(x, metric = 'cosine')
+    Dx[np.where(np.isnan(Dx))] = 0.
+    ix = seriate(Dx)
+
+    return x[ix], ix
+
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156]):
+    def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156], sorting = None):
         # list of x and y arrays
         self.x = x
         self.y = y
@@ -25,6 +35,7 @@ class Formatter(object):
         self.n_sites = shape[2]
         
         self.pop_sizes = pop_sizes
+        self.sorting = sorting
         
     # return a list of the desired array shapes
     def format(self):
@@ -47,6 +58,13 @@ class Formatter(object):
             y1 = y[x1_indices, :]
             y2 = y[x2_indices, :]
             
+            if self.sorting == 'seriation_match':
+                x1, x1_indices = seriate_x(x1)
+                y1 = y1[x1_indices, :]
+                
+                x2, x2_indices = seriate_x(x2)
+                y2 = y2[x1_indices, :]
+            
             six = np.random.choice(range(x1.shape[1] - self.n_sites))
             
             x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
@@ -67,6 +85,7 @@ def parse_args():
     parser.add_argument("--chunk_size", default = "4")
 
     parser.add_argument("--ofile", default = "None")
+    parser.add_argument("--sorting", default = "None")
     args = parser.parse_args()
 
     if args.verbose:
@@ -98,7 +117,7 @@ def main():
             
             x, y = load_data(msFile, ancFile)
             
-            f = Formatter(x, y)
+            f = Formatter(x, y, sorting = args.sorting)
             x, y = f.format()
         
             comm.send([x, y], dest = 0)
