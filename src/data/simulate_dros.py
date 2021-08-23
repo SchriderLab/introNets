@@ -75,7 +75,7 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     alpha1 = np.log(nu1/nu1_0)/T
     alpha2 = np.log(nu2/nu2_0)/T
     
-    p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1))
+    p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
     
     return p
 
