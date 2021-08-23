@@ -75,6 +75,8 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     alpha1 = np.log(nu1/nu1_0)/T
     alpha2 = np.log(nu2/nu2_0)/T
     
+    migTime = migTime * T
+    
     p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
     
     return p
@@ -122,14 +124,14 @@ def main():
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=1G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
-    rho = [0.1, 0.2, 0.3]
-    migTime = np.linspace(0.1, 1, 3)
-    migProb = np.linspace(0.1, 1, 3)
+    rho = [0.2]
+    migTime = [0.5]
+    migProb = [0.5]
     
     p = list(itertools.product(rho, migTime, migProb))
     counter = 0
     
-    for ix in range(1):
+    for ix in range(p.shape[0]):
         for p_ in p:
             for j in range(100):
                 rho, migTime, migProb = p_
