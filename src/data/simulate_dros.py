@@ -131,7 +131,7 @@ def main():
     p = list(itertools.product(rho, migTime, migProb))
     counter = 0
     
-    for ix in range(p.shape[0]):
+    for ix in range(len(p)):
         for p_ in p:
             for j in range(100):
                 rho, migTime, migProb = p_
