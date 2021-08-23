@@ -38,6 +38,9 @@ class PermInvariantClassifier(nn.Module):
         x = torch.mean(x, dim = 2)
         
         x = torch.flatten(x, 1)
+        
+        print(x.shape)
+        
         x = self.out(x)
         
         return x
