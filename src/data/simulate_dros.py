@@ -58,12 +58,16 @@ def parameters(n, sample = False):
 
     return p
 
-def parameters_df(df, ix, rho, migTime, migProb, n):
+def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     u = 3.5e-9
     L = 10000
-    thetaOverRho = 0.2
     
     ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, Nref_m12, Nref_m21 = df[ix]
+    
+    nu1 = nu1 / Nref
+    nu2 = nu2 / Nref
+    
+    T = T / Nref
     
     theta = 4 * Nref * u * L
     rho = theta / thetaOverRho
@@ -125,7 +129,7 @@ def main():
     p = list(itertools.product(rho, migTime, migProb))
     counter = 0
     
-    for ix in range(df.shape[0]):
+    for ix in range(1):
         for p_ in p:
             for j in range(100):
                 rho, migTime, migProb = p_
