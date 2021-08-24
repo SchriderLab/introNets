@@ -152,7 +152,7 @@ def main():
         x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1)).to(device)
         
         # theta, theta_rho, nu_ab, ...
-        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]
+        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
         print(p[0])
         
         with torch.no_grad():
