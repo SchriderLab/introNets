@@ -66,8 +66,6 @@ def normalize(p):
     # nu_b
     p[3] = (p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0])
     
-    
-    
     # migProb
     p[8] = ((1 - p[8]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
     
@@ -154,7 +152,7 @@ def main():
         x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1)).to(device)
         
         # theta, theta_rho, nu_ab, ...
-        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 9, 10]]
+        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
         
         with torch.no_grad():
             y_pred = model(x1, x2).detach().cpu().numpy()
