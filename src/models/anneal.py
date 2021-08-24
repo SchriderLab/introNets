@@ -106,8 +106,6 @@ def parse_args():
     parser.add_argument("--weights", default = "None")
     
     parser.add_argument("--ifile", default = "None", help = "initial random simulation data the discriminator was trained on")
-    parser.add_arugment("--idir", default = "None")
-    
     parser.add_argument("--n_steps", default = "100")
     
     parser.add_argument("--odir", default = "None")
@@ -151,6 +149,8 @@ def main():
     ifile = h5py.File(args.ifile, 'r')
     
     # go through the validation keys to get the first initial proposal
+    
+    print('making initial predictions...')
     val_keys = list(ifile['val'].keys())
     
     P = []
@@ -167,12 +167,10 @@ def main():
             y_pred = model(x1, x2).detach().cpu().numpy()
             
             # log probability of real classificiation
-            y_ = y_pred[:,1]
+            y_ = -y_pred[:,1]
             
-        y_ = -np.mean(y_)
-            
-        y.append(y_)
-        P.append(p[0])
+        y.extend(list(y_))
+        P.extend(list(p))
 
     # the proposal (top 10)
     theta = np.array([P[u] for u in np.argsort(y)])[:10]
