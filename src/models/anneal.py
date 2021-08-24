@@ -44,7 +44,12 @@ SIZE_B = 14
 N_SITES = 10000
 
 import sys
-from data_functions import writeTbsFile, load_data_dros
+from data_functions import load_data_dros
+
+def writeTbsFile(params, outFileName):
+    with open(outFileName, "w") as outFile:
+        for paramVec in params:
+            outFile.write(" ".join([str(x) for x in paramVec]) + "\n")
 
 def normalize(p):
     rho = p[1]
