@@ -69,7 +69,7 @@ def normalize(p):
     
     
     # migProb
-    p[7] = ((1 - p[7]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
+    p[8] = ((1 - p[8]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
     
     # T
     p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
@@ -84,15 +84,15 @@ def simulate(x, n):
     rho = theta / theta_rho
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
     nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
-    T = (bounds[6][1] - bounds[6][0]) * x[7] + bounds[6][0]
+    T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
 
     alpha1 = x[4]
     alpha2 = x[5]
 
     b_ = list(bounds[4])
     b_[1] = T / 4.
-    migTime = (b_[1] - b_[0]) * x[8] + b_[0]
-    migProb = (bounds[5][1] - bounds[5][0]) * x[9] + bounds[5][0]
+    migTime = (b_[1] - b_[0]) * x[7] + b_[0]
+    migProb = (bounds[5][1] - bounds[5][0]) * x[8] + bounds[5][0]
 
     p = np.tile(np.array([theta, rho, nu_a, nu_b, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
 
@@ -191,7 +191,7 @@ def main():
             X1 = []
             X2 = []
             for k in range(len(theta)):
-                new_theta = theta[k] + np.random.normal(0, 1./12. * T, 10)
+                new_theta = theta[k] + np.random.normal(0, 1./12. * T, 9)
                 x = simulate(new_theta, 100)
                 
                 print(x.shape)
