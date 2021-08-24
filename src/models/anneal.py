@@ -150,8 +150,8 @@ def main():
     y = []
     
     for key in val_keys:
-        x1 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x1']), axis = 1))
-        x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1))
+        x1 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x1']), axis = 1)).to(device)
+        x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1)).to(device)
         
         # theta, theta_rho, nu_ab, ...
         p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 6, 8, 10, 11]]
