@@ -69,10 +69,10 @@ def normalize(p):
     
     
     # migProb
-    p[6] = ((1 - p[5]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
+    p[7] = ((1 - p[7]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
     
     # T
-    p[7] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
+    p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
     
     return p
 
