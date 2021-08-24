@@ -162,14 +162,16 @@ def main():
             # log probability of real classificiation
             y_ = -y_pred[:,1]
             
-        y.extend(list(y_))
+        y.extend((list(y_))
         P.extend(list(p))
 
     # the proposal (top 10)
     theta = np.array([P[u] for u in np.argsort(y)])[:10]
     y_min = np.mean(np.array([y[u] for u in np.argsort(y)])[:10])
 
-    theta = normalize(theta)
+
+    for k in range(theta.shape[0]):
+        theta[k] = normalize(theta[k])
     
     T = float(args.T)
 
@@ -190,7 +192,7 @@ def main():
             X2 = []
             for k in range(len(theta)):
                 new_theta = theta + np.random.normal(theta[k], 1./12. * T, 10)
-                x = simulate(new_theta)
+                x = simulate(new_theta, 100)
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
