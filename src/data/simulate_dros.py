@@ -67,7 +67,7 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     nu1 = nu1 / Nref
     nu2 = nu2 / Nref
     
-    T = T / Nref
+    T = T / (4 * Nref)
     
     theta = 4 * Nref * u * L
     rho = theta / thetaOverRho
