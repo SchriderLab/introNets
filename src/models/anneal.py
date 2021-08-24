@@ -167,7 +167,7 @@ def main():
 
     # the proposal (top 10)
     theta = np.array([P[u] for u in np.argsort(y)])[:10]
-    y_min = np.mean([y[u] for u in np.argsort(y)])[:10]
+    y_min = np.mean(np.array([y[u] for u in np.argsort(y)])[:10])
 
     theta = normalize(theta)
     
