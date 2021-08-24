@@ -31,7 +31,7 @@ bounds[1] = (0.01, 0.25) # theta_rho
 bounds[2] = (5., 45.) # nu_ab
 bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
-bounds[5] = (0.01, 0.7) # migProb
+bounds[5] = (0.01, 1.0) # migProb
 bounds[6] = (0.3, 0.8) # T
 bounds[7] = (15000., 80.)
 
@@ -47,17 +47,31 @@ import sys
 from src.data.data_functions import writeTbsFile, load_data_dros
 
 def normalize(p):
+    rho = p[1]
+    theta = p[0]
+    
+    theta_rho = theta / rho
+    
+    # theta
     p[0] = (p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0])
-    p[1] = (p[1] - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
+    p[1] = (theta_rho - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
+    
+    # nu_a
     p[2] = (p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0])
+    # nu_b
     p[3] = (p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0])
     
-    p[5] = (p[5] - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
-    p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
+    
+    
+    # migProb
+    p[6] = ((1 - p[5]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
+    
+    # T
+    p[7] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
     
     return p
 
-def simulate(x):
+def simulate(x, n):
     
     theta = (bounds[0][1] - bounds[0][0]) * x[0] + bounds[0][0]
     theta_rho = (bounds[1][1] - bounds[1][0]) * x[1] + bounds[1][0]
@@ -65,14 +79,17 @@ def simulate(x):
     rho = theta / theta_rho
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
     nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
-    T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
+    T = (bounds[6][1] - bounds[6][0]) * x[7] + bounds[6][0]
+
+    alpha1 = x[4]
+    alpha2 = x[5]
 
     b_ = list(bounds[4])
     b_[1] = T / 4.
-    migTime = (b_[1] - b_[0]) * x[4] + b_[0]
-    migProb = (bounds[5][1] - bounds[5][0]) * x[5] + bounds[5][0]
+    migTime = (b_[1] - b_[0]) * x[8] + b_[0]
+    migProb = (bounds[5][1] - bounds[5][0]) * x[9] + bounds[5][0]
 
-    p = np.array([theta, rho, nu_a, nu_b, 0, 0, T, T, migTime, 1 - migProb, migTime], dtype = object)
+    p = np.tile(np.array([theta, rho, nu_a, nu_b, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
 
     return p
 
@@ -86,7 +103,7 @@ def parse_args():
     parser.add_argument("--ifile", default = "None", help = "initial random simulation data the discriminator was trained on")
     parser.add_arugment("--idir", default = "None")
     
-    parser.add_argument("--n_iterations", default = "100")
+    parser.add_argument("--n_steps", default = "100")
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--T", default = "1.0")
@@ -139,52 +156,90 @@ def main():
         x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1))
         
         # theta, theta_rho, nu_ab, ...
-        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 6, 8, 9]]
-        p[:,1] = (p[:,1] ** -1) * p[:,0]
+        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 6, 8, 10, 11]]
         
         with torch.no_grad():
             y_pred = model(x1, x2).detach().cpu().numpy()
             
-            # probability of real classificiation
-            y_ = np.exp(y_pred[:,1])
+            # log probability of real classificiation
+            y_ = y_pred[:,1]
             
-        y.extend(list(y_))
-        P.extend(list(p))
-        
-    theta = P[np.argmax(y)].reshape(1, 7)
+        y_ = -np.mean(y_)
+            
+        y.append(y_)
+        P.append(p[0])
+
+    # the proposal (top 10)
+    theta = np.array([P[u] for u in np.argsort(y)])[:10]
+    y_min = np.mean([y[u] for u in np.argsort(y)])[:10]
+
     theta = normalize(theta)
     
     T = float(args.T)
-    accepted = False
-    
+
     odir = os.path.join(args.odir, 'sims')
     os.system('mkdir -p {}'.format(odir))
         
-    while not accepted:
-        theta += np.random.normal(theta, 1./12. * T, 7)
-        x = simulate(theta)
+    for ix in range(int(args.n_steps)):
+        print('on step {}...'.format(ix))
+        print('-log_likelihood: {}'.format(y_min))
         
-        writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
-
-        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-        print('simulating via the recommended parameters...')
-        sys.stdout.flush()
+        accepted = False
         
-        os.system(cmd)
+        while not accepted:
+            P = []
+            y = []
+            
+            X1 = []
+            X2 = []
+            for k in range(len(theta)):
+                new_theta = theta + np.random.normal(theta[k], 1./12. * T, 10)
+                x = simulate(new_theta)
+                
+                writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
-        ms = os.path.join(odir, 'mig.msOut')
-        anc = os.path.join(odir, 'out.anc')
+                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+                print('simulating via the recommended parameters for prop {}...'.format(k))
+                print(cmd)
+                sys.stdout.flush()
+                
+                os.system(cmd)
+                
+                ms = os.path.join(odir, 'mig.msOut')
+                anc = os.path.join(odir, 'out.anc')
+                
+                x1, x2, y1, y2, params = load_data_dros(ms, anc)
+                X1.append(x1)
+                X2.append(x2)
+                
+                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1))
+                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1))
+                
+                y_pred = model(x1, x2).detach().cpu().numpy()
+                y_ = -np.mean(y_pred[:,1])
+                
+                P.append(new_theta)
+                y.append(y)
+                
+            y_new = np.mean(y)
+            print('new -ll: {}'.format(y_new))
+            
+            if y_new < y_min:
+                accepted = True
+            else:
+                p = y_new / y_min * T
+                
+                if p > 1:
+                    accepted = True
+                else:
+                    if np.random.choice([0, 1], p = [1 - p, p]) == 1:
+                        accepted = True
+                        
+        print('accepted a new theta...')
+        y_min = copy.copy(y_min)
+        theta = np.array(P)
         
-        x1, x2, y1, y2, params = load_data_dros(ms, anc)
-        
-        x1 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x1']), axis = 1))
-        x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1))
-        
-        y_pred = model(x1, x2).detach().cpu().numpy()
-        y_ = np.exp(y_pred[:,1])
-        
-        p = 
-        
+        T -= 0.02
         
             
             
