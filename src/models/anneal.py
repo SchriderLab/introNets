@@ -155,6 +155,7 @@ def main():
         
         # theta, theta_rho, nu_ab, ...
         p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 6, 8, 10, 11]]
+        print(p)
         
         with torch.no_grad():
             y_pred = model(x1, x2).detach().cpu().numpy()
