@@ -129,17 +129,10 @@ def parse_args():
 
 def main():
     args = parse_args()
-
-    # ${code_blocks}
-    device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
-    device = torch.device(device_strings[0])
+    device = torch.device('cuda')
 
     model = PermInvariantClassifier()
-    if len(device_strings) > 1:
-        model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
-        model = model.to(device)
-    else:
-        model = model.to(device)
+    model = model.to(device)
     
     checkpoint = torch.load(args.weights, map_location = device)
     model.load_state_dict(checkpoint)
