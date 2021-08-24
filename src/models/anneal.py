@@ -162,7 +162,7 @@ def main():
             # log probability of real classificiation
             y_ = -y_pred[:,1]
             
-        y.extend((list(y_))
+        y.extend(list(y_))
         P.extend(list(p))
 
     # the proposal (top 10)
