@@ -77,7 +77,7 @@ def normalize(p):
 def simulate(x, n):
     
     theta = (bounds[0][1] - bounds[0][0]) * x[0] + bounds[0][0]
-    theta_rho = (bounds[1][1] - bounds[1][0]) * x[1] + bounds[1][0]
+    theta_rho = (bounds[7][1] - bounds[7][0]) * x[1] + bounds[7][0]
     
     rho = theta / theta_rho
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
@@ -167,9 +167,9 @@ def main():
     theta = np.array([P[u] for u in np.argsort(y)])[:10]
     y_min = np.mean(np.array([y[u] for u in np.argsort(y)])[:10])
 
-
     for k in range(theta.shape[0]):
         theta[k] = normalize(theta[k])
+        print(theta[k])
     
     T = float(args.T)
 
