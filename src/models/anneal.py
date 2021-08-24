@@ -44,7 +44,7 @@ SIZE_B = 14
 N_SITES = 10000
 
 import sys
-from ..data.data_functions import writeTbsFile, load_data_dros
+from data_functions import writeTbsFile, load_data_dros
 
 def normalize(p):
     rho = p[1]
