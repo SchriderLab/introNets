@@ -191,7 +191,7 @@ def main():
             X1 = []
             X2 = []
             for k in range(len(theta)):
-                new_theta = theta + np.random.normal(theta[k], 1./12. * T, 10)
+                new_theta = theta[k] + np.random.normal(theta[k], 1./12. * T, 10)
                 x = simulate(new_theta, 100)
                 
                 print(x.shape)
