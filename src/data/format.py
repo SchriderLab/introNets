@@ -20,8 +20,8 @@ def parse_args():
     
     parser.add_argument("--ofile", default = "None", help = "hdf5 file for pre-chunked data to go into")
     
-    parser.add_argument("--n_replicates", default = "5000", help = "the number of simulation replicates to include in the output file")
-    parser.add_argument("--n_replicates_val", default = "1000", help = "the number of simulation replicates to include for validation")
+    parser.add_argument("--n_replicates", default = "500000", help = "the number of simulation replicates to include in the output file")
+    parser.add_argument("--n_replicates_val", default = "10000", help = "the number of simulation replicates to include for validation")
     
     parser.add_argument("--chunk_size", default = "4")
     
@@ -38,7 +38,7 @@ def parse_args():
 def main():
     args = parse_args()
     
-    idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
+    idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir)])
     ofile = h5py.File(args.ofile, 'w')
     
     chunk_size = int(args.chunk_size)
@@ -57,7 +57,10 @@ def main():
         ms_file = os.path.join(idir, 'mig.msOut')
         
         if os.path.exists(anc_file) and os.path.exists(ms_file):
-            x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
+            try:
+                x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
+            except:
+                pass
             
             X1.extend(x1)
             X2.extend(x2)
