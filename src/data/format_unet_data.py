@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
     Dx[np.where(np.isnan(Dx))] = 0.
-    ix = seriate(Dx)
+    ix = seriate(Dx, timeout = 0)
 
     return x[ix], ix
 
@@ -45,7 +45,6 @@ def seriate_y_spectral(x):
     C[np.where(np.isnan(C))] = 0.
 
     C = np.diag(C.sum(axis = 1)) - C
-    print('computing spectra...')
     _, v = eigs(C, k = 2, which = 'SM')
 
     f = v[:,1]
@@ -111,8 +110,6 @@ class Formatter(object):
             x1 = np.squeeze(x1[:,ii])
             x2 = np.squeeze(x2[:,ii])
             y2 = np.squeeze(y2[:,ii])
-            
-            print(x1.shape, y2.shape, x2.shape)
             
             six = np.random.choice(range(x1.shape[1] - self.n_sites))
             
