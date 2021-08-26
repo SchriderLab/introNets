@@ -68,59 +68,48 @@ class Formatter(object):
         self.sorting = sorting
         
     # return a list of the desired array shapes
-    def format(self):
-        X = []
-        Y = []
+    def format(self, x, y):
+        x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
+        x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
         
-        for k in range(len(self.x)):
-            x = self.x[k]
-            y = self.y[k]
-            
-            x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
-            x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
-            
-            if y.shape != x.shape:
-                continue
-            
-            x1 = x[x1_indices, :]
-            x2 = x[x2_indices, :]
-            
-            y1 = y[x1_indices, :]
-            y2 = y[x2_indices, :]
-            
-            x1, i1 = seriate_x(x1)
-            x2, i2 = seriate_x(x2)
+
         
-            y1 = y1[i1, :]
-            y2 = y2[i2, :]
+        x1 = x[x1_indices, :]
+        x2 = x[x2_indices, :]
+        
+        y1 = y[x1_indices, :]
+        y2 = y[x2_indices, :]
+        
+        x1, i1 = seriate_x(x1)
+        x2, i2 = seriate_x(x2)
+    
+        y1 = y1[i1, :]
+        y2 = y2[i2, :]
+        
+        y = np.vstack([y1, y2])
+        x = np.vstack([x1, x2])
+        
+        x, ii = seriate_y_spectral(x)
+        
+        x1 = x[:128, :]
+        x2 = x[128:, :]
+        
+        y = y[:,ii]
+        y1 = y[:128, :]
+        y2 = y[128:, :]
             
-            y = np.vstack([y1, y2])
-            x = np.vstack([x1, x2])
+        ii = np.where(x.sum(axis = 0) > 0)
+        x1 = np.squeeze(x1[:,ii])
+        x2 = np.squeeze(x2[:,ii])
+        y2 = np.squeeze(y2[:,ii])
+        
+        six = np.random.choice(range(x1.shape[1] - self.n_sites))
+        
+        x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
+        #y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
+        y2 = y2[:, six:six + self.n_sites]
             
-            x, ii = seriate_y_spectral(x)
-            
-            x1 = x[:128, :]
-            x2 = x[128:, :]
-            
-            y = y[:,ii]
-            y1 = y[:128, :]
-            y2 = y[128:, :]
-                
-            ii = np.where(x.sum(axis = 0) > 0)
-            x1 = np.squeeze(x1[:,ii])
-            x2 = np.squeeze(x2[:,ii])
-            y2 = np.squeeze(y2[:,ii])
-            
-            six = np.random.choice(range(x1.shape[1] - self.n_sites))
-            
-            x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
-            #y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
-            y2 = y2[:, six:six + self.n_sites]
-            
-            X.append(x)
-            Y.append(np.expand_dims(1 - y2, 0))
-            
-        return X, Y
+        return x, y2
             
             
 def parse_args():
@@ -158,19 +147,27 @@ def main():
     chunk_size = int(args.chunk_size)
 
     if comm.rank != 0:
-        for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
-            idir = idirs[ix]
-            
+        for idir in idirs:
             msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
             ancFile = os.path.join(idir, 'out.anc')
             
             x, y = load_data(msFile, ancFile)
             
-            f = Formatter(x, y, sorting = args.sorting)
-            x, y = f.format()
-        
-            comm.send([x, y], dest = 0)
+            comm.Barrier()
             
+            for ix in range(comm.rank - 1, len(x), comm.size - 1):
+                x_ = x[ix]
+                y_ = y[ix]
+                
+                if x_.shape != y_.shape:
+                    comm.send([None, None], dest = 0)
+                    continue
+                
+                f = Formatter(sorting = args.sorting)
+                x_, y_ = f.format(x_, y_)
+                
+                comm.send([x, y], dest = 0)
+                
     else:
         n_received = 0
         current_chunk = 0
@@ -178,11 +175,15 @@ def main():
         X = []
         Y = []
         
-        while n_received < len(idirs):
+        while n_received < len(idirs) * 250:
             x, y = comm.recv(source = MPI.ANY_SOURCE)
             
-            X.extend(x)
-            Y.extend(y)
+            if x is not None:
+                X.append(x)
+                Y.append(y)
+            else:
+                n_received += 1
+                continue
             
             n_received += 1
             
@@ -197,10 +198,10 @@ def main():
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
                 current_chunk += 1
-                
+                    
+
         ofile.close()
             
-
     # ${code_blocks}
 
 if __name__ == '__main__':
