@@ -87,10 +87,12 @@ def simulate(x, n):
     rho = theta / theta_rho
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
     nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
+    
+    if x[6] < 0:
+        x[6] = 0
     T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
     
-    print(T)
-
+    
     alpha1 = x[4]
     alpha2 = x[5]
 
