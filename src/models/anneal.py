@@ -33,7 +33,7 @@ bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
 bounds[6] = (0.01, 0.9) # T
-bounds[7] = (15000., 80.)
+bounds[7] = (1., 15000.)
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
