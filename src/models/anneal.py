@@ -215,12 +215,8 @@ def main():
             X2 = []
             for k in range(len(theta)):
                 new_theta = theta[k] + np.random.normal(0, 1./12. * T, 9)
-                print(new_theta)
-                sys.exit()
-                
+
                 x = simulate(new_theta, 100)
-                
-                print(x.shape)
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
