@@ -27,7 +27,7 @@ import pandas as pd
 
 bounds = dict()
 bounds[0] = (20., 150.) # theta
-bounds[1] = (0.01, 0.25) # theta_rho
+bounds[1] = (0.01, 0.35) # theta_rho
 bounds[2] = (5., 45.) # nu_ab
 bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
@@ -63,7 +63,7 @@ def normalize(p):
     
     # theta
     p[0] = (p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0])
-    p[1] = (theta_rho - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
+    p[1] = (theta_rho - bounds[1][0]) / (bounds[1][1] - bounds[1][0])
     
     # nu_a
     p[2] = (p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0])
@@ -82,7 +82,7 @@ def normalize(p):
 def simulate(x, n):
     
     theta = (bounds[0][1] - bounds[0][0]) * x[0] + bounds[0][0]
-    theta_rho = (bounds[7][1] - bounds[7][0]) * x[1] + bounds[7][0]
+    theta_rho = (bounds[1][1] - bounds[1][0]) * x[1] + bounds[1][0]
     
     rho = theta / theta_rho
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
