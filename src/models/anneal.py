@@ -59,6 +59,8 @@ def normalize(p):
     
     theta_rho = theta / rho
     
+    print(theta_rho)
+    
     # theta
     p[0] = (p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0])
     p[1] = (theta_rho - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
@@ -73,8 +75,7 @@ def normalize(p):
     
     # T
     p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
-    print(p[6])
-    
+
     
     return p
 
