@@ -143,6 +143,8 @@ def parse_args():
 
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--sorting", default = "None")
+    
+    parser.add_argument("--scenario", default = "BF_to_AO")
     args = parser.parse_args()
 
     if args.verbose:
@@ -162,7 +164,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
 
-    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if (not '.' in u)]
+    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if ((not '.' in u) and (args.scenario in u))]
     chunk_size = int(args.chunk_size)
 
     if comm.rank != 0:
