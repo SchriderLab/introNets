@@ -64,14 +64,14 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     
     ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, Nref_m12, Nref_m21 = df[ix]
     
+    alpha1 = np.log(nu1/nu1_0)/T
+    alpha2 = np.log(nu2/nu2_0)/T
+    
     nu1 = nu1 / Nref
     nu2 = nu2 / Nref
     
     theta = 4 * Nref * u * L
     rho = theta / thetaOverRho
-    
-    alpha1 = np.log(nu1/nu1_0)/T
-    alpha2 = np.log(nu2/nu2_0)/T
     
     migTime = migTime * T
     
