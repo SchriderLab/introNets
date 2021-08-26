@@ -17,13 +17,6 @@ import h5py
 from seriate import seriate
 from scipy.spatial.distance import pdist
 
-from scipy.sparse import coo_matrix
-from scipy.sparse.csgraph import min_weight_full_bipartite_matching
-from scipy.spatial.distance import cdist, pdist, squareform
-from scipy.optimize import linear_sum_assignment
-import torch
-
-from scipy.linalg import svdvals
 from scipy.sparse.linalg import eigs
 from sklearn.metrics import pairwise_distances
 
