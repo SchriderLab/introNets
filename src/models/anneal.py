@@ -52,14 +52,10 @@ def writeTbsFile(params, outFileName):
             outFile.write(" ".join([str(x) for x in paramVec]) + "\n")
 
 def normalize(p):
-    print(p)
-    
     rho = p[1]
     theta = p[0]
     
     theta_rho = theta / rho
-    
-    print(theta_rho)
     
     # theta
     p[0] = (p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0])
@@ -244,8 +240,8 @@ def main():
                 X1.append(x1)
                 X2.append(x2)
                 
-                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1))
-                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1))
+                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1)).to(device)
+                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1)).to(device)
                 
                 y_pred = model(x1, x2).detach().cpu().numpy()
                 y_ = -np.mean(y_pred[:,1])
