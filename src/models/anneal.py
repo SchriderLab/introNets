@@ -228,7 +228,14 @@ def main():
                 print(cmd)
                 sys.stdout.flush()
                 
-                os.system(cmd)
+                p = os.popen(cmd)
+                lines = p.readlines()
+                
+                f = open(os.path.join(odir, 'mig.msOut'), 'w')
+                for line in lines:
+                    f.write(line)
+                    
+                f.close()
                 
                 ms = os.path.join(odir, 'mig.msOut')
                 anc = os.path.join(odir, 'out.anc')
