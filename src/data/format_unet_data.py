@@ -55,10 +55,7 @@ def seriate_y_spectral(x):
     return x.T, ix
 
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
-        # list of x and y arrays
-        self.x = x
-        self.y = y
+    def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
         
         self.n_pops = shape[0]
         self.pop_size = shape[1]
