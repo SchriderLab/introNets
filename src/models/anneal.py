@@ -32,7 +32,7 @@ bounds[2] = (5., 45.) # nu_ab
 bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
-bounds[6] = (0.3, 0.8) # T
+bounds[6] = (0.01, 0.9) # T
 bounds[7] = (15000., 80.)
 
 # use this format to tell the parsers
@@ -52,6 +52,8 @@ def writeTbsFile(params, outFileName):
             outFile.write(" ".join([str(x) for x in paramVec]) + "\n")
 
 def normalize(p):
+    print(p)
+    
     rho = p[1]
     theta = p[0]
     
@@ -71,6 +73,8 @@ def normalize(p):
     
     # T
     p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
+    print(p[6])
+    
     
     return p
 
@@ -83,6 +87,8 @@ def simulate(x, n):
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
     nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
     T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
+    
+    print(T)
 
     alpha1 = x[4]
     alpha2 = x[5]
@@ -93,6 +99,7 @@ def simulate(x, n):
     migProb = (bounds[5][1] - bounds[5][0]) * x[8] + bounds[5][0]
 
     p = np.tile(np.array([theta, rho, nu_a, nu_b, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
+
 
     return p
 
@@ -144,33 +151,42 @@ def main():
     print('making initial predictions...')
     val_keys = list(ifile['val'].keys())
     
-    P = []
-    y = []
-    
+    P = dict()
+    Ph = dict()
     for key in val_keys:
         x1 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x1']), axis = 1)).to(device)
         x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1)).to(device)
         
         # theta, theta_rho, nu_ab, ...
         p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-        print(p[0])
+        pt = tuple(p)
         
+        h = hash(pt)
+        if h not in P.keys():
+            P[h] = []
+            Ph[h] = p
+
         with torch.no_grad():
             y_pred = model(x1, x2).detach().cpu().numpy()
             
             # log probability of real classificiation
             y_ = -y_pred[:,1]
             
-        y.extend(list(y_))
-        P.extend(list(p))
+        P[h].extend(list(y_))
 
+    hs = list(P.keys())
+    vals = [np.mean(P[u]) for u in hs]
+    
+    hs = [hs[u] for u in np.argsort(vals)[:10]]
+    vals = [vals[u] for u in np.argsort(vals)[:10]]
+    
     # the proposal (top 10)
-    theta = np.array([P[u] for u in np.argsort(y)])[:10]
-    y_min = np.mean(np.array([y[u] for u in np.argsort(y)])[:10])
+    theta = np.array([Ph[u] for u in hs])
+
+    y_min = np.mean(vals)
 
     for k in range(theta.shape[0]):
         theta[k] = normalize(theta[k])
-        print(theta[k])
     
     T = float(args.T)
 
@@ -191,6 +207,9 @@ def main():
             X2 = []
             for k in range(len(theta)):
                 new_theta = theta[k] + np.random.normal(0, 1./12. * T, 9)
+                print(new_theta)
+                sys.exit()
+                
                 x = simulate(new_theta, 100)
                 
                 print(x.shape)
