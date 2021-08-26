@@ -159,12 +159,17 @@ def main():
         
         # theta, theta_rho, nu_ab, ...
         p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-        pt = tuple(p)
+        pt = [tuple(u) for u in p]
         
-        h = hash(pt)
-        if h not in P.keys():
-            P[h] = []
-            Ph[h] = p
+        hs = [hash(u) for u in pt]
+        
+        for k in range(len(hs)):
+            h = hs[k]
+            p_ = p[k]
+            
+            if h not in P.keys():
+                P[h] = []
+                Ph[h] = p_
 
         with torch.no_grad():
             y_pred = model(x1, x2).detach().cpu().numpy()
@@ -172,8 +177,11 @@ def main():
             # log probability of real classificiation
             y_ = -y_pred[:,1]
             
-        P[h].extend(list(y_))
-
+            for k in range(len(hs)):
+                h = hs[k]
+                
+                P[h].append(y_[k])
+            
     hs = list(P.keys())
     vals = [np.mean(P[u]) for u in hs]
     
