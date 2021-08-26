@@ -220,7 +220,7 @@ def main():
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
-                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 6.576808 -eg 0 2 -7.841388 -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(x), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(x), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
                 print('simulating via the recommended parameters for prop {}...'.format(k))
                 print(cmd)
                 sys.stdout.flush()
