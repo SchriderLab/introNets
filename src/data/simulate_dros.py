@@ -123,7 +123,7 @@ def main():
     
     df = np.loadtxt(args.ifile)
 
-    slurm_cmd = 'sbatch -t 1-00:00:00 --mem=1G -o {0} --wrap "{1}"'
+    slurm_cmd = 'sbatch -t 1-00:00:00 --mem=8G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
     rho = [0.2]
@@ -135,24 +135,24 @@ def main():
     
     for ix in range(df.shape[0]):
         for p_ in p:
-            for j in range(10):
-                rho, migTime, migProb = p_
-                
-                P = parameters_df(df, ix, rho, migTime, migProb, n // 10)
-                
-                odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
-                counter += 1
-                
-                os.system('mkdir -p {}'.format(odir))
+
+            rho, migTime, migProb = p_
             
-                writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
+            P = parameters_df(df, ix, rho, migTime, migProb, n)
             
-                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-                print('simulating via the recommended parameters...')
-                sys.stdout.flush()
+            odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+            counter += 1
             
-                fout = os.path.join(odir, 'mig.msOut')
-                os.system(slurm_cmd.format(fout, cmd))
+            os.system('mkdir -p {}'.format(odir))
+        
+            writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
+        
+            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+            print('simulating via the recommended parameters...')
+            sys.stdout.flush()
+        
+            fout = os.path.join(odir, 'mig.msOut')
+            #os.system(slurm_cmd.format(fout, cmd))
             
 
 if __name__ == '__main__':
