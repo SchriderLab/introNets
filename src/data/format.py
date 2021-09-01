@@ -6,6 +6,7 @@ import h5py
 import numpy as np
 
 from data_functions import load_data_dros, load_npz
+import random
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -39,6 +40,8 @@ def main():
     args = parse_args()
     
     idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir)])
+    random.shuffle(idirs)
+    
     ofile = h5py.File(args.ofile, 'w')
     
     chunk_size = int(args.chunk_size)
