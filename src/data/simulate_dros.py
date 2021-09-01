@@ -64,18 +64,20 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     
     ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, Nref_m12, Nref_m21 = df[ix]
     
+    nu1_0 /= Nref
+    nu2_0 /= Nref
+    nu1 /= Nref
+    nu2 /= Nref
+    
+    T /= (4*Nref / 15)
+    
     alpha1 = np.log(nu1/nu1_0)/T
     alpha2 = np.log(nu2/nu2_0)/T
-    
-    nu1 = nu1 / Nref
-    nu2 = nu2 / Nref
     
     theta = 4 * Nref * u * L
     rho = theta / thetaOverRho
     
     migTime = migTime * T
-    
-    T = T / (4 * Nref)
     
     p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
     
@@ -133,10 +135,10 @@ def main():
     
     for ix in range(df.shape[0]):
         for p_ in p:
-            for j in range(100):
+            for j in range(10):
                 rho, migTime, migProb = p_
                 
-                P = parameters_df(df, ix, rho, migTime, migProb, n // 100)
+                P = parameters_df(df, ix, rho, migTime, migProb, n // 10)
                 
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                 counter += 1
