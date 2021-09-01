@@ -38,9 +38,7 @@ def seriate_y(x):
 
     return x[ix].T, ix
 
-def seriate_y_spectral(x):
-    x = x.T
-    
+def seriate_spectral(x):    
     C = pairwise_distances(x)
     C[np.where(np.isnan(C))] = 0.
 
@@ -52,7 +50,7 @@ def seriate_y_spectral(x):
 
     x = x[ix,:]
     
-    return x.T, ix
+    return x, ix
 
 class Formatter(object):
     def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
@@ -69,16 +67,14 @@ class Formatter(object):
         x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
         x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
         
-
-        
         x1 = x[x1_indices, :]
         x2 = x[x2_indices, :]
         
         y1 = y[x1_indices, :]
         y2 = y[x2_indices, :]
         
-        x1, i1 = seriate_x(x1)
-        x2, i2 = seriate_x(x2)
+        x1, i1 = seriate_spectral(x1)
+        x2, i2 = seriate_spectral(x2)
     
         y1 = y1[i1, :]
         y2 = y2[i2, :]
@@ -86,7 +82,8 @@ class Formatter(object):
         y = np.vstack([y1, y2])
         x = np.vstack([x1, x2])
         
-        x, ii = seriate_y_spectral(x)
+        x, ii = seriate_spectral(x.T)
+        x = x.T
         
         x1 = x[:128, :]
         x2 = x[128:, :]
@@ -94,17 +91,6 @@ class Formatter(object):
         y = y[:,ii]
         y1 = y[:128, :]
         y2 = y[128:, :]
-            
-        ii = np.where(x.sum(axis = 0) > 0)
-        x1 = np.squeeze(x1[:,ii])
-        x2 = np.squeeze(x2[:,ii])
-        y2 = np.squeeze(y2[:,ii])
-        
-        six = np.random.choice(range(x1.shape[1] - self.n_sites))
-        
-        x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
-        #y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
-        y2 = y2[:, six:six + self.n_sites]
             
         return x, y2
             
@@ -117,7 +103,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
     parser.add_argument("--chunk_size", default = "4")
 
-    parser.add_argument("--ofile", default = "None")
+    parser.add_argument("--odir", default = "None")
     parser.add_argument("--sorting", default = "None")
     
     parser.add_argument("--scenario", default = "BF_to_AO")
@@ -128,77 +114,54 @@ def parse_args():
         logging.debug("running in verbose mode")
     else:
         logging.basicConfig(level=logging.INFO)
+        
+    if args.odir != "None":
+        if not os.path.exists(args.odir):
+            os.mkdir(args.odir)
+            logging.debug('root: made output directory {0}'.format(args.odir))
+        else:
+            os.system('rm -rf {0}'.format(os.path.join(args.odir, '*')))
+
 
     return args
 
 def main():
-    args = parse_args()
-    
     # configure MPI
     comm = MPI.COMM_WORLD
-    
-    if comm.rank == 0:
-        ofile = h5py.File(args.ofile, 'w')
 
-    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if ((not '.' in u) and (args.scenario in u))]
+    args = parse_args()
+
     chunk_size = int(args.chunk_size)
-
+    
+    msFile = os.path.join(args.idir, '{}.txt'.format(args.idir.split('/')[-1]))
+    ancFile = os.path.join(args.idir, 'out.anc')
+    
+    x, y = load_data(msFile, ancFile)
+    
     if comm.rank != 0:
-        for idir in idirs:
-            msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
-            ancFile = os.path.join(idir, 'out.anc')
+        for ix in range(comm.rank - 1, len(x), comm.size - 1):
+            x_ = x[ix]
+            y_ = y[ix]
             
-            x, y = load_data(msFile, ancFile)
-            
-            comm.Barrier()
-            
-            for ix in range(comm.rank - 1, len(x), comm.size - 1):
-                x_ = x[ix]
-                y_ = y[ix]
-                
-                if x_.shape != y_.shape:
-                    comm.send([None, None], dest = 0)
-                    continue
-                
-                f = Formatter(sorting = args.sorting)
-                x_, y_ = f.format(x_, y_)
-                
-                comm.send([x, y], dest = 0)
-                
-    else:
-        n_received = 0
-        current_chunk = 0
-
-        X = []
-        Y = []
-        
-        while n_received < len(idirs) * 250:
-            x, y = comm.recv(source = MPI.ANY_SOURCE)
-            
-            if x is not None:
-                X.append(x)
-                Y.append(y)
-            else:
-                n_received += 1
+            if x_.shape != y_.shape:
                 continue
             
+            f = Formatter(sorting = args.sorting)
+            x_, y_ = f.format(x_, y_)
+        
+            comm.send([x_, y_], dest = 0)
+    else:
+        n_received = 0
+        
+        while n_received < len(x):
+            x, y = comm.recv(source = MPI.ANY_SOURCE)
+            
+            np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x, y = y)
+            
             n_received += 1
-            
-            while len(X) > chunk_size:
-                ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
-                ofile.flush()
-                
-                del X[-chunk_size:]
-                del Y[-chunk_size:]
 
-                logging.info('0: wrote chunk {0}'.format(current_chunk))
-                
-                current_chunk += 1
-                    
-
-        ofile.close()
-            
+            if (n_received + 1) % 100 == 0:
+                logging.info('on {}...'.format(n_received))
     # ${code_blocks}
 
 if __name__ == '__main__':
