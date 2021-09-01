@@ -117,7 +117,7 @@ def parse_args():
         
     if args.odir != "None":
         if not os.path.exists(args.odir):
-            os.mkdir(args.odir)
+            os.system('mkdir -p {}'.format(args.odir))
             logging.debug('root: made output directory {0}'.format(args.odir))
         else:
             os.system('rm -rf {0}'.format(os.path.join(args.odir, '*')))
