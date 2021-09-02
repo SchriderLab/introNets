@@ -26,6 +26,10 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 
 from data_functions import load_data_dros
+
+import matplotlib
+matplotlib.use('Agg')
+
 import matplotlib.pyplot as plt
 
 def parse_args():
@@ -81,6 +85,8 @@ def main():
     P = []
     l = []
     for idir in idirs:
+        print('predicting on {}...'.format(idir))
+        
         ms = os.path.join(idir, 'mig.msOut')
         anc = os.path.join(idir, 'out.anc')
         
@@ -105,6 +111,7 @@ def main():
                 
                 ys.extend(list(y_))
                 
+        print('got nll of: {}...'.format(np.mean(ys)))
         l.append(np.mean(ys))
         
     plt.plot(sorted(l))
