@@ -158,10 +158,10 @@ def main():
         n_received = 0
         
         while n_received < len(x):
-            x, y = comm.recv(source = MPI.ANY_SOURCE)
+            x_, y = comm.recv(source = MPI.ANY_SOURCE)
             
             if x is not None:
-                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x, y = y)
+                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y)
             
             n_received += 1
 
