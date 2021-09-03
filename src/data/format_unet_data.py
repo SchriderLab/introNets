@@ -138,12 +138,16 @@ def main():
     
     x, y = load_data(msFile, ancFile)
     
+    comm.Barrier()
+    
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(x), comm.size - 1):
             x_ = x[ix]
             y_ = y[ix]
             
             if x_.shape != y_.shape:
+                comm.send([None, None], dest = 0)
+                
                 continue
             
             f = Formatter(sorting = args.sorting)
@@ -156,7 +160,8 @@ def main():
         while n_received < len(x):
             x, y = comm.recv(source = MPI.ANY_SOURCE)
             
-            np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x, y = y)
+            if x is not None:
+                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x, y = y)
             
             n_received += 1
 
