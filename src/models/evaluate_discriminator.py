@@ -47,6 +47,8 @@ def parse_args():
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--T", default = "1.0")
+    
+    parser.add_argument("--ofile", default = "nll_disc_i1.npz")
     args = parser.parse_args()
 
     if args.verbose:
@@ -117,6 +119,8 @@ def main():
     plt.plot(sorted(l))
     plt.savefig('nll.png', dpi = 100)
     plt.close()
+    
+    np.savez(args.ofile, P = np.array(P), l = np.array(l))
     
 if __name__ == '__main__':
     main()
