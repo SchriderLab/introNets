@@ -121,7 +121,10 @@ def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
                     
-        ii = np.random.choice(range(x.shape[1] - n_sites))
+        if x.shape[1] > n_sites:
+            ii = np.random.choice(range(x.shape[1] - n_sites))
+        else:
+            continue
         
         if len(y.shape) > 1:
             
