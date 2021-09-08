@@ -23,6 +23,7 @@ import h5py
 
 import numpy as np
 from sklearn.metrics import accuracy_score
+from data_functions import load_npz
 import pandas as pd
 
 bounds = dict()
@@ -33,7 +34,11 @@ bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
 bounds[6] = (0.01, 0.9) # T
-bounds[7] = (1., 15000.)
+bounds[7] = (1., 10.) # alpha1
+bounds[8] = (-10, 10.) # alpha2
+
+bounds[2] = (5., 45.) # nu_ab
+bounds[3] = (0.01, 3.0) # nu_ba
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -45,6 +50,25 @@ N_SITES = 10000
 
 import sys
 from data_functions import load_data_dros
+
+import random
+
+def get_real_batch(Xs, batch_size = 64, n_sites = 128):
+    x1 = []
+    x2 = []
+    
+    y = []
+    for ix in range(batch_size):
+        X = Xs[np.random.choice(range(len(Xs)))]
+                
+        k = np.random.choice(range(X.shape[1] - n_sites))
+        
+        x1.append(np.expand_dims(X[:20, k : k + n_sites], axis = 0))
+        x2.append(np.expand_dims(X[20:, k : k + n_sites], axis = 0))
+        
+        y.append(1)
+        
+    return torch.FloatTensor(np.expand_dims(np.concatenate(x1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(x2), axis = 1)), torch.LongTensor(y)
 
 def writeTbsFile(params, outFileName):
     with open(outFileName, "w") as outFile:
@@ -66,6 +90,11 @@ def normalize(p):
     # nu_b
     p[3] = (p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0])
     
+    # alpha1
+    p[4] = (p[4] - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
+    # alpha2
+    p[5] = (p[5] - bounds[8][0]) / (bounds[8][1] - bounds[8][0])
+    
     # migProb
     p[8] = ((1 - p[8]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
     
@@ -75,8 +104,7 @@ def normalize(p):
     
     return p
 
-def simulate(x, n):
-    
+def simulate(x, n):    
     theta = (bounds[0][1] - bounds[0][0]) * x[0] + bounds[0][0]
     theta_rho = (bounds[1][1] - bounds[1][0]) * x[1] + bounds[1][0]
     
@@ -84,13 +112,11 @@ def simulate(x, n):
     nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
     nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
     
-    if x[6] < 0:
-        x[6] = 0
+
     T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
     
-    
-    alpha1 = x[4]
-    alpha2 = x[5]
+    alpha1 = (bounds[7][1] - bounds[7][0]) * x[4] + bounds[7][0]
+    alpha2 = (bounds[8][1] - bounds[8][0]) * x[5] + bounds[8][0]
 
     b_ = list(bounds[4])
     b_[1] = T / 4.
@@ -109,10 +135,14 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--weights", default = "None")
     
-    parser.add_argument("--ifile", default = "None", help = "initial random simulation data the discriminator was trained on")
+    #parser.add_argument("--ifile", default = "None", help = "initial random simulation data the discriminator was trained on")
+    parser.add_argument("--ifile", default = "None")
+    parser.add_argument("--idir", default = "None")
+    
     parser.add_argument("--n_steps", default = "100")
     
     parser.add_argument("--odir", default = "None")
+    parser.add_argument("--N", default = "100")
     parser.add_argument("--T", default = "1.0")
     args = parser.parse_args()
 
@@ -130,6 +160,11 @@ def parse_args():
 
     return args
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
 
 def main():
     args = parse_args()
@@ -141,87 +176,47 @@ def main():
     checkpoint = torch.load(args.weights, map_location = device)
     model.load_state_dict(checkpoint)
     
-    model.eval()
-    
-    ifile = h5py.File(args.ifile, 'r')
-    
-    # go through the validation keys to get the first initial proposal
-    
-    print('making initial predictions...')
-    val_keys = list(ifile['val'].keys())
-    
-    P = dict()
-    Ph = dict()
-    for key in val_keys:
-        x1 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x1']), axis = 1)).to(device)
-        x2 = torch.FloatTensor(np.expand_dims(np.array(ifile['val'][key]['x2']), axis = 1)).to(device)
-        
-        # theta, theta_rho, nu_ab, ...
-        p = np.array(ifile['val'][key]['p'])[:,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-        pt = [tuple(u) for u in p]
-        
-        hs = [hash(u) for u in pt]
-        
-        for k in range(len(hs)):
-            h = hs[k]
-            p_ = p[k]
-            
-            if h not in P.keys():
-                P[h] = []
-                Ph[h] = p_
+    npz = np.load(args.ifile)
+    Xs = [load_npz(os.path.join(args.idir, u)).astype(np.uint8) for u in sorted(os.listdir(args.idir))]
 
-        with torch.no_grad():
-            y_pred = model(x1, x2).detach().cpu().numpy()
-            
-            # log probability of real classificiation
-            y_ = -y_pred[:,1]
-            
-            for k in range(len(hs)):
-                h = hs[k]
-                
-                P[h].append(y_[k])
-            
-    hs = list(P.keys())
-    vals = [np.mean(P[u]) for u in hs]
+    theta = npz['P']
+    l = npz['l']
     
-    hs = [hs[u] for u in np.argsort(vals)[:10]]
-    vals = [vals[u] for u in np.argsort(vals)[:10]]
+    min_l = np.mean(l)
     
-    # the proposal (top 10)
-    theta = np.array([Ph[u] for u in hs])
-
-    y_min = np.mean(vals)
-
+    theta = theta[np.argsort(l),:][:int(args.N)]
     for k in range(theta.shape[0]):
         theta[k] = normalize(theta[k])
-    
+
     T = float(args.T)
 
     odir = os.path.join(args.odir, 'sims')
     os.system('mkdir -p {}'.format(odir))
         
     for ix in range(int(args.n_steps)):
+        model.eval()
+        
         print('on step {}...'.format(ix))
-        print('-log_likelihood: {}'.format(y_min))
+        print('current nll: {}'.format(min_l))
+        
+        X1 = []
+        X2 = []
         
         accepted = False
-        
         while not accepted:
-            P = []
-            y = []
+            print('simulating and prediciting on new proposals...')
             
-            X1 = []
-            X2 = []
-            for k in range(len(theta)):
-                new_theta = theta[k] + np.random.normal(0, 1./12. * T, 9)
+            l = []
+            
+            new_theta = theta + np.random.normal(0, 1./12. * T, size = theta.shape)
+            new_theta = np.clip(new_theta, 0, 1)
 
-                x = simulate(new_theta, 100)
+            for k in range(new_theta.shape[0]):
+                x = simulate(new_theta[k], 1000)
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
                 cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(x), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-                print('simulating via the recommended parameters for prop {}...'.format(k))
-                print(cmd)
                 sys.stdout.flush()
                 
                 p = os.popen(cmd)
@@ -237,25 +232,37 @@ def main():
                 anc = os.path.join(odir, 'out.anc')
                 
                 x1, x2, y1, y2, params = load_data_dros(ms, anc)
+                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1))
+                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1))
+                
                 X1.append(x1)
                 X2.append(x2)
                 
-                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1)).to(device)
-                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1)).to(device)
+                # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
+                p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
                 
-                y_pred = model(x1, x2).detach().cpu().numpy()
-                y_ = -np.mean(y_pred[:,1])
+                ys = []
+                for c in chunks(list(range(x1.shape[0])), 100):
+                    x1_ = x1[c,::].to(device)
+                    x2_ = x2[c,::].to(device)
+                    
+                    with torch.no_grad():
+                        y_pred = model(x1_, x2_).detach().cpu().numpy()
+                        
+                        # log probability of real classificiation
+                        y_ = -y_pred[:,1]
+                        
+                        ys.extend(list(y_))
                 
-                P.append(new_theta)
-                y.append(y)
-                
-            y_new = np.mean(y)
-            print('new -ll: {}'.format(y_new))
+                l.append(np.mean(ys))
             
-            if y_new < y_min:
+            print('new -ll: {}'.format(np.mean(l)))
+            new_l = np.mean(l)
+            
+            if new_l < min_l:
                 accepted = True
             else:
-                p = y_new / y_min * T
+                p = new_l / min_l * T
                 
                 if p > 1:
                     accepted = True
@@ -264,10 +271,61 @@ def main():
                         accepted = True
                         
         print('accepted a new theta...')
-        y_min = copy.copy(y_min)
-        theta = np.array(P)
-        
+        theta = copy.copy(new_theta)
+        np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta)
+                
         T -= 0.02
+        
+        X1 = torch.cat(X1)
+        X2 = torch.cat(X2)
+        
+        indices = list(range(X1.shape[0]))
+        random.shuffle(indices)
+        
+        # training phase
+        model.train()
+        
+        criterion = NLLLoss()
+        optimizer = optim.Adam(model.parameters(), lr = 0.001)
+        
+        losses = []
+        accuracies = []
+        
+        print('performing an epoch of training...')
+        for c in chunks(list(range(X1.shape[0])), 64):
+            optimizer.zero_grad()
+            
+            x1 = X1[c,::].to(device)
+            x2 = X2[c,::].to(device)
+            y = torch.LongTensor(np.zeros(x1.shape[0])).to(device)
+            
+            y_pred = model(x1, x2)
+            
+            x1r, x2r, yr = get_real_batch(Xs)
+            
+            y_pred_real = model(x1r, x2r)
+            
+
+            loss = criterion(y_pred, y) + criterion(y_pred_real, yr) # ${loss_change}
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+
+            # compute accuracy in CPU with sklearn
+            y_pred = np.exp(y_pred.detach().cpu().numpy())
+            y = y.detach().cpu().numpy()
+
+            y_pred = np.argmax(y_pred, axis=1)
+
+            # append metrics for this epoch
+            accuracies.append(accuracy_score(y, y_pred))
+            
+        print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
+        
+        print('saving weights...')
+        torch.save(model.state_dict(), os.path.join(args.odir, 'disc_{0:04d}.weights'.format(ix)))
+        
+        
         
             
 if __name__ == '__main__':
