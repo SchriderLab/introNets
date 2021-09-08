@@ -182,11 +182,12 @@ def main():
     theta = npz['P']
     l = npz['l']
     
-    min_l = np.mean(l)
-    
     theta = theta[np.argsort(l),:][:int(args.N)]
     for k in range(theta.shape[0]):
         theta[k] = normalize(theta[k])
+        
+    l = l[np.argsort(l)][:int(args.N)]
+    min_l = np.mean(l)
 
     T = float(args.T)
 
@@ -255,6 +256,9 @@ def main():
                         ys.extend(list(y_))
                 
                 l.append(np.mean(ys))
+                
+                if (k + 1) % 10 == 0:
+                    print('on prop {}...'.format(k + 1))
             
             print('new -ll: {}'.format(np.mean(l)))
             new_l = np.mean(l)
@@ -302,9 +306,11 @@ def main():
             y_pred = model(x1, x2)
             
             x1r, x2r, yr = get_real_batch(Xs)
+            x1r = x1r.to(device)
+            x2r = x2r.to(device)
+            yr = yr.to(device)
             
             y_pred_real = model(x1r, x2r)
-            
 
             loss = criterion(y_pred, y) + criterion(y_pred_real, yr) # ${loss_change}
             loss.backward()
