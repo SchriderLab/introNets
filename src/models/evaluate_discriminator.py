@@ -109,7 +109,7 @@ def main():
             
             with torch.no_grad():
                 y_pred = model(x1_, x2_).detach().cpu()
-                print(criterion(y_pred, torch.LongTensor(np.zeros(y_pred.shape[0])).item()))
+                print(criterion(y_pred, torch.LongTensor(np.zeros(y_pred.shape[0]))).item())
                 
                 # log probability of real classificiation
                 y_ = -y_pred.numpy()[:,1]
