@@ -285,6 +285,9 @@ def main():
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
         
         min_l = copy.copy(new_l)
+        
+        history['step'].append(ix)
+        history['gen_loss'].append(min_l)
                 
         T -= 0.02
         
@@ -335,6 +338,11 @@ def main():
             accuracies.append(accuracy_score(y, y_pred))
             
         print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
+        
+        history['disc_loss'].append(np.mean(losses))
+        
+        df = pd.DataFrame(history)
+        df.to_csv(os.path.join(args.odir, 'history.csv'.format(args.tag)), index = False)
         
         print('saving weights...')
         torch.save(model.state_dict(), os.path.join(args.odir, 'disc_{0:04d}.weights'.format(ix)))
