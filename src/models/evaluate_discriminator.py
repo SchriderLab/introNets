@@ -96,6 +96,8 @@ def main():
         x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1))
         x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1))
         
+        criterion = torch.nn.NLLLoss()
+        
         # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
         p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
         P.append(p)
@@ -106,10 +108,11 @@ def main():
             x2_ = x2[c,::].to(device)
             
             with torch.no_grad():
-                y_pred = model(x1_, x2_).detach().cpu().numpy()
+                y_pred = model(x1_, x2_).detach().cpu()
+                print(criterion(y_pred, torch.LongTensor(np.zeros(y_pred.shape[0])).item()))
                 
                 # log probability of real classificiation
-                y_ = -y_pred[:,1]
+                y_ = -y_pred.numpy()[:,1]
                 
                 ys.extend(list(y_))
                 
