@@ -125,7 +125,6 @@ def simulate(x, n):
 
     p = np.tile(np.array([theta, rho, nu_a, nu_b, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
 
-
     return p
 
 def parse_args():
@@ -193,6 +192,11 @@ def main():
 
     odir = os.path.join(args.odir, 'sims')
     os.system('mkdir -p {}'.format(odir))
+    
+    history = dict()
+    history['step'] = []
+    history['gen_loss'] = []
+    history['disc_loss'] = []
         
     for ix in range(int(args.n_steps)):
         model.eval()
@@ -276,7 +280,11 @@ def main():
                         
         print('accepted a new theta...')
         theta = copy.copy(new_theta)
-        np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta)
+        
+        theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
+        np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
+        
+        min_l = copy.copy(new_l)
                 
         T -= 0.02
         
@@ -296,7 +304,7 @@ def main():
         accuracies = []
         
         print('performing an epoch of training...')
-        for c in chunks(list(range(X1.shape[0])), 64):
+        for c in chunks(indices, 64):
             optimizer.zero_grad()
             
             x1 = X1[c,::].to(device)
@@ -312,7 +320,7 @@ def main():
             
             y_pred_real = model(x1r, x2r)
 
-            loss = criterion(y_pred, y) + criterion(y_pred_real, yr) # ${loss_change}
+            loss = (criterion(y_pred, y) + criterion(y_pred_real, yr)) * 0.5 # ${loss_change}
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
