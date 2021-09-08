@@ -138,7 +138,7 @@ def parse_args():
     parser.add_argument("--ifile", default = "None")
     parser.add_argument("--idir", default = "None")
     
-    parser.add_argument("--n_steps", default = "100")
+    parser.add_argument("--n_steps", default = "45")
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--N", default = "100")
@@ -342,7 +342,7 @@ def main():
         history['disc_loss'].append(np.mean(losses))
         
         df = pd.DataFrame(history)
-        df.to_csv(os.path.join(args.odir, 'history.csv'.format(args.tag)), index = False)
+        df.to_csv(os.path.join(args.odir, 'history.csv'), index = False)
         
         print('saving weights...')
         torch.save(model.state_dict(), os.path.join(args.odir, 'disc_{0:04d}.weights'.format(ix)))
