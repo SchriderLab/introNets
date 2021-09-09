@@ -82,7 +82,7 @@ def main():
     
     model.eval()
     
-    idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
+    idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir)])
     
     P = []
     l = []
@@ -103,6 +103,7 @@ def main():
         P.append(p)
         
         ys = []
+        accs = []
         for c in chunks(list(range(x1.shape[0])), 50):
             x1_ = x1[c,::].to(device)
             x2_ = x2[c,::].to(device)
@@ -114,9 +115,13 @@ def main():
                 # log probability of real classificiation
                 y_ = -y_pred.numpy()[:,1]
                 
+                y_pred = np.argmax(y_pred, axis=1)
+                
+                accs.append(accuracy_score(np.zeros(y_pred.shape[0]).astype(np.int32), y_pred))
                 ys.extend(list(y_))
                 
         print('got nll of: {}...'.format(np.mean(ys)))
+        print('got acc of {}...'.format(np.mean(accs)))
         l.append(np.mean(ys))
         
     plt.plot(sorted(l))
