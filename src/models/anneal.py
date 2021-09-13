@@ -340,6 +340,8 @@ def main():
             
             if (counter + 1) % 5 == 0:
                 print('training loss: {0}...'.format(np.mean(losses)))
+                
+            counter += 1
             
             
         print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
