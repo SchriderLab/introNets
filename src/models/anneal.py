@@ -306,6 +306,7 @@ def main():
         losses = []
         accuracies = []
         
+        counter = 0
         print('performing an epoch of training...')
         for c in chunks(indices, 64):
             optimizer.zero_grad()
@@ -336,6 +337,10 @@ def main():
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
+            
+            if (counter + 1) % 5 == 0:
+                print('training loss: {0}...'.format(np.mean(losses)))
+            
             
         print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
         
