@@ -253,8 +253,8 @@ def main():
                 anc = os.path.join(odir, 'out.anc')
                 
                 x1, x2, y1, y2, params = load_data_dros(ms, anc)
-                x1 = torch.FloatTensor(np.expand_dims(x1, axis = 1))
-                x2 = torch.FloatTensor(np.expand_dims(x2, axis = 1))
+                x1 = torch.FloatTensor(x1)
+                x2 = torch.FloatTensor(x2)
                 
                 X1.append(x1)
                 X2.append(x2)
