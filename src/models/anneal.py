@@ -203,7 +203,7 @@ def main():
         model.eval()
         
         print('on step {}...'.format(ix))
-        print('current nll: {}'.format(min_l))
+        print('current nll: {}'.format(np.mean(l)))
         
         X1 = []
         X2 = []
@@ -273,7 +273,7 @@ def main():
                 if np.mean(ys) < l[k]:
                     accepted = True
                 else:
-                    p = new_l / min_l * T
+                    p = np.mean(ys) / l[k] * T
                     
                     if p > 1:
                         accepted = True
@@ -293,7 +293,7 @@ def main():
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
         
         history['step'].append(ix)
-        history['gen_loss'].append(min_l)
+        history['gen_loss'].append(np.mean(l))
                 
         T -= 0.02
         
