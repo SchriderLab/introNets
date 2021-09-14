@@ -289,8 +289,6 @@ def main():
                     print('on prop {}...'.format(k + 1))
         
                 print('new -ll: {0}, vs. {1}'.format(np.mean(ys), l[k]))
-                new_l = np.mean(l)
-        
                 if np.mean(ys) < l[k]:
                     accepted = True
                 else:
@@ -319,6 +317,8 @@ def main():
         
         X1 = torch.cat(X1)
         X2 = torch.cat(X2)
+        
+        print(X1.shape, X2.shape)
         
         indices = list(range(X1.shape[0]))
         random.shuffle(indices)
