@@ -224,7 +224,6 @@ def main():
         for k in range(new_theta.shape[0]):
             accepted = False
             
-            
             while not accepted:
                 criterion = nn.NLLLoss(reduction = 'none')
                 
@@ -253,11 +252,10 @@ def main():
                 anc = os.path.join(odir, 'out.anc')
                 
                 x1, x2, y1, y2, params = load_data_dros(ms, anc)
-                x1 = torch.FloatTensor(x1)
-                x2 = torch.FloatTensor(x2)
+                x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
+                x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
                 
-                X1.append(x1)
-                X2.append(x2)
+                print(x1.shape, x2.shape)
                 
                 # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                 p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
@@ -306,6 +304,9 @@ def main():
             theta[k] = copy.copy(new_theta)
     
             l[k] = np.mean(ys)
+            
+            X1.append(x1)
+            X2.append(x2)
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
