@@ -186,7 +186,6 @@ def main():
         theta[k] = normalize(theta[k])
         
     l = l[np.argsort(l)][:int(args.N)]
-    min_l = np.mean(l)
 
     T = float(args.T)
 
@@ -209,17 +208,18 @@ def main():
         X1 = []
         X2 = []
         
-        accepted = False
-        while not accepted:
-            print('simulating and prediciting on new proposals...')
-            
-            l = []
-            
-            new_theta = theta + np.random.normal(0, 1./12. * T, size = theta.shape)
-            new_theta = np.clip(new_theta, 0, 1)
+        new_theta = theta + np.random.normal(0, 1./12. * T, size = theta.shape)
+        new_theta = np.clip(new_theta, 0, 1)
 
-            for k in range(new_theta.shape[0]):
-                x = simulate(new_theta[k], 100)
+        for k in range(new_theta.shape[0]):
+            accepted = False
+            while not accepted:
+                new_theta = theta[k] + np.random.normal(0, 1./12. * T, size = theta.shape[1])
+                new_theta = np.clip(new_theta, 0, 1)
+                
+                print('simulating and prediciting on new proposal {}...'.format(k))
+            
+                x = simulate(new_theta, 100)
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
@@ -256,39 +256,41 @@ def main():
                     
                     with torch.no_grad():
                         y_pred = model(x1_, x2_)
-                        print(criterion(y_pred, target).item())
                         
                         # log probability of real classificiation
                         y_ = -y_pred.detach().cpu().numpy()[:,1]
                         
                         ys.extend(list(y_))
                 
-                l.append(np.mean(ys))
+                
                 
                 if (k + 1) % 10 == 0:
                     print('on prop {}...'.format(k + 1))
-            
-            print('new -ll: {}'.format(np.mean(l)))
-            new_l = np.mean(l)
-            
-            if new_l < min_l:
-                accepted = True
-            else:
-                p = new_l / min_l * T
-                
-                if p > 1:
+        
+                print('new -ll: {0}, vs. {1}'.format(np.mean(ys), l[k]))
+                new_l = np.mean(l)
+        
+                if np.mean(ys) < l[k]:
                     accepted = True
                 else:
-                    if np.random.choice([0, 1], p = [1 - p, p]) == 1:
+                    p = new_l / min_l * T
+                    
+                    if p > 1:
                         accepted = True
+                    else:
+                        if np.random.choice([0, 1], p = [1 - p, p]) == 1:
+                            accepted = True
+                            
+                    
                         
-        print('accepted a new theta...')
-        theta = copy.copy(new_theta)
-        
+            print('accepted a new theta...')
+            theta[k] = copy.copy(new_theta)
+    
+            l[k] = np.mean(ys)
+    
+    
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
-        
-        min_l = copy.copy(new_l)
         
         history['step'].append(ix)
         history['gen_loss'].append(min_l)
