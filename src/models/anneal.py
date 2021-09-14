@@ -256,7 +256,7 @@ def main():
                     
                     with torch.no_grad():
                         y_pred = model(x1_, x2_)
-                        print(criterion(target, y_pred).item())
+                        print(criterion(y_pred, target).item())
                         
                         # log probability of real classificiation
                         y_ = -y_pred.detach().cpu().numpy()[:,1]
