@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import NestedUNet, NestedUNetIv3
+from layers import NestedUNet
 from data_loaders import H5UDataGenerator
 import h5py
 
