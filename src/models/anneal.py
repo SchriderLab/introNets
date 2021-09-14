@@ -299,8 +299,8 @@ def main():
                             accepted = True
                             
                     
-                        
             print('accepted a new theta...')
+            print(np.mean(losses))
             theta[k] = copy.copy(new_theta)
     
             l[k] = np.mean(ys)
@@ -334,7 +334,7 @@ def main():
         
         counter = 0
         print('performing an epoch of training...')
-        for c in chunks(indices, 64):
+        for c in chunks(indices, 99):
             optimizer.zero_grad()
             
             x1 = X1[c,::].to(device)
@@ -364,8 +364,7 @@ def main():
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
             
-            if (counter + 1) % 5 == 0:
-                print('training loss: {0}...'.format(np.mean(losses)))
+            print(loss.item())
                 
             counter += 1
             
