@@ -208,6 +208,7 @@ def main():
         
     for ix in range(int(args.n_steps)):
         viz_dir_ = os.path.join(viz_dir, 'step{0:03d}'.format(ix))
+        os.system('mkdir -p {}'.format(viz_dir_))
         
         model.eval()
         
