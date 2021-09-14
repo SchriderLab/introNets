@@ -252,7 +252,7 @@ def main():
                 for c in chunks(list(range(x1.shape[0])), 100):
                     x1_ = x1[c,::].to(device)
                     x2_ = x2[c,::].to(device)
-                    target = torch.LongTensor(np.zeros(100)).to(device)
+                    target = torch.LongTensor(np.zeros(x1_.shape[0])).to(device)
                     
                     with torch.no_grad():
                         y_pred = model(x1_, x2_)
