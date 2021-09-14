@@ -616,7 +616,7 @@ class NestedUNetIv3(nn.Module):
         
         output = self.final(x0_3)
         
-        return self.out(output)
+        return output
 
 # https://arxiv.org/pdf/1807.10165.pdf
 class NestedUNet(nn.Module):
@@ -628,7 +628,7 @@ class NestedUNet(nn.Module):
         self.deep_supervision = deep_supervision
 
         self.pool = nn.MaxPool2d(2, 2)
-        self.up = nn.Upsample(scale_factor = 4.413793103448276, mode='bilinear', align_corners=True)
+        self.up = nn.Upsample(scale_factor = 2, mode='bilinear', align_corners=True)
 
         self.conv0_0 = VGGBlock(input_channels, nb_filter[0], nb_filter[0])
         self.conv1_0 = VGGBlock(nb_filter[0], nb_filter[1], nb_filter[1])
