@@ -8,6 +8,10 @@ from torch.nn import CrossEntropyLoss, KLDivLoss, NLLLoss, SmoothL1Loss, BCELoss
 import torch
 
 from torch import nn
+import matplotlib
+matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
 
 import torch.optim as optim
 from torch.optim.lr_scheduler import ReduceLROnPlateau
@@ -190,7 +194,10 @@ def main():
     T = float(args.T)
 
     odir = os.path.join(args.odir, 'sims')
+    viz_dir = os.path.join(args.odir, 'viz')
+    
     os.system('mkdir -p {}'.format(odir))
+    os.system('mkdir -p {}'.format(viz_dir))
     
     criterion = NLLLoss()
     
@@ -200,6 +207,8 @@ def main():
     history['disc_loss'] = []
         
     for ix in range(int(args.n_steps)):
+        viz_dir_ = os.path.join(viz_dir, 'step{0:03d}'.format(ix))
+        
         model.eval()
         
         print('on step {}...'.format(ix))
@@ -213,6 +222,8 @@ def main():
 
         for k in range(new_theta.shape[0]):
             accepted = False
+            
+            
             while not accepted:
                 new_theta = theta[k] + np.random.normal(0, 1./12. * T, size = theta.shape[1])
                 new_theta = np.clip(new_theta, 0, 1)
@@ -249,6 +260,7 @@ def main():
                 p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
                 
                 ys = []
+                losses = []
                 for c in chunks(list(range(x1.shape[0])), 100):
                     x1_ = x1[c,::].to(device)
                     x2_ = x2[c,::].to(device)
@@ -256,13 +268,19 @@ def main():
                     
                     with torch.no_grad():
                         y_pred = model(x1_, x2_)
+                        losses.extend(list(criterion(y_pred, target, reduction = None).detach().cpu().numpy().flatten()))
                         
                         # log probability of real classificiation
                         y_ = -y_pred.detach().cpu().numpy()[:,1]
                         
                         ys.extend(list(y_))
                 
+                fig, axes = plt.subplots(nrows = 2, sharex = True)
+                axes[0].hist(ys, bins = 35)
+                axes[1].hist(losses, bins = 35)
                 
+                plt.savefig(os.path.join(viz_dir_, 'prop_{}_hists.png'.format(k)), dpi = 100)
+                plt.close()
                 
                 if (k + 1) % 10 == 0:
                     print('on prop {}...'.format(k + 1))
@@ -287,7 +305,6 @@ def main():
             theta[k] = copy.copy(new_theta)
     
             l[k] = np.mean(ys)
-    
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
@@ -348,7 +365,10 @@ def main():
                 
             counter += 1
             
-            
+        plt.hist(losses, bins = 35)
+        plt.savefig(os.path.join(viz_dir_, 'disc_losses.png'), dpi = 100)
+        plt.close()
+                    
         print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
         
         history['disc_loss'].append(np.mean(losses))
