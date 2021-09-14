@@ -193,6 +193,8 @@ def main():
     odir = os.path.join(args.odir, 'sims')
     os.system('mkdir -p {}'.format(odir))
     
+    criterion = NLLLoss()
+    
     history = dict()
     history['step'] = []
     history['gen_loss'] = []
@@ -217,7 +219,7 @@ def main():
             new_theta = np.clip(new_theta, 0, 1)
 
             for k in range(new_theta.shape[0]):
-                x = simulate(new_theta[k], 1000)
+                x = simulate(new_theta[k], 100)
                 
                 writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
         
@@ -250,12 +252,14 @@ def main():
                 for c in chunks(list(range(x1.shape[0])), 100):
                     x1_ = x1[c,::].to(device)
                     x2_ = x2[c,::].to(device)
+                    target = torch.LongTensor(np.zeros(100)).to(device)
                     
                     with torch.no_grad():
-                        y_pred = model(x1_, x2_).detach().cpu().numpy()
+                        y_pred = model(x1_, x2_)
+                        print(criterion(target, y_pred).item())
                         
                         # log probability of real classificiation
-                        y_ = -y_pred[:,1]
+                        y_ = -y_pred.detach().cpu().numpy()[:,1]
                         
                         ys.extend(list(y_))
                 
@@ -300,7 +304,6 @@ def main():
         # training phase
         model.train()
         
-        criterion = NLLLoss()
         optimizer = optim.Adam(model.parameters(), lr = 0.001)
         
         losses = []
