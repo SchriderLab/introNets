@@ -225,6 +225,8 @@ def main():
             
             
             while not accepted:
+                criterion = nn.NLLLoss(reduction = 'none')
+                
                 new_theta = theta[k] + np.random.normal(0, 1./12. * T, size = theta.shape[1])
                 new_theta = np.clip(new_theta, 0, 1)
                 
@@ -268,7 +270,7 @@ def main():
                     
                     with torch.no_grad():
                         y_pred = model(x1_, x2_)
-                        losses.extend(list(criterion(y_pred, target, reduction = None).detach().cpu().numpy().flatten()))
+                        losses.extend(list(criterion(y_pred, target).detach().cpu().numpy().flatten()))
                         
                         # log probability of real classificiation
                         y_ = -y_pred.detach().cpu().numpy()[:,1]
@@ -291,7 +293,7 @@ def main():
                 if np.mean(ys) < l[k]:
                     accepted = True
                 else:
-                    p = np.mean(ys) / l[k] * T
+                    p = (l[k] / np.mean(ys)) * T
                     
                     if p > 1:
                         accepted = True
@@ -322,7 +324,7 @@ def main():
         
         # training phase
         model.train()
-        
+        criterion = nn.NLLLoss()
         optimizer = optim.Adam(model.parameters(), lr = 0.001)
         
         losses = []
