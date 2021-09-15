@@ -219,7 +219,11 @@ def main():
         
         new_theta = theta + np.random.normal(0, 1./12. * T, size = theta.shape)
         new_theta = np.clip(new_theta, 0, 1)
+        
+        indices = []
+        c = 0
 
+        print('simulating and predicting...')
         for k in range(new_theta.shape[0]):
             accepted = False
             
@@ -228,8 +232,6 @@ def main():
                 
                 new_theta = theta[k] + np.random.normal(0, 1./12. * T, size = theta.shape[1])
                 new_theta = np.clip(new_theta, 0, 1)
-                
-                print('simulating and prediciting on new proposal {}...'.format(k))
             
                 x = simulate(new_theta, 100)
                 
@@ -253,8 +255,6 @@ def main():
                 x1, x2, y1, y2, params = load_data_dros(ms, anc)
                 x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
                 x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
-                
-                print(x1.shape, x2.shape)
                 
                 if len(x1.shape) != 4:
                     continue
@@ -284,11 +284,7 @@ def main():
                 
                 plt.savefig(os.path.join(viz_dir_, 'prop_{}_hists.png'.format(k)), dpi = 100)
                 plt.close()
-                
-                if (k + 1) % 10 == 0:
-                    print('on prop {}...'.format(k + 1))
         
-                print('new -ll: {0}, vs. {1}'.format(np.mean(ys), l[k]))
                 if np.mean(ys) < l[k]:
                     accepted = True
                 else:
@@ -301,28 +297,23 @@ def main():
                             accepted = True
                             
                     
-            print('accepted a new theta...')
-            print(np.mean(losses))
             theta[k] = copy.copy(new_theta)
     
             l[k] = np.mean(ys)
             
             X1.append(x1)
             X2.append(x2)
+            
+            indices.append(range(c, c + x1.shape[0]))
+            c += x1.shape[0]
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
-        
-        history['step'].append(ix)
-        history['gen_loss'].append(np.mean(l))
                 
         T -= 0.02
         
         X1 = torch.cat(X1)
         X2 = torch.cat(X2)
-        
-        indices = list(range(X1.shape[0]))
-        random.shuffle(indices)
         
         # training phase
         model.train()
@@ -333,7 +324,9 @@ def main():
         
         counter = 0
         print('performing an epoch of training...')
-        for c in chunks(indices, 99):
+        for k in range(len(indices)):
+            c = indices[k]
+            
             optimizer.zero_grad()
             
             x1 = X1[c,::].to(device)
@@ -355,15 +348,15 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.exp(y_pred.detach().cpu().numpy())
+            y_pred = y_pred.detach().cpu().numpy()
             y = y.detach().cpu().numpy()
+            
+            l[k] = -np.mean(y_pred[:,1])
 
             y_pred = np.argmax(y_pred, axis=1)
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
-            
-            print(loss.item())
                 
             counter += 1
             
@@ -371,9 +364,12 @@ def main():
         plt.savefig(os.path.join(viz_dir_, 'disc_losses.png'), dpi = 100)
         plt.close()
                     
-        print('have {0} as the new loss and {1} acc as the loss of the discriminator...'.format(np.mean(losses), np.mean(accuracies)))
+        print('have {0} as the new disc loss and {1} acc...'.format(np.mean(losses), np.mean(accuracies)))
+        print('have {} as the new gen loss.'.format(np.mean(l)))
         
         history['disc_loss'].append(np.mean(losses))
+        history['step'].append(ix)
+        history['gen_loss'].append(np.mean(l))
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, 'history.csv'), index = False)
