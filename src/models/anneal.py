@@ -221,7 +221,7 @@ def main():
         new_theta = np.clip(new_theta, 0, 1)
         
         indices = []
-        c = 0
+        c_ = 0
 
         print('simulating and predicting...')
         for k in range(new_theta.shape[0]):
@@ -304,8 +304,8 @@ def main():
             X1.append(x1)
             X2.append(x2)
             
-            indices.append(range(c, c + x1.shape[0]))
-            c += x1.shape[0]
+            indices.append(range(c_, c_ + x1.shape[0]))
+            c_ += x1.shape[0]
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
