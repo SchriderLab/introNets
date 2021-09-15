@@ -256,6 +256,9 @@ def main():
                 
                 print(x1.shape, x2.shape)
                 
+                if len(x1.shape) != 4:
+                    continue
+                
                 # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                 p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
                 
@@ -317,8 +320,6 @@ def main():
         
         X1 = torch.cat(X1)
         X2 = torch.cat(X2)
-        
-        print(X1.shape, X2.shape)
         
         indices = list(range(X1.shape[0]))
         random.shuffle(indices)
