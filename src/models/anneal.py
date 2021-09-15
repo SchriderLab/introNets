@@ -252,7 +252,11 @@ def main():
                 ms = os.path.join(odir, 'mig.msOut')
                 anc = os.path.join(odir, 'out.anc')
                 
-                x1, x2, y1, y2, params = load_data_dros(ms, anc)
+                try:
+                    x1, x2, y1, y2, params = load_data_dros(ms, anc)
+                except:
+                    continue
+                
                 x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
                 x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
                 
