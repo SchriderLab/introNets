@@ -31,18 +31,15 @@ from data_functions import load_npz
 import pandas as pd
 
 bounds = dict()
-bounds[0] = (20., 150.) # theta
+bounds[0] = (1., 150.) # theta
 bounds[1] = (0.01, 0.35) # theta_rho
-bounds[2] = (5., 45.) # nu_ab
+bounds[2] = (1., 200.) # nu_ab
 bounds[3] = (0.01, 3.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
 bounds[6] = (0.01, 0.9) # T
-bounds[7] = (1., 10.) # alpha1
+bounds[7] = (-10., 10.) # alpha1
 bounds[8] = (-10, 10.) # alpha2
-
-bounds[2] = (5., 45.) # nu_ab
-bounds[3] = (0.01, 3.0) # nu_ba
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -205,6 +202,8 @@ def main():
     history['step'] = []
     history['gen_loss'] = []
     history['disc_loss'] = []
+    
+    optimizer = optim.Adam(model.parameters(), lr = 0.001)
         
     for ix in range(int(args.n_steps)):
         viz_dir_ = os.path.join(viz_dir, 'step{0:03d}'.format(ix))
@@ -327,7 +326,6 @@ def main():
         # training phase
         model.train()
         criterion = nn.NLLLoss()
-        optimizer = optim.Adam(model.parameters(), lr = 0.001)
         
         losses = []
         accuracies = []
