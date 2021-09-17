@@ -317,7 +317,7 @@ def main():
             c_ += x1.shape[0]
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
-        np.savez(os.path.join(args.odir, 'theta_{0:4d}.npz'.format(ix)), theta = theta_, l = np.array(l))
+        np.savez(os.path.join(args.odir, 'theta_{0:04d}.npz'.format(ix)), theta = theta_, l = np.array(l))
                 
         T -= 0.02
         
