@@ -263,6 +263,9 @@ def main():
                 if len(x1.shape) != 4:
                     continue
                 
+                if x1.shape[0] < 2:
+                    continue
+                
                 # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                 p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
                 
