@@ -144,6 +144,8 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--N", default = "100")
     parser.add_argument("--T", default = "1.0")
+    
+    parser.add_argument("--var", default = "0.02")
     args = parser.parse_args()
 
     if args.verbose:
@@ -217,7 +219,7 @@ def main():
         X1 = []
         X2 = []
         
-        new_theta = theta + np.random.normal(0, 1./12. * T, size = theta.shape)
+        new_theta = theta + np.random.normal(0, float(args.var) * T, size = theta.shape)
         new_theta = np.clip(new_theta, 0, 1)
         
         indices = []
