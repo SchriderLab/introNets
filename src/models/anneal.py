@@ -53,6 +53,7 @@ import sys
 from data_functions import load_data_dros
 
 import random
+np.set_printoptions(suppress=True)
 
 def get_real_batch(Xs, batch_size = 64, n_sites = 128):
     x1 = []
@@ -219,25 +220,29 @@ def main():
         X1 = []
         X2 = []
         
-        new_theta = theta + np.random.normal(0, float(args.var) * T, size = theta.shape)
-        new_theta = np.clip(new_theta, 0, 1)
-        
         indices = []
         c_ = 0
 
         print('simulating and predicting...')
-        for k in range(new_theta.shape[0]):
+        for k in range(theta.shape[0]):
             accepted = False
+            print('on proposal {0} or {1}...'.format(k + 1, theta.shape[0]))
+            print('loss: {}'.format(l[k]))
             
             while not accepted:
                 losses = []
                 proposals = []
                 
+                print('current theta:')
+                print(theta[k])
                 for j in range(10):
                     criterion = nn.NLLLoss(reduction = 'none')
                     
                     new_theta = theta[k] + np.random.normal(0, float(args.var) * T, size = theta.shape[1])
                     new_theta = np.clip(new_theta, 0, 1)
+                    
+                    print('trying:')
+                    print(new_theta)
                 
                     x = simulate(new_theta, 100)
                     
@@ -262,7 +267,8 @@ def main():
           
                     x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
                     x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
-                    print(x1.shape)
+                    
+                    print('have {} valid sims...'.format(x1.shape[0]))
             
                     # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                     p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
@@ -275,12 +281,13 @@ def main():
                         
                         with torch.no_grad():
                             y_pred = model(x1_, x2_)
-                            losses.extend(list(criterion(y_pred, target).detach().cpu().numpy().flatten()))
                             
                             # log probability of real classificiation
                             y_ = -y_pred.detach().cpu().numpy()[:,1]
                             
                             ys.extend(list(y_))
+                    
+                    print('loss: {}'.format(np.mean(ys)))
                     
                     losses.append(np.mean(ys))
                     proposals.append(new_theta)
@@ -302,7 +309,7 @@ def main():
                     
             theta[k] = copy.copy(new_theta)
     
-            l[k] = np.mean(ys)
+            l[k] = np.min(losses)
             
             X1.append(x1)
             X2.append(x2)
