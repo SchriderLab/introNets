@@ -33,7 +33,7 @@ import pandas as pd
 bounds = dict()
 bounds[0] = (1., 150.) # theta
 bounds[1] = (0.01, 0.35) # theta_rho
-bounds[2] = (0.1., 200.) # nu_ab
+bounds[2] = (0.1, 200.) # nu_ab
 bounds[3] = (0.001, 1.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
