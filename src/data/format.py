@@ -63,7 +63,7 @@ def main():
             try:
                 x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
             except:
-                pass
+                continue
             
             X1.extend(x1)
             X2.extend(x2)
