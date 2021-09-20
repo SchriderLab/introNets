@@ -276,7 +276,6 @@ def main():
                     p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
                     
                     ys = []
-                    losses = []
                     for c in chunks(list(range(x1.shape[0])), 100):
                         x1_ = x1[c,::].to(device)
                         x2_ = x2[c,::].to(device)
