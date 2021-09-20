@@ -230,74 +230,76 @@ def main():
             accepted = False
             
             while not accepted:
-                criterion = nn.NLLLoss(reduction = 'none')
-                
-                new_theta = theta[k] + np.random.normal(0, 1./12. * T, size = theta.shape[1])
-                new_theta = np.clip(new_theta, 0, 1)
-            
-                x = simulate(new_theta, 100)
-                
-                writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
-        
-                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(x), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-                sys.stdout.flush()
-                
-                p = os.popen(cmd)
-                lines = p.readlines()
-                
-                f = open(os.path.join(odir, 'mig.msOut'), 'w')
-                for line in lines:
-                    f.write(line)
-                    
-                f.close()
-                
-                ms = os.path.join(odir, 'mig.msOut')
-                anc = os.path.join(odir, 'out.anc')
-                
-                try:
-                    x1, x2, y1, y2, params = load_data_dros(ms, anc)
-                except:
-                    continue
-                
-                x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
-                x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
-                
-                if len(x1.shape) != 4:
-                    continue
-                
-                if x1.shape[0] < 2:
-                    continue
-                
-                # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
-                p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-                
-                ys = []
                 losses = []
-                for c in chunks(list(range(x1.shape[0])), 100):
-                    x1_ = x1[c,::].to(device)
-                    x2_ = x2[c,::].to(device)
-                    target = torch.LongTensor(np.zeros(x1_.shape[0])).to(device)
+                proposals = []
+                
+                for j in range(10):
+                    criterion = nn.NLLLoss(reduction = 'none')
                     
-                    with torch.no_grad():
-                        y_pred = model(x1_, x2_)
-                        losses.extend(list(criterion(y_pred, target).detach().cpu().numpy().flatten()))
-                        
-                        # log probability of real classificiation
-                        y_ = -y_pred.detach().cpu().numpy()[:,1]
-                        
-                        ys.extend(list(y_))
+                    new_theta = theta[k] + np.random.normal(0, float(args.var) * T, size = theta.shape[1])
+                    new_theta = np.clip(new_theta, 0, 1)
                 
-                fig, axes = plt.subplots(nrows = 2, sharex = True)
-                axes[0].hist(ys, bins = 35)
-                axes[1].hist(losses, bins = 35)
+                    x = simulate(new_theta, 100)
+                    
+                    writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
+            
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(x), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+                    sys.stdout.flush()
+                    
+                    p = os.popen(cmd)
+                    lines = p.readlines()
+                    
+                    f = open(os.path.join(odir, 'mig.msOut'), 'w')
+                    for line in lines:
+                        f.write(line)
+                        
+                    f.close()
+                    
+                    ms = os.path.join(odir, 'mig.msOut')
+                    anc = os.path.join(odir, 'out.anc')
+                    
+                    try:
+                        x1, x2, y1, y2, params = load_data_dros(ms, anc)
+                    except:
+                        continue
+                    
+                    x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
+                    x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
+                    
+                    if len(x1.shape) != 4:
+                        continue
+                    
+                    if x1.shape[0] < 2:
+                        continue
+                    
+                    # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
+                    p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
+                    
+                    ys = []
+                    losses = []
+                    for c in chunks(list(range(x1.shape[0])), 100):
+                        x1_ = x1[c,::].to(device)
+                        x2_ = x2[c,::].to(device)
+                        target = torch.LongTensor(np.zeros(x1_.shape[0])).to(device)
+                        
+                        with torch.no_grad():
+                            y_pred = model(x1_, x2_)
+                            losses.extend(list(criterion(y_pred, target).detach().cpu().numpy().flatten()))
+                            
+                            # log probability of real classificiation
+                            y_ = -y_pred.detach().cpu().numpy()[:,1]
+                            
+                            ys.extend(list(y_))
+                    
+                    losses.append(np.mean(ys))
+                    
                 
-                plt.savefig(os.path.join(viz_dir_, 'prop_{}_hists.png'.format(k)), dpi = 100)
-                plt.close()
-        
-                if np.mean(ys) < l[k]:
+                new_theta = proposals[np.argmin(losses)]
+                loss = np.min(losses)
+                if loss < l[k]:
                     accepted = True
                 else:
-                    p = (l[k] / np.mean(ys)) * T
+                    p = (l[k] / loss) * T
                     
                     if p > 1:
                         accepted = True
