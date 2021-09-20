@@ -319,8 +319,8 @@ def main():
             X1.append(x1s[np.argmin(losses)])
             X2.append(x2s[np.argmin(losses)])
             
-            indices.append(range(c_, c_ + x1.shape[0]))
-            c_ += x1.shape[0]
+            indices.append(range(c_, c_ + X1[-1].shape[0]))
+            c_ += X1[-1].shape[0]
     
         theta_ = np.concatenate([simulate(theta[k], 1) for k in range(theta.shape[0])])
         np.savez(os.path.join(args.odir, 'theta_{0:04d}.npz'.format(ix)), theta = theta_, l = np.array(l))
