@@ -292,6 +292,7 @@ def main():
                             ys.extend(list(y_))
                     
                     losses.append(np.mean(ys))
+                    proposals.append(new_theta)
                     
                 
                 new_theta = proposals[np.argmin(losses)]
