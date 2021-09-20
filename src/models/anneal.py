@@ -233,6 +233,9 @@ def main():
                 losses = []
                 proposals = []
                 
+                x1s = []
+                x2s = []
+                
                 print('current theta:')
                 print(theta[k])
                 for j in range(10):
@@ -241,9 +244,7 @@ def main():
                     new_theta = theta[k] + np.random.normal(0, float(args.var) * T, size = theta.shape[1])
                     new_theta = np.clip(new_theta, 0, 1)
                     
-                    print('trying:')
-                    print(new_theta)
-                
+    
                     x = simulate(new_theta, 100)
                     
                     writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
@@ -268,7 +269,8 @@ def main():
                     x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
                     x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
                     
-                    print('have {} valid sims...'.format(x1.shape[0]))
+                    x1s.append(x1)
+                    x2s.append(x2)
             
                     # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                     p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
@@ -287,7 +289,6 @@ def main():
                             
                             ys.extend(list(y_))
                     
-                    print('loss: {}'.format(np.mean(ys)))
                     
                     losses.append(np.mean(ys))
                     proposals.append(new_theta)
@@ -305,14 +306,16 @@ def main():
                     else:
                         if np.random.choice([0, 1], p = [1 - p, p]) == 1:
                             accepted = True
-                            
+                
+                print('new_theta:')
+                print(new_theta)
                     
             theta[k] = copy.copy(new_theta)
     
             l[k] = np.min(losses)
             
-            X1.append(x1)
-            X2.append(x2)
+            X1.append(x1s[np.argmin(losses)])
+            X2.append(x2s[np.argmin(losses)])
             
             indices.append(range(c_, c_ + x1.shape[0]))
             c_ += x1.shape[0]
