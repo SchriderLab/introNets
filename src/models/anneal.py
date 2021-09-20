@@ -258,11 +258,11 @@ def main():
                     ms = os.path.join(odir, 'mig.msOut')
                     anc = os.path.join(odir, 'out.anc')
                     
-                    
                     x1, x2, y1, y2, params = load_data_dros(ms, anc)
           
                     x1 = torch.FloatTensor(np.expand_dims(np.array(x1), axis = 1))
                     x2 = torch.FloatTensor(np.expand_dims(np.array(x2), axis = 1))
+                    print(x1.shape)
             
                     # theta, theta_rho, nu_ab, nu_ba, alpha1, alpha2, T, migTime, migProb
                     p = params[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
