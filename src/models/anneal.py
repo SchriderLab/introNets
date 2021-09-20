@@ -33,13 +33,13 @@ import pandas as pd
 bounds = dict()
 bounds[0] = (1., 150.) # theta
 bounds[1] = (0.01, 0.35) # theta_rho
-bounds[2] = (1., 200.) # nu_ab
-bounds[3] = (0.01, 3.0) # nu_ba
+bounds[2] = (0.1., 200.) # nu_ab
+bounds[3] = (0.001, 1.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
 bounds[6] = (0.01, 15.) # T
 bounds[7] = (-10., 10.) # alpha1
-bounds[8] = (-10, 10.) # alpha2
+bounds[8] = (-20, 10.) # alpha2
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -307,8 +307,10 @@ def main():
                         if np.random.choice([0, 1], p = [1 - p, p]) == 1:
                             accepted = True
                 
-                print('new_theta:')
-                print(new_theta)
+            print('new_theta:')
+            print(new_theta)
+            
+            print('new_loss: {}'.format(np.min(losses)))
                     
             theta[k] = copy.copy(new_theta)
     
