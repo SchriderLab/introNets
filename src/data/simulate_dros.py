@@ -18,7 +18,7 @@ SIZE_B = 14
 N_SITES = 10000
 
 bounds = dict()
-bounds[0] = (20., 150.) # theta
+bounds[0] = (1., 150.) # theta
 bounds[1] = (0.01, 0.25) # theta_rho
 bounds[2] = (5., 45.) # nu_ab
 bounds[3] = (0.01, 3.0) # nu_ba
@@ -69,7 +69,7 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     nu1 /= Nref
     nu2 /= Nref
     
-    T /= (4*Nref / 15)
+    T /= (4*Nref)
     
     alpha1 = np.log(nu1/nu1_0)/T
     alpha2 = np.log(nu2/nu2_0)/T
