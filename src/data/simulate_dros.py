@@ -209,6 +209,7 @@ def main():
             
             # make some perturbed versions of the sims
             P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
+            print(P_)
             
             for ij in range(10):
                 P_ = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
