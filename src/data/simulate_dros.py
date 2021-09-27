@@ -212,14 +212,14 @@ def main():
             print(P_)
             
             for ij in range(10):
-                P_ = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
+                x = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
             
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                 counter += 1
                 
                 os.system('mkdir -p {}'.format(odir))
             
-                writeTbsFile(P_, os.path.join(odir, 'mig.tbs'))
+                writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
             
                 cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
                 print('simulating via the recommended parameters...')
