@@ -19,13 +19,14 @@ N_SITES = 10000
 
 bounds = dict()
 bounds[0] = (1., 150.) # theta
-bounds[1] = (0.01, 0.25) # theta_rho
-bounds[2] = (5., 45.) # nu_ab
-bounds[3] = (0.01, 3.0) # nu_ba
+bounds[1] = (0.01, 0.35) # theta_rho
+bounds[2] = (0.1, 200.) # nu_ab
+bounds[3] = (0.001, 1.0) # nu_ba
 bounds[4] = (0.01, None) # migTime
-bounds[5] = (0.01, 0.7) # migProb
-bounds[6] = (0.3, 0.8) # T
-bounds[7] = (15000., 80.)
+bounds[5] = (0.01, 1.0) # migProb
+bounds[6] = (0.01, 15.) # T
+bounds[7] = (-10., 10.) # alpha1
+bounds[8] = (-20, 10.) # alpha2
 
 params = dict()
 params['theta'] = 68.29691232
@@ -69,7 +70,7 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     nu1 /= Nref
     nu2 /= Nref
     
-    T /= (4*Nref)
+    T /= (4*Nref / 15.)
     
     alpha1 = np.log(nu1/nu1_0)/T
     alpha2 = np.log(nu2/nu2_0)/T
@@ -82,6 +83,58 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
     
     return p
+
+def normalize(p):
+    rho = p[1]
+    theta = p[0]
+    
+    theta_rho = theta / rho
+    
+    # theta
+    p[0] = (p[0] - bounds[0][0]) / (bounds[0][1] - bounds[0][0])
+    p[1] = (theta_rho - bounds[1][0]) / (bounds[1][1] - bounds[1][0])
+    
+    # nu_a
+    p[2] = (p[2] - bounds[2][0]) / (bounds[2][1] - bounds[2][0])
+    # nu_b
+    p[3] = (p[3] - bounds[3][0]) / (bounds[3][1] - bounds[3][0])
+    
+    # alpha1
+    p[4] = (p[4] - bounds[7][0]) / (bounds[7][1] - bounds[7][0])
+    # alpha2
+    p[5] = (p[5] - bounds[8][0]) / (bounds[8][1] - bounds[8][0])
+    
+    # migProb
+    p[8] = ((1 - p[8]) - bounds[5][0]) / (bounds[5][1] - bounds[5][0])
+    
+    # T
+    p[6] = (p[6] - bounds[6][0]) / (bounds[6][1] - bounds[6][0])
+
+    return p
+
+def simulate(x, n):    
+    theta = (bounds[0][1] - bounds[0][0]) * x[0] + bounds[0][0]
+    theta_rho = (bounds[1][1] - bounds[1][0]) * x[1] + bounds[1][0]
+    
+    rho = theta / theta_rho
+    nu_a = (bounds[2][1] - bounds[2][0]) * x[2] + bounds[2][0]
+    nu_b = (bounds[3][1] - bounds[3][0]) * x[3] + bounds[3][0]
+    
+
+    T = (bounds[6][1] - bounds[6][0]) * x[6] + bounds[6][0]
+    
+    alpha1 = (bounds[7][1] - bounds[7][0]) * x[4] + bounds[7][0]
+    alpha2 = (bounds[8][1] - bounds[8][0]) * x[5] + bounds[8][0]
+
+    b_ = list(bounds[4])
+    b_[1] = T / 4.
+    migTime = (b_[1] - b_[0]) * x[7] + b_[0]
+    migProb = (bounds[5][1] - bounds[5][0]) * x[8] + bounds[5][0]
+
+    p = np.tile(np.array([theta, rho, nu_a, nu_b, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
+
+    return p
+
 
 def writeTbsFile(params, outFileName):
     with open(outFileName, "w") as outFile:
@@ -135,7 +188,7 @@ def main():
     
     for ix in range(df.shape[0]):
         for p_ in p:
-
+            # simulate the selected parameters
             rho, migTime, migProb = p_
             
             P = parameters_df(df, ix, rho, migTime, migProb, n)
@@ -154,7 +207,27 @@ def main():
             fout = os.path.join(odir, 'mig.msOut')
             os.system(slurm_cmd.format(fout, cmd))
             
-
+            # make some perturbed versions of the sims
+            P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
+            
+            for ij in range(10):
+                P_ = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
+            
+                odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+                counter += 1
+                
+                os.system('mkdir -p {}'.format(odir))
+            
+                writeTbsFile(P_, os.path.join(odir, 'mig.tbs'))
+            
+                cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+                print('simulating via the recommended parameters...')
+                sys.stdout.flush()
+            
+                fout = os.path.join(odir, 'mig.msOut')
+                os.system(slurm_cmd.format(fout, cmd))
+                
+            
 if __name__ == '__main__':
     main()
 
