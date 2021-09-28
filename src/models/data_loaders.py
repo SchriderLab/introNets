@@ -181,6 +181,7 @@ class DisDataGenerator(object):
         
         self.done = False
         self.done_val = False
+        self.batch_size = batch_size
         
         self.on_epoch_end()
         
