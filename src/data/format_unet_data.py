@@ -79,19 +79,8 @@ class Formatter(object):
         y1 = y1[i1, :]
         y2 = y2[i2, :]
         
-        y = np.vstack([y1, y2])
         x = np.vstack([x1, x2])
-        
-        x, ii = seriate_spectral(x.T)
-        x = x.T
-        
-        x1 = x[:128, :]
-        x2 = x[128:, :]
-        
-        y = y[:,ii]
-        y1 = y[:128, :]
-        y2 = y[128:, :]
-            
+
         return x, y2
             
             
