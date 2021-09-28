@@ -182,6 +182,8 @@ class DisDataGenerator(object):
         self.done = False
         self.done_val = False
         
+        self.on_epoch_end()
+        
     def on_epoch_end(self):
         self.ix_s = 0
         self.Xs_val = [[], []]
