@@ -234,13 +234,15 @@ class DisDataGenerator(object):
         # real data
         X = self.Xr[np.random.choice(range(len(self.Xr)))]
         
-        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), 4, replace = False)
+        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), self.batch_size // 2, replace = False)
             
         for ii in k:
             X1.append(np.expand_dims(X[:20, ii: ii + X1[-1].shape[-1]], axis = 0))
             X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
             
             y.append(1)
+            
+        return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
             
     def get_val_batch(self):
         X1 = []
@@ -261,13 +263,15 @@ class DisDataGenerator(object):
         # real data
         X = self.Xr_val[np.random.choice(range(len(self.Xr_val)))]
         
-        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), 4, replace = False)
+        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), self.batch_size // 2, replace = False)
             
         for ii in k:
             X1.append(np.expand_dims(X[:20, ii: ii + X1[-1].shape[-1]], axis = 0))
             X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
             
             y.append(1)
+            
+        return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
         
 
 class H5DisDataGenerator(object):
