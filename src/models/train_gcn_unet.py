@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os
 import argparse
 import logging
@@ -16,8 +17,8 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import PermInvariantClassifier
-from data_loaders import H5DisDataGenerator, DisDataGenerator
+from layers import NestedUNet
+from data_loaders import H5UDataGenerator
 import h5py
 
 import numpy as np
@@ -27,22 +28,27 @@ import pandas as pd
 # where to insert certain parts of the script
 # ${imports}
 
+import matplotlib
+matplotlib.use('Agg')
 
+import matplotlib.pyplot as plt
+from layers import GCNUNet
+from data_loaders import GCNDataGenerator
 
 def parse_args():
     # Argument Parser
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--idir_sims", default = "None")
-    parser.add_argument("--idir_real", default = "None")
+    parser.add_argument("--ifile", default = "BA_10e6_seriated.hdf5")
+    parser.add_argument("--idir", default = "None")
 
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
 
     parser.add_argument("--devices", default = "0")
     parser.add_argument("--n_plateau", default = "5")
     parser.add_argument("--rl_factor", default = "0.5")
-    parser.add_argument("--n_epochs", default = "10")
+    parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
 
     parser.add_argument("--batch_size", default = "16")
@@ -75,7 +81,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = PermInvariantClassifier()
+    model = GCNUNet()
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -85,24 +91,16 @@ def main():
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
-
-    # define the generator
-    print('reading data keys...')
-    generator = DisDataGenerator(args.idir_sims, args.idir_real)
-
-    criterion = NLLLoss()
+        
+    generator = GCNDataGenerator(args.idir)
+    
+    criterion = nn.SmoothL1Loss()
+    
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
-    scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
+    early_count = 0
+    #scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
     min_val_loss = np.inf
-    early_count = 0
-
-    history = dict()
-    history['epoch'] = []
-    history['loss'] = []
-    history['val_loss'] = []
-    # ${define_extra_history}
-
     print('training...')
     for ix in range(int(args.n_epochs)):
         model.train()
@@ -110,17 +108,21 @@ def main():
         losses = []
         accuracies = []
 
-        ij = 0
-        while not generator.done:
+        for ij in range(generator.length):
             optimizer.zero_grad()
-            x1, x2, y = generator.get_batch()
-
-            x1 = x1.to(device)
-            x2 = x2.to(device)
+            try:
+                x, y, edges, batch = generator.get_batch()
+            except:
+                break
             
+            x = x.to(device)
             y = y.to(device)
+            edges = [u.to(device) for u in edges]
+            batch = batch.to(device)
 
-            y_pred = model(x1, x2)
+            y_pred = model(x, edges, batch)
+            #print(y.shape, y_pred.shape)
+
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -128,55 +130,63 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.exp(y_pred.detach().cpu().numpy())
-            y = y.detach().cpu().numpy()
-
-            y_pred = np.argmax(y_pred, axis=1)
+            y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
+            y = np.round(y.detach().cpu().numpy().flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
 
-            if (ij + 1) % 100 == 0:
+            if (ij + 1) % 1 == 0:
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
-                
-            ij += 1
 
         model.eval()
 
         val_losses = []
         val_accs = []
-        while not generator.val_done:
+        
+        Y = []
+        Y_pred = []
+        for step in range(generator.val_length):
             with torch.no_grad():
-                x1, x2, y = generator.get_val_batch()
+                try:
+                    x, y, edges, batch = generator.get_batch(val = True)
+                except:
+                    break
 
-                x1 = x1.to(device)
-                x2 = x2.to(device)
-                
+                x = x.to(device)
                 y = y.to(device)
+                edges = [u.to(device) for u in edges]
+                batch = batch.to(device)
     
-                y_pred = model(x1, x2)
+                y_pred = model(x, edges, batch)
 
                 loss = criterion(y_pred, y)
+                
                 # compute accuracy in CPU with sklearn
-                y_pred = np.exp(y_pred.detach().cpu().numpy())
-                y = y.detach().cpu().numpy()
-
-                y_pred = np.argmax(y_pred, axis=1)
-
+                y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
+                y = np.round(y.detach().cpu().numpy().flatten())
+                
+                Y.extend(y)
+                Y_pred.extend(y_pred)
+    
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y, y_pred))
                 val_losses.append(loss.detach().item())
 
+        fig, axes = plt.subplots(ncols = 2)
+
+        axes[0].scatter(Y, Y_pred, alpha = 0.6)
+        axes[0].plot([0, 0], [1, 1], color = 'k')
+        
+        axes[1].hist(np.array(Y_pred) - np.array(Y), bins = 35)
+        plt.savefig(os.path.join())
+        
         val_loss = np.mean(val_losses)
 
         logging.info(
             'root: Epoch {0}, got val loss of {1}, acc: {2} '.format(ix, val_loss, np.mean(val_accs)))
-
-        history['epoch'].append(ix)
-        history['loss'].append(np.mean(losses))
-        history['val_loss'].append(np.mean(val_losses))
         # ${save_extra_history}
 
         val_loss = np.mean(val_losses)
@@ -193,14 +203,9 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        scheduler.step(val_loss)
         generator.on_epoch_end()
-
-        df = pd.DataFrame(history)
-        df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
-
 
 if __name__ == '__main__':
     main()
-# -*- coding: utf-8 -*-
-
+        
+    
