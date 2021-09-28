@@ -169,8 +169,8 @@ class DisDataGenerator(object):
     def __init__(self, idir_sims, idir_real, batch_size = 64):
         self.Xr = [load_npz(os.path.join(idir_real, u)) for u in sorted(os.listdir(idir_real))]
         
-        self.Xr_val = self.Xs[-3:]
-        del self.Xs[-3:]
+        self.Xr_val = self.Xr[-3:]
+        del self.Xr[-3:]
         
         self.Xs_val = [[], []]
         
