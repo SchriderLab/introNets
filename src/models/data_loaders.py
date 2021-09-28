@@ -9,6 +9,13 @@ import random
 import torch
 import os, sys
 
+from torch.utils.data import Dataset
+from torch_geometric.data import Data
+import glob
+from sparsenn.models.gcn.topologies import knn_1d
+
+from data_functions import load_data_dros
+
 def load_npz(ifile):
     ifile = np.load(ifile)
     pop1_x = ifile['simMatrix'].T
@@ -26,6 +33,82 @@ def load_npz(ifile):
                 x[:,k] = 1 - x[:,k]
 
     return x
+
+class GCNDataGenerator(object):
+    def __init__(self, idir, batch_size = 8, val_prop = 0.05, k = 8):
+       
+        self.training = glob.glob(os.path.join(idir, '*/*.npz'))
+        
+        n_val = int(len(self.training) * val_prop)
+        random.shuffle(self.training)
+        
+        self.val = self.training[:n_val]
+        del self.training[:n_val]
+        
+        self.batch_size = batch_size
+        
+        self.on_epoch_end()
+        self.k = k
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+        
+    def on_epoch_end(self):
+        random.shuffle(self.training)
+        
+        self.ix = 0
+        self.val_ix = 0
+        
+    def get_element(self, val = False):
+        if val:
+            ifile = np.load(self.val[self.val_ix], allow_pickle = True)
+            self.val_ix += 1
+        else:
+            ifile = np.load(self.training[self.ix], allow_pickle = True)
+            self.ix += 1
+            
+        if len(ifile['y'].shape) == 0:
+            return self.get_element(val)
+        
+        y = np.mean(ifile['y'].T, axis = 1)
+        y = torch.FloatTensor(y.reshape(y.shape[0], 1))
+        
+        x = torch.FloatTensor(ifile['x'].T)
+        
+        return x, y
+        
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y = self.get_element(val)
+            
+            n = x.shape[0]
+            
+            if len(edges) == 0:
+                edges = knn_1d(n, k = self.k)
+            else:
+                _ = knn_1d(n, k = self.k)
+                edges = [torch.cat([edges[k], _[k] + current_node], dim = 1) for k in range(len(_))]
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(x)
+            ys.append(y)
+            
+            current_node += n
+            
+        x = torch.cat(xs)
+        y = torch.cat(ys)
+        
+        return x, y, edges, torch.LongTensor(batch)
+    
+    def __len__(self):
+        return self.length
 
 class H5UDataGenerator(object):
     def __init__(self, ifile, keys = None, val_prop = 0.05, batch_size = 16, chunk_size = 4):
@@ -81,6 +164,107 @@ class H5UDataGenerator(object):
             
         self.ix_val += self.n_per
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))
+        
+class DisDataGenerator(object):
+    def __init__(self, idir_sims, idir_real, batch_size = 64):
+        self.Xr = [load_npz(os.path.join(idir, u)) for u in sorted(os.listdir(idir))]
+        
+        self.Xr_val = self.Xs[-3:]
+        del self.Xs[-3:]
+        
+        self.Xs_val = [[], []]
+        
+        self.idirs = sorted([os.path.join(idir_sims, u) for u in os.listdir(idir_sims)])
+        self.Xs = None
+        
+        self.ix_s = 0
+        
+        self.done = False
+        self.done_val = False
+        
+    def on_epoch_end(self):
+        self.ix_s = 0
+        self.Xs_val = [[], []]
+        
+        self.read()
+        
+        self.done = False
+        self.done_val = False
+        
+    def read(self):
+        ms = os.path.join(self.idirs[self.ix_s], 'mig.msOut')
+        anc = os.path.join(self.idirs[self.ix_s], 'out.anc')
+        
+        x1, x2, y1, y2, params = load_data_dros(ms, anc)
+        self.x1s = x1
+        self.x2s = x2
+        
+        self.Xs_val[0].append(self.x1s[-100:])
+        self.Xs_val[1].append(self.x2s[-100:])
+        
+        del self.x1s[-100:]
+        del self.x2s[-100:]
+        
+        self.ix_s += 1
+        
+        if self.ix_s == len(self.idirs):
+            self.done = True
+        
+        
+    def get_batch(self):
+        X1 = []
+        X2 = []
+        y = []
+
+        if len(self.x1s) < self.batch_size // 2:
+            self.read()
+            return self.get_batch()
+            
+        X1.extend(self.x1s[:self.batch_size // 2])
+        X2.extend(self.x2s[:self.batch_size // 2])
+        
+        del self.x1s[:self.batch_size // 2]
+        del self.x2s[:self.batch_size // 2]
+        
+        y.extend([0 for u in range(self.batch_size // 2)])
+        
+        # real data
+        X = self.Xr[np.random.choice(range(len(self.Xr)))]
+        
+        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), 4, replace = False)
+            
+        for ii in k:
+            X1.append(np.expand_dims(X[:20, ii: ii + X1[-1].shape[-1]], axis = 0))
+            X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
+            
+            y.append(1)
+            
+    def get_val_batch(self):
+        X1 = []
+        X2 = []
+        y = []
+            
+        X1.extend(self.Xs_val[0][:self.batch_size // 2])
+        X2.extend(self.Xs_val[1][:self.batch_size // 2])
+        
+        del self.Xs_val[0][:self.batch_size // 2]
+        del self.Xs_val[1][:self.batch_size // 2]
+        
+        if len(self.Xs_val[0]) < self.batch_size // 2:
+            self.done_val = True
+        
+        y.extend([0 for u in range(self.batch_size // 2)])
+        
+        # real data
+        X = self.Xr_val[np.random.choice(range(len(self.Xr_val)))]
+        
+        k = np.random.choice(range(X.shape[1] - X1[-1].shape[-1]), 4, replace = False)
+            
+        for ii in k:
+            X1.append(np.expand_dims(X[:20, ii: ii + X1[-1].shape[-1]], axis = 0))
+            X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
+            
+            y.append(1)
         
 
 class H5DisDataGenerator(object):

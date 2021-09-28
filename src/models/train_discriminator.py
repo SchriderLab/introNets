@@ -17,7 +17,7 @@ import torch.distributed as dist
 import copy
 
 from layers import PermInvariantClassifier
-from data_loaders import H5DisDataGenerator
+from data_loaders import H5DisDataGenerator, DisDataGenerator
 import h5py
 
 import numpy as np
@@ -34,8 +34,8 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--ifile", default = "BA_10e6_seriated.hdf5")
-    parser.add_argument("--idir", default = "None")
+    parser.add_argument("--idir_sims", default = "None")
+    parser.add_argument("--idir_real", default = "None")
 
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
 
@@ -88,7 +88,7 @@ def main():
 
     # define the generator
     print('reading data keys...')
-    generator = H5DisDataGenerator(args.ifile, args.idir)
+    generator = DisDataGenerator(args.idir_sims, args.idir_real)
     
     l, vl = generator.get_lengths()
 
@@ -112,7 +112,8 @@ def main():
         losses = []
         accuracies = []
 
-        for ij in range(l):
+        ij = 0
+        while not generator.done:
             optimizer.zero_grad()
             x1, x2, y = generator.get_batch()
 
@@ -141,12 +142,14 @@ def main():
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
+                
+            ij += 1
 
         model.eval()
 
         val_losses = []
         val_accs = []
-        for step in range(vl):
+        while not generator.val_done:
             with torch.no_grad():
                 x1, x2, y = generator.get_val_batch()
 
