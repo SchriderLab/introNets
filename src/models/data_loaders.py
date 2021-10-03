@@ -223,8 +223,8 @@ class DisDataGenerator(object):
             self.read()
             return self.get_batch()
             
-        X1.extend(self.x1s[:self.batch_size // 2])
-        X2.extend(self.x2s[:self.batch_size // 2])
+        X1.extend([np.expand_dims(u, 0) for u in self.x1s[:self.batch_size // 2]])
+        X2.extend([np.expand_dims(u, 0) for u in self.x2s[:self.batch_size // 2]])
         
         del self.x1s[:self.batch_size // 2]
         del self.x2s[:self.batch_size // 2]
@@ -242,9 +242,6 @@ class DisDataGenerator(object):
             
             y.append(1)
             
-        print([u.shape for u in X1])
-        print([u.shape for u in X2])
-            
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
             
     def get_val_batch(self):
@@ -252,8 +249,8 @@ class DisDataGenerator(object):
         X2 = []
         y = []
             
-        X1.extend(self.Xs_val[0][:self.batch_size // 2])
-        X2.extend(self.Xs_val[1][:self.batch_size // 2])
+        X1.extend([np.expand_dims(u, 0) for u in self.Xs_val[0][:self.batch_size // 2]])
+        X2.extend([np.expand_dims(u, 0) for u in self.Xs_val[1][:self.batch_size // 2]])
         
         del self.Xs_val[0][:self.batch_size // 2]
         del self.Xs_val[1][:self.batch_size // 2]
