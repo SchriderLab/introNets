@@ -12,7 +12,7 @@ import os, sys
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
 import glob
-#from sparsenn.models.gcn.topologies import knn_1d
+from sparsenn.models.gcn.topologies import knn_1d
 
 from data_functions import load_data_dros
 
@@ -241,6 +241,9 @@ class DisDataGenerator(object):
             X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
             
             y.append(1)
+            
+        print([u.shape for u in X1])
+        print([u.shape for u in X2])
             
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
             
