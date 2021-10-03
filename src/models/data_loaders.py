@@ -198,7 +198,12 @@ class DisDataGenerator(object):
         ms = os.path.join(self.idirs[self.ix_s], 'mig.msOut')
         anc = os.path.join(self.idirs[self.ix_s], 'out.anc')
         
-        x1, x2, y1, y2, params = load_data_dros(ms, anc)
+        try:
+            x1, x2, y1, y2, params = load_data_dros(ms, anc)
+        except:
+            self.ix_s += 1
+            return self.read()
+        
         self.x1s = x1
         self.x2s = x2
         
