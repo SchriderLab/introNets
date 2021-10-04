@@ -35,7 +35,7 @@ def main():
     
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
     
-    cmd = 'sbatch -n 24 --mem=16G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --idir {0} --odir {1}"'
+    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --idir {0} --odir {1}"'
     for idir in idirs:
         cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]))
         os.system(cmd_)
