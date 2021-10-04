@@ -103,7 +103,7 @@ def main():
     history = dict()
     history['loss'] = []
     history['epoch'] = []
-    history['val loss'] = []
+    history['val_loss'] = []
 
     min_val_loss = np.inf
     print('training...')
