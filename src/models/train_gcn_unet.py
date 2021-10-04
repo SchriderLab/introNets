@@ -52,6 +52,7 @@ def parse_args():
     parser.add_argument("--n_early", default = "10")
 
     parser.add_argument("--batch_size", default = "16")
+    parser.add_argument("--k", default = "32")
     parser.add_argument("--loss", default = "bce")
     # ${args}
 
