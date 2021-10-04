@@ -92,8 +92,7 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = GCNDataGenerator(args.idir)
-    
+    generator = GCNDataGenerator(args.idir, k = int(args.k), batch_size = int(args.batch_size))
     criterion = nn.SmoothL1Loss()
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
@@ -163,25 +162,24 @@ def main():
                 y_pred = model(x, edges, batch)
 
                 loss = criterion(y_pred, y)
+                val_losses.append(loss.detach().item())
                 
                 # compute accuracy in CPU with sklearn
-                y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
-                y = np.round(y.detach().cpu().numpy().flatten())
+                y_pred = y_pred.detach().cpu().numpy().flatten()
+                y = y.detach().cpu().numpy().flatten()
                 
                 Y.extend(y)
                 Y_pred.extend(y_pred)
     
-                # append metrics for this epoch
-                val_accs.append(accuracy_score(y, y_pred))
-                val_losses.append(loss.detach().item())
 
         fig, axes = plt.subplots(ncols = 2)
 
-        axes[0].scatter(Y, Y_pred, alpha = 0.6)
+        axes[0].scatter(Y, Y_pred, alpha = 0.1)
         axes[0].plot([0, 0], [1, 1], color = 'k')
         
         axes[1].hist(np.array(Y_pred) - np.array(Y), bins = 35)
-        plt.savefig(os.path.join())
+        plt.savefig(os.path.join(args.odir, '{0}_{1:03d}.png'.format(args.tag, ix)), dpi = 100)
+        plt.close()
         
         val_loss = np.mean(val_losses)
 
