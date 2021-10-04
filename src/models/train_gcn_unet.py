@@ -141,7 +141,7 @@ def main():
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
 
-            if (ij + 5) % 1 == 0:
+            if (ij + 1) % 5 == 0:
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
