@@ -73,15 +73,6 @@ class Formatter(object):
         y1 = y[x1_indices, :]
         y2 = y[x2_indices, :]
         
-        x1, i1 = seriate_spectral(x1.T)
-        x2, i2 = seriate_spectral(x2.T)
-        
-        x1 = x1.T
-        x2 = x2.T
-    
-        y1 = y1[:, i1]
-        y2 = y2[:, i2]
-        
         x = np.vstack([x1, x2])
 
         return x, y2
