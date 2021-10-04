@@ -100,6 +100,11 @@ def main():
     early_count = 0
     #scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
+    history = dict()
+    history['loss'] = []
+    history['epoch'] = []
+    history['val loss'] = []
+
     min_val_loss = np.inf
     print('training...')
     for ix in range(int(args.n_epochs)):
@@ -136,12 +141,15 @@ def main():
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
 
-            if (ij + 1) % 1 == 0:
+            if (ij + 5) % 1 == 0:
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
 
         model.eval()
+        
+        history['epoch'].append(ix)
+        history['loss'].append(np.mean(losses))
 
         val_losses = []
         val_accs = []
@@ -171,18 +179,9 @@ def main():
                 
                 Y.extend(y)
                 Y_pred.extend(y_pred)
-    
-
-        fig, axes = plt.subplots(ncols = 2)
-
-        axes[0].scatter(Y, Y_pred, alpha = 0.1)
-        axes[0].plot([0, 0], [1, 1], color = 'k')
-        
-        axes[1].hist(np.array(Y_pred) - np.array(Y), bins = 35)
-        plt.savefig(os.path.join(args.odir, '{0}_{1:03d}.png'.format(args.tag, ix)), dpi = 100)
-        plt.close()
         
         val_loss = np.mean(val_losses)
+        history['val_loss'].append(val_loss)
 
         logging.info(
             'root: Epoch {0}, got val loss of {1}, acc: {2} '.format(ix, val_loss, np.mean(val_accs)))
@@ -203,6 +202,9 @@ def main():
                 break
 
         generator.on_epoch_end()
+        
+        df = pd.DataFrame(history)
+        df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
 
 if __name__ == '__main__':
     main()
