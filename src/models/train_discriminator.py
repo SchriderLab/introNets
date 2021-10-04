@@ -88,7 +88,7 @@ def main():
 
     # define the generator
     print('reading data keys...')
-    generator = DisDataGenerator(args.idir_sims, args.idir_real)
+    generator = DisDataGenerator(args.idir_sims, args.idir_real, batch_size = int(args.batch_size))
 
     criterion = NLLLoss()
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
