@@ -110,7 +110,7 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     
     parser.add_argument("--k", default = "16")
-    parser.add_argument("--n_dilations", default = "None")
+    parser.add_argument("--n_dilations", default = "7")
     
     args = parser.parse_args()
 
