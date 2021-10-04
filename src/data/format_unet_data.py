@@ -52,6 +52,30 @@ def seriate_spectral(x):
     
     return x, ix
 
+def remove_singletons(x_list, y_list):
+    
+    if not len(x_list) == len(y_list):
+        
+        raise ValueError("training and truth data must have same number of chunks")
+        
+    new_x, new_y = [], []
+        
+    for idx, x in enumerate(x_list):
+        
+        y = y_list[idx]
+        
+        flt = np.sum(np.sum(x, axis=0) > 1)
+        
+        x_flt = x[:, flt]
+        
+        y_flt = y[:, flt]
+        
+        new_x.append(x_flt)
+        
+        new_y.append(y_flt)
+        
+    return new_x, new_y
+
 class Formatter(object):
     def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
         
@@ -126,7 +150,8 @@ def main():
     ancFile = os.path.join(args.idir, 'out.anc')
     
     x, y = load_data(msFile, ancFile)
-    
+    x, y = remove_singletons(x, y)
+
     comm.Barrier()
     
     if comm.rank != 0:
