@@ -202,7 +202,12 @@ class DisDataGenerator(object):
             x1, x2, y1, y2, params = load_data_dros(ms, anc)
         except:
             self.ix_s += 1
-            return self.read()
+            
+            if self.ix_s >= len(self.idirs):
+                self.done = True
+                return
+            else:
+                return self.read()
         
         self.x1s = x1
         self.x2s = x2
