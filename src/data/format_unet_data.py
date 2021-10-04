@@ -15,12 +15,14 @@ import h5py
 # ${imports}
 
 from seriate import seriate
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
 
 from scipy.sparse.linalg import eigs
 from sklearn.metrics import pairwise_distances
+from scipy.optimize import linear_sum_assignment
 
 import matplotlib.pyplot as plt
+from sparsenn.models.gcn.topologies import knn_1d
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -53,14 +55,18 @@ def seriate_spectral(x):
     return x, ix
 
 class Formatter(object):
-    def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
+    def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], 
+                 sort = True, ix_y = 1, metric = 'cosine'):
         
         self.n_pops = shape[0]
         self.pop_size = shape[1]
         self.n_sites = shape[2]
         
         self.pop_sizes = pop_sizes
-        self.sorting = sorting
+        self.sort = sort
+        
+        self.ix_y = ix_y
+        self.metric = metric
         
     # return a list of the desired array shapes
     def format(self, x, y):
@@ -73,9 +79,24 @@ class Formatter(object):
         y1 = y[x1_indices, :]
         y2 = y[x2_indices, :]
         
+        if self.sort:
+            x1, ix1 = seriate_spectral(x1)
+            
+            y1 = y1[ix1, :]
+            
+            C = cdist(x1, x2, metric = self.metric).astype(np.float32)
+            i, j = linear_sum_assignment(C)
+            
+            x2 = x2[j, :]
+            y2 = y2[j, :]
+            
         x = np.vstack([x1, x2])
 
-        return x, y2
+        if self.ix_y == 1:
+            return x, y2
+        elif self.ix_y == 0:
+            return x, y1
+        
             
             
 def parse_args():
@@ -87,9 +108,10 @@ def parse_args():
     parser.add_argument("--chunk_size", default = "4")
 
     parser.add_argument("--odir", default = "None")
-    parser.add_argument("--sorting", default = "None")
     
-    parser.add_argument("--scenario", default = "BF_to_AO")
+    parser.add_argument("--k", default = "16")
+    parser.add_argument("--n_dilations", default = "None")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -143,8 +165,10 @@ def main():
         while n_received < len(x):
             x_, y = comm.recv(source = MPI.ANY_SOURCE)
             
+            edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+            
             if x is not None:
-                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y)
+                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
             
             n_received += 1
 
