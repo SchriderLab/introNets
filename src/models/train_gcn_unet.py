@@ -84,7 +84,7 @@ def main():
     device = torch.device(device_strings[0])
 
     if args.seg:
-        n_classes = 256
+        n_classes = 128
     else:
         n_classes = 1
         
@@ -126,8 +126,10 @@ def main():
         for ij in range(generator.length):
             optimizer.zero_grad()
             
-            x, y, edges, batch = generator.get_batch()
-           
+            try:
+                x, y, edges, batch = generator.get_batch()
+            except:
+                break
             
             x = x.to(device)
             y = y.to(device)
