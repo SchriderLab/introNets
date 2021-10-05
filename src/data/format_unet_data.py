@@ -155,7 +155,7 @@ def main():
                 
                 continue
             
-            f = Formatter(sorting = args.sorting)
+            f = Formatter()
             x_, y_ = f.format(x_, y_)
         
             comm.send([x_, y_], dest = 0)
