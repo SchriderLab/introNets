@@ -164,11 +164,12 @@ def main():
         
         while n_received < len(x):
             x_, y = comm.recv(source = MPI.ANY_SOURCE)
-            n = x_.shape[1]
             
-            edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+            if x_ is not None:
+                n = x_.shape[0]
             
-            if x is not None:
+                edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+                
                 np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
             
             n_received += 1
