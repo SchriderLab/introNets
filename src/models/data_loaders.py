@@ -77,7 +77,7 @@ class GCNDataGenerator(object):
             y = np.mean(ifile['y'].T, axis = 1)
             y = torch.FloatTensor(y.reshape(y.shape[0], 1))
         else:
-            y = torch.FloatTensor(ifile['y'])
+            y = torch.FloatTensor(ifile['y'].T)
         
         x = torch.FloatTensor(ifile['x'].T)
         

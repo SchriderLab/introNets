@@ -125,11 +125,9 @@ def main():
 
         for ij in range(generator.length):
             optimizer.zero_grad()
-            try:
-                x, y, edges, batch = generator.get_batch()
-            except Exception as e:
-                print(e)
-                break
+            
+            x, y, edges, batch = generator.get_batch()
+           
             
             x = x.to(device)
             y = y.to(device)
