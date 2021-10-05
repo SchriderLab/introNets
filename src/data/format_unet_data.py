@@ -112,6 +112,8 @@ def parse_args():
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
     
+    parser.add_argument("--ix_y", default = "1")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -155,7 +157,7 @@ def main():
                 
                 continue
             
-            f = Formatter()
+            f = Formatter(ix_y = int(args.ix_y))
             x_, y_ = f.format(x_, y_)
         
             comm.send([x_, y_], dest = 0)
