@@ -29,7 +29,7 @@ _InceptionOutputs = InceptionOutputs
 from torch_geometric.utils import to_dense_batch
 
 class GCNUNet(nn.Module):
-    def __init__(self, in_channels = 256, num_classes = 2, n_features = 256, n_layers = 8):
+    def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8):
         super(GCNUNet, self).__init__()
         
         self.res = DynamicGraphResBlock(in_channels, n_features, n_layers)
@@ -38,7 +38,7 @@ class GCNUNet(nn.Module):
         self.conv = nn.Conv1d(n, 1024, 1)
         self.transform = nn.Sequential(nn.Linear(n + 1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
                                        nn.Linear(1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
-                                       nn.Linear(1024, 1))
+                                       nn.Linear(1024, n_classes))
         
         self.activation = nn.ReLU()
         
