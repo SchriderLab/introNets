@@ -164,6 +164,7 @@ def main():
         
         while n_received < len(x):
             x_, y = comm.recv(source = MPI.ANY_SOURCE)
+            n = x_.shape[1]
             
             edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
             
