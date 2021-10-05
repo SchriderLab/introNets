@@ -40,9 +40,7 @@ class GCNDataGenerator(object):
                      seg = False):
        
         self.training = glob.glob(os.path.join(idir, '*/*.npz'))
-        
-        print(len(self.training))
-        
+                
         n_val = int(len(self.training) * val_prop)
         random.shuffle(self.training)
         
@@ -57,9 +55,7 @@ class GCNDataGenerator(object):
         
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
-        
-        print(self.length, self.val_length)
-        
+                
     def on_epoch_end(self):
         random.shuffle(self.training)
         
@@ -87,7 +83,7 @@ class GCNDataGenerator(object):
         
         edges = ifile['edges']
         
-        return x, y
+        return x, y, edges
         
     def get_batch(self, val = False):
         xs = []
