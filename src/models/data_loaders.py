@@ -58,6 +58,8 @@ class GCNDataGenerator(object):
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
         
+        print(self.length, self.val_length)
+        
     def on_epoch_end(self):
         random.shuffle(self.training)
         
