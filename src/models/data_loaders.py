@@ -35,7 +35,9 @@ def load_npz(ifile):
     return x
 
 class GCNDataGenerator(object):
-    def __init__(self, idir, batch_size = 8, val_prop = 0.05, k = 8):
+    def __init__(self, idir, batch_size = 8, 
+                     val_prop = 0.05, k = 8, 
+                     seg = False):
        
         self.training = glob.glob(os.path.join(idir, '*/*.npz'))
         
@@ -49,6 +51,7 @@ class GCNDataGenerator(object):
         
         self.on_epoch_end()
         self.k = k
+        self.seg = seg
         
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
@@ -70,10 +73,15 @@ class GCNDataGenerator(object):
         if len(ifile['y'].shape) == 0:
             return self.get_element(val)
         
-        y = np.mean(ifile['y'].T, axis = 1)
-        y = torch.FloatTensor(y.reshape(y.shape[0], 1))
+        if not self.seg:
+            y = np.mean(ifile['y'].T, axis = 1)
+            y = torch.FloatTensor(y.reshape(y.shape[0], 1))
+        else:
+            y = torch.FloatTensor(ifile['y'])
         
         x = torch.FloatTensor(ifile['x'].T)
+        
+        edges = ifile['edges']
         
         return x, y
         
@@ -85,15 +93,14 @@ class GCNDataGenerator(object):
         
         current_node = 0
         for ix in range(self.batch_size):
-            x, y = self.get_element(val)
+            x, y, e = self.get_element(val)
             
             n = x.shape[0]
             
             if len(edges) == 0:
-                edges = knn_1d(n, k = self.k)
+                edges = e
             else:
-                _ = knn_1d(n, k = self.k)
-                edges = [torch.cat([edges[k], _[k] + current_node], dim = 1) for k in range(len(_))]
+                edges = [torch.cat([edges[k], e[k] + current_node], dim = 1) for k in range(len(e))]
                 
             batch.extend(np.repeat(ix, n))
     
