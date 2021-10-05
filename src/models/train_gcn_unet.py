@@ -127,7 +127,8 @@ def main():
             optimizer.zero_grad()
             try:
                 x, y, edges, batch = generator.get_batch()
-            except:
+            except Exception as e:
+                print(e)
                 break
             
             x = x.to(device)
