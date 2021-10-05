@@ -81,7 +81,7 @@ class GCNDataGenerator(object):
         
         x = torch.FloatTensor(ifile['x'].T)
         
-        edges = ifile['edges']
+        edges = [torch.LongTensor(u) for u in ifile['edges']]
         
         return x, y, edges
         

@@ -128,7 +128,7 @@ def main():
             try:
                 x, y, edges, batch = generator.get_batch()
             except Exception as e:
-                print(e)
+                #print(e)
                 break
             
             x = x.to(device)
