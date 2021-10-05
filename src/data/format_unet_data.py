@@ -96,6 +96,8 @@ class Formatter(object):
             return x, y2
         elif self.ix_y == 0:
             return x, y1
+        elif self.ix_y == -1:
+            return x, np.vstack([y1, y2])
         
             
             
