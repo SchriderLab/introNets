@@ -41,6 +41,8 @@ class GCNDataGenerator(object):
        
         self.training = glob.glob(os.path.join(idir, '*/*.npz'))
         
+        print(len(self.training))
+        
         n_val = int(len(self.training) * val_prop)
         random.shuffle(self.training)
         
