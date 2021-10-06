@@ -207,11 +207,16 @@ def main():
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
             
+            Y = np.array(Y)
+            Y_pred = np.array(Y_pred)
+            
+            ix_ = list(np.random.choice(range(len(Y)), 1000, replace = False))
+            
             fig, axes = plt.subplots(ncols = 2)
-            axes[0].scatter(Y, Y_pred, alpha = 0.1)
+            axes[0].scatter(Y[ix_], Y_pred[ix_], alpha = 0.1)
             axes[0].plot([0, 1], [0, 1], color = 'k')
             
-            axes[1].hist(np.array(Y_pred) - np.array(Y), bins = 35)
+            axes[1].hist(Y_pred[ix_] - Y[ix_], bins = 35)
             
             plt.savefig(os.path.join(args.odir, '{}_best.png'.format(args.tag)))
             plt.close()
