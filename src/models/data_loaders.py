@@ -34,6 +34,90 @@ def load_npz(ifile):
 
     return x
 
+class GCNDisDataGenerator(object):
+    def __init__(self, idir, batch_size = 8, 
+                     val_prop = 0.05, k = 8, 
+                     seg = False):
+       
+        self.training = glob.glob(os.path.join(idir, '*/*/*.npz'))
+        self.models = sorted(list(set([u.split('/')[-3] for u in self.training])))
+                
+        n_val = int(len(self.training) * val_prop)
+        random.shuffle(self.training)
+        
+        self.val = self.training[:n_val]
+        del self.training[:n_val]
+        
+        self.batch_size = batch_size
+        
+        self.on_epoch_end()
+        self.k = k
+        self.seg = seg
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+                
+    def on_epoch_end(self):
+        random.shuffle(self.training)
+        
+        self.ix = 0
+        self.val_ix = 0
+        
+    def get_element(self, val = False):
+        if val:
+            ifile = np.load(self.val[self.val_ix], allow_pickle = True)
+            
+            model = self.val[self.val_ix].split('/')[-3]
+            self.val_ix += 1
+        else:
+            ifile = np.load(self.training[self.ix], allow_pickle = True)
+            
+            model = self.training[self.ix].split('/')[-3]
+            self.ix += 1
+            
+        if len(ifile['y'].shape) == 0:
+            return self.get_element(val)
+        
+
+        x = torch.FloatTensor(ifile['x'].T)
+        
+        edges = [torch.LongTensor(u) for u in ifile['edges']]
+        
+        y = torch.LongTensor([self.models.index(model)])
+        
+        return x, y, edges
+        
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y, e = self.get_element(val)
+            
+            n = x.shape[0]
+            
+            if len(edges) == 0:
+                edges = e
+            else:
+                edges = [torch.cat([edges[k], e[k] + current_node], dim = 1) for k in range(len(e))]
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(x)
+            ys.append(y)
+            
+            current_node += n
+            
+        x = torch.cat(xs)
+        y = torch.cat(ys)
+        
+        return x, y, edges, torch.LongTensor(batch)
+    
+    def __len__(self):
+        return self.length
 class GCNDataGenerator(object):
     def __init__(self, idir, batch_size = 8, 
                      val_prop = 0.05, k = 8, 
