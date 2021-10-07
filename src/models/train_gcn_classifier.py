@@ -140,8 +140,8 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
-            y = np.argmax(y.detach().cpu().numpy(), axis = 1).flatten()
+            y_pred = np.argmax(y_pred.detach().cpu().numpy(), axis = 1).flatten()
+            y = y.detach().cpu().numpy().flatten()
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
@@ -159,8 +159,6 @@ def main():
         val_losses = []
         val_accs = []
         
-        Y = []
-        Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
                 try:
@@ -179,13 +177,10 @@ def main():
                 val_losses.append(loss.detach().item())
                 
                 # compute accuracy in CPU with sklearn
-                y_pred = y_pred.detach().cpu().numpy().flatten()
-                y = np.argmax(y.detach().cpu().numpy(), axis = 1).flatten()
+                y_pred = np.argmax(y_pred.detach().cpu().numpy(), axis = 1).flatten()
+                y = y.detach().cpu().numpy().flatten()
                 
                 val_accs.append(accuracy_score(y, y_pred))
-                
-                Y.extend(y)
-                Y_pred.extend(y_pred)
         
         val_loss = np.mean(val_losses)
         history['val_loss'].append(val_loss)
@@ -200,20 +195,6 @@ def main():
             min_val_loss = val_loss
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
-            
-            Y = np.array(Y)
-            Y_pred = np.array(Y_pred)
-            
-            ix_ = list(np.random.choice(range(len(Y)), 1000, replace = False))
-            
-            fig, axes = plt.subplots(ncols = 2)
-            axes[0].scatter(Y[ix_], Y_pred[ix_], alpha = 0.1)
-            axes[0].plot([0, 1], [0, 1], color = 'k')
-            
-            axes[1].hist(Y_pred[ix_] - Y[ix_], bins = 35)
-            
-            plt.savefig(os.path.join(args.odir, '{}_best.png'.format(args.tag)))
-            plt.close()
 
             early_count = 0
         else:
