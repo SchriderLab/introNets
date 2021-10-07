@@ -59,7 +59,7 @@ class GCNUNet(nn.Module):
     
 class GCNClassifier(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 4, n_features = 256, n_layers = 8):
-        super(GCNUNet, self).__init__()
+        super(GCNClassifier, self).__init__()
         
         self.res = DynamicGraphResBlock(in_channels, n_features, n_layers)
         n = n_features * (n_layers - 1)
