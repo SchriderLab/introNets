@@ -141,7 +141,7 @@ def main():
 
             # compute accuracy in CPU with sklearn
             y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
-            y = np.argmax(y.detach().cpu().numpy(), dim = 1).flatten()
+            y = np.argmax(y.detach().cpu().numpy(), axis = 1).flatten()
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
@@ -180,7 +180,7 @@ def main():
                 
                 # compute accuracy in CPU with sklearn
                 y_pred = y_pred.detach().cpu().numpy().flatten()
-                y = np.argmax(y.detach().cpu().numpy(), dim = 1).flatten()
+                y = np.argmax(y.detach().cpu().numpy(), axis = 1).flatten()
                 
                 val_accs.append(accuracy_score(y, y_pred))
                 
