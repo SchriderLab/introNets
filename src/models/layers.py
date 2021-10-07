@@ -82,7 +82,7 @@ class GCNClassifier(nn.Module):
         x = torch.cat([x, x_global[batch]], dim = 1)
         x = global_mean_pool(x, batch)
         
-        print(x.shape)
+        #print(x.shape)
         
         x = self.transform(x)
         
