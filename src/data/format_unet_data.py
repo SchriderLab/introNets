@@ -146,7 +146,7 @@ def main():
 
     chunk_size = int(args.chunk_size)
     
-    msFile = os.path.join(args.idir, '{}.txt'.format(args.idir.split('/')[-1]))
+    msFile = os.path.join(args.idir, '{}.txt'.format(args.idir.split('/')[-2]))
     ancFile = os.path.join(args.idir, 'out.anc')
     
     x, y = load_data(msFile, ancFile)
