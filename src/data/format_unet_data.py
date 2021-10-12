@@ -142,44 +142,48 @@ def main():
 
     chunk_size = int(args.chunk_size)
     
-    msFile = os.path.join(args.idir, '{}.txt'.format(args.idir.split('/')[-1]))
-    ancFile = os.path.join(args.idir, 'out.anc')
+    msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
+    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
     
-    x, y = load_data(msFile, ancFile)
+    n_received = 0
     
-    comm.Barrier()
-    
-    if comm.rank != 0:
-        for ix in range(comm.rank - 1, len(x), comm.size - 1):
-            x_ = x[ix]
-            y_ = y[ix]
-            
-            if x_.shape != y_.shape:
-                comm.send([None, None], dest = 0)
-                
-                continue
-            
-            f = Formatter(ix_y = int(args.ix_y))
-            x_, y_ = f.format(x_, y_)
+    for ix in range(len(msFiles)):
+        msFile = msFiles[ix]
+        ancFile = ancFiles[ix]
         
-            comm.send([x_, y_], dest = 0)
-    else:
-        n_received = 0
+        x, y = load_data(msFile, ancFile)
         
-        while n_received < len(x):
-            x_, y = comm.recv(source = MPI.ANY_SOURCE)
-            
-            if x_ is not None:
-                n = x_.shape[0]
-            
-                edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+        comm.Barrier()
+        
+        if comm.rank != 0:
+            for ix in range(comm.rank - 1, len(x), comm.size - 1):
+                x_ = x[ix]
+                y_ = y[ix]
                 
-                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
+                if x_.shape != y_.shape:
+                    comm.send([None, None], dest = 0)
+                    
+                    continue
+                
+                f = Formatter(ix_y = int(args.ix_y))
+                x_, y_ = f.format(x_, y_)
             
-            n_received += 1
-
-            if (n_received + 1) % 100 == 0:
-                logging.info('on {}...'.format(n_received))
+                comm.send([x_, y_], dest = 0)
+        else:
+            while n_received < len(x):
+                x_, y = comm.recv(source = MPI.ANY_SOURCE)
+                
+                if x_ is not None:
+                    n = x_.shape[0]
+                
+                    edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+                    
+                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
+                
+                n_received += 1
+    
+                if (n_received + 1) % 100 == 0:
+                    logging.info('on {}...'.format(n_received))
     # ${code_blocks}
 
 if __name__ == '__main__':
