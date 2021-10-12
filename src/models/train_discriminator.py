@@ -151,7 +151,7 @@ def main():
 
         val_losses = []
         val_accs = []
-        while not generator.val_done:
+        while not generator.done_val:
             with torch.no_grad():
                 x1, x2, y = generator.get_val_batch()
                 
