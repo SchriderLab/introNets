@@ -74,11 +74,12 @@ class GCNDisDataGenerator(object):
             
             model = self.training[self.ix].split('/')[-3]
             self.ix += 1
-            
+                
         if len(ifile['y'].shape) == 0:
             return self.get_element(val)
         
-
+        
+        
         x = torch.FloatTensor(ifile['x'].T)
         
         edges = [torch.LongTensor(u) for u in ifile['edges']]
@@ -296,7 +297,7 @@ class DisDataGenerator(object):
             
             if self.ix_s >= len(self.idirs):
                 self.done = True
-                return
+                return False
             else:
                 return self.read()
         
@@ -313,6 +314,8 @@ class DisDataGenerator(object):
         
         if self.ix_s == len(self.idirs):
             self.done = True
+            
+        return True
         
         
     def get_batch(self):
@@ -321,8 +324,10 @@ class DisDataGenerator(object):
         y = []
 
         if len(self.x1s) < self.batch_size // 2:
-            self.read()
-            return self.get_batch()
+            if self.read():
+                return self.get_batch()
+            else:
+                return None, None, None
             
         X1.extend([np.expand_dims(u, 0) for u in self.x1s[:self.batch_size // 2]])
         X2.extend([np.expand_dims(u, 0) for u in self.x2s[:self.batch_size // 2]])

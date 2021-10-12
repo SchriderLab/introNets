@@ -114,6 +114,9 @@ def main():
         while not generator.done:
             optimizer.zero_grad()
             x1, x2, y = generator.get_batch()
+            
+            if x1 is None:
+                break
 
             x1 = x1.to(device)
             x2 = x2.to(device)
@@ -140,7 +143,8 @@ def main():
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
-                
+                break
+            
             ij += 1
 
         model.eval()
@@ -150,6 +154,9 @@ def main():
         while not generator.val_done:
             with torch.no_grad():
                 x1, x2, y = generator.get_val_batch()
+                
+                if x1 is None:
+                    break
 
                 x1 = x1.to(device)
                 x2 = x2.to(device)
