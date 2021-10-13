@@ -305,8 +305,8 @@ class DisDataGenerator(object):
         self.x1s = x1
         self.x2s = x2
         
-        self.Xs_val[0].append(self.x1s[-100:])
-        self.Xs_val[1].append(self.x2s[-100:])
+        self.Xs_val[0].extend(self.x1s[-100:])
+        self.Xs_val[1].extend(self.x2s[-100:])
         
         del self.x1s[-100:]
         del self.x2s[-100:]
@@ -377,9 +377,6 @@ class DisDataGenerator(object):
             X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
             
             y.append(1)
-            
-        print([u.shape for u in X1])
-        print([u.shape for u in X2])
             
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
         
