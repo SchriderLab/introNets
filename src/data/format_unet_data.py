@@ -94,34 +94,23 @@ class Formatter(object):
         
     # return a list of the desired array shapes
     def format(self, x, y):
-        x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
-        x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
+        x1_indices = list(range(self.pop_sizes[0]))
+        x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
         
-        x1 = x[x1_indices, :]
-        x2 = x[x2_indices, :]
-        
-        y1 = y[x1_indices, :]
-        y2 = y[x2_indices, :]
+        x1 = x[x1_indices,:]
+        x2 = x[x2_indices,:]
         
         if self.sort:
             x1, ix1 = seriate_spectral(x1)
             
-            y1 = y1[ix1, :]
-            
             C = cdist(x1, x2, metric = self.metric).astype(np.float32)
             i, j = linear_sum_assignment(C)
             
-            x2 = x2[j, :]
-            y2 = y2[j, :]
+            y = y[j,:]
             
         x = np.vstack([x1, x2])
 
-        if self.ix_y == 1:
-            return x, y2
-        elif self.ix_y == 0:
-            return x, y1
-        elif self.ix_y == -1:
-            return x, np.vstack([y1, y2])
+        return x, y
         
             
             
