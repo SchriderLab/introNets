@@ -119,6 +119,7 @@ class GCNDisDataGenerator(object):
     
     def __len__(self):
         return self.length
+
 class GCNDataGenerator(object):
     def __init__(self, idir, batch_size = 8, 
                      val_prop = 0.05, k = 8, 
@@ -464,6 +465,9 @@ class H5DisDataGenerator(object):
                 X2.append(np.expand_dims(X[20:, ii: ii + X1[-1].shape[-1]], axis = 0))
                 
                 y.append(1) 
+        
+        print([u.shape for u in X1])
+        print([u.shape for u in X2])
         
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
     
