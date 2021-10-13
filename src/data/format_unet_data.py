@@ -97,7 +97,6 @@ class Formatter(object):
         x1_indices = list(range(self.pop_sizes[0]))
         x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
         
-        try:
         x1 = x[x1_indices,:]
         x2 = x[x2_indices,:]
         
