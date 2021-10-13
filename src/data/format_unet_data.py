@@ -185,6 +185,8 @@ def main():
                 x_ = x[ix]
                 y_ = y[ix]
                 
+                print(x_.shape, y_.shape)
+                
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
             
