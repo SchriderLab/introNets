@@ -64,7 +64,7 @@ def remove_singletons(x_list, y_list):
         
         y = y_list[idx]
         
-        flt = np.sum(np.sum(x, axis=0) > 1)
+        flt = (np.sum(x, axis=0) > 1)
         
         x_flt = x[:, flt]
         
@@ -115,6 +115,7 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None")
     parser.add_argument("--chunk_size", default = "4")
+    parser.add_argument("--istem", default = "None")
 
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--sorting", default = "None")
@@ -146,8 +147,8 @@ def main():
 
     chunk_size = int(args.chunk_size)
     
-    msFile = os.path.join(args.idir, '{}.txt'.format(args.idir.split('/')[-2]))
-    ancFile = os.path.join(args.idir, 'out.anc')
+    msFile = os.path.join(args.idir, '{}.txt'.format(args.istem))
+    ancFile = os.path.join(args.idir, '{}.anc'.format(args.istem))
     
     x, y = load_data(msFile, ancFile)
     x, y = remove_singletons(x, y)
