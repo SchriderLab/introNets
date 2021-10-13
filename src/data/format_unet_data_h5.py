@@ -85,6 +85,16 @@ class Formatter(object):
             x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
             y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
             
+            if args.pop:
+                
+                if args.pop == 0:
+                
+                    y = y[0]
+                    
+                else:
+                    
+                    y = y[1]
+            
             X.append(x)
             Y.append(y)
             
@@ -104,6 +114,8 @@ def parse_args():
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     
+    parser.add_argument("--pop", choices = [0, 1], help = "only return y values for one pop?")
+
     args = parser.parse_args()
 
     if args.verbose:
