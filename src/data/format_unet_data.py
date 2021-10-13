@@ -160,11 +160,6 @@ def main():
                 x_ = x[ix]
                 y_ = y[ix]
                 
-                if x_.shape != y_.shape:
-                    comm.send([None, None], dest = 0)
-                    
-                    continue
-                
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
             
