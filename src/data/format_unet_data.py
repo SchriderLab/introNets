@@ -151,6 +151,7 @@ def main():
         msFile = msFiles[ix]
         ancFile = ancFiles[ix]
         
+        logging.info('loading files...')
         x, y = load_data(msFile, ancFile)
         
         comm.Barrier()
@@ -160,7 +161,7 @@ def main():
                 x_ = x[ix]
                 y_ = y[ix]
                 
-                print(x_.shape, y_.shape)
+                logging.info('{},{}'.format(x_.shape, y_.shape))
                 
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
@@ -181,6 +182,9 @@ def main():
     
                 if (n_received + 1) % 100 == 0:
                     logging.info('on {}...'.format(n_received))
+                    
+        comm.Barrier()
+        
     # ${code_blocks}
 
 if __name__ == '__main__':
