@@ -349,6 +349,9 @@ class DisDataGenerator(object):
             
             y.append(1)
             
+        print([u.shape for u in X1])
+        print([u.shape for u in X2])
+            
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
             
     def get_val_batch(self):
