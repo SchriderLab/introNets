@@ -54,6 +54,30 @@ def seriate_spectral(x):
     
     return x, ix
 
+def remove_singletons(x_list, y_list):
+    
+    if not len(x_list) == len(y_list):
+        
+        raise ValueError("training and truth data must have same number of chunks")
+        
+    new_x, new_y = [], []
+        
+    for idx, x in enumerate(x_list):
+        
+        y = y_list[idx]
+        
+        flt = (np.sum(x, axis=0) > 1)
+        
+        x_flt = x[:, flt]
+        
+        y_flt = y[:, flt]
+        
+        new_x.append(x_flt)
+        
+        new_y.append(y_flt)
+        
+    return new_x, new_y
+
 class Formatter(object):
     def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], 
                  sort = True, ix_y = 1, metric = 'cosine'):
@@ -108,6 +132,7 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None")
     parser.add_argument("--chunk_size", default = "4")
+    parser.add_argument("--istem", default = "None")
 
     parser.add_argument("--odir", default = "None")
     
@@ -146,7 +171,7 @@ def main():
     ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
     
     n_received = 0
-    
+
     for ix in range(len(msFiles)):
         msFile = msFiles[ix]
         ancFile = ancFiles[ix]
