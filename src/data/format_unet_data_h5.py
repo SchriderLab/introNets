@@ -24,6 +24,30 @@ def seriate_x(x):
     ix = seriate(Dx)
 
     return x[ix], ix
+    
+def remove_singletons(x_list, y_list):
+    
+    if not len(x_list) == len(y_list):
+        
+        raise ValueError("training and truth data must have same number of chunks")
+        
+    new_x, new_y = [], []
+        
+    for idx, x in enumerate(x_list):
+        
+        y = y_list[idx]
+        
+        flt = (np.sum(x, axis=0) > 1)
+        
+        x_flt = x[:, flt]
+        
+        y_flt = y[:, flt]
+        
+        new_x.append(x_flt)
+        
+        new_y.append(y_flt)
+        
+    return new_x, new_y
 
 class Formatter(object):
     def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156], sorting = None):
@@ -77,6 +101,9 @@ def parse_args():
 
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--sorting", default = "None")
+    
+    parser.add_argument("--densify", action = "store_true", help = "remove singletons")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -107,6 +134,10 @@ def main():
             ancFile = os.path.join(idir, 'out.anc')
             
             x, y = load_data(msFile, ancFile)
+            
+            if args.densify:
+                
+                x, y = remove_singletons(x, y)
             
             f = Formatter(x, y, sorting = args.sorting)
             x, y = f.format()
