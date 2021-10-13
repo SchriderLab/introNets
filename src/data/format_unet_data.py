@@ -97,6 +97,7 @@ class Formatter(object):
         x1_indices = list(range(self.pop_sizes[0]))
         x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
         
+        try:
         x1 = x[x1_indices,:]
         x2 = x[x2_indices,:]
         
@@ -176,6 +177,9 @@ def main():
                 y_ = y[ix]
                 
                 logging.info('{},{}'.format(x_.shape, y_.shape))
+                if x_.shape[0] != 306:
+                    comm.send([None, None], dest = 0)
+                    continue
                 
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
