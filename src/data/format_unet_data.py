@@ -121,6 +121,7 @@ def parse_args():
     parser.add_argument("--sorting", default = "None")
     
     parser.add_argument("--scenario", default = "BF_to_AO")
+    parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     args = parser.parse_args()
 
     if args.verbose:
@@ -151,7 +152,9 @@ def main():
     ancFile = os.path.join(args.idir, '{}.anc'.format(args.istem))
     
     x, y = load_data(msFile, ancFile)
-    x, y = remove_singletons(x, y)
+    
+    if args.densify:
+        x, y = remove_singletons(x, y)
 
     comm.Barrier()
     
