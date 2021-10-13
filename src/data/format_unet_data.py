@@ -159,9 +159,11 @@ def main():
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
     ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
     
-    n_received = 0
+    counter = 0
 
     for ix in range(len(msFiles)):
+        n_received = 0
+        
         msFile = msFiles[ix]
         ancFile = ancFiles[ix]
         
@@ -193,8 +195,10 @@ def main():
                 
                     edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
                     
-                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
+                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges)
                 
+                    counter += 1
+                    
                 n_received += 1
     
                 if (n_received + 1) % 100 == 0:
