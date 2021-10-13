@@ -12,7 +12,7 @@ import os, sys
 from torch.utils.data import Dataset
 from torch_geometric.data import Data
 import glob
-#from sparsenn.models.gcn.topologies import knn_1d
+from sparsenn.models.gcn.topologies import knn_1d
 
 from data_functions import load_data_dros
 
@@ -34,11 +34,14 @@ def load_npz(ifile):
 
     return x
 
-class GCNDataGenerator(object):
-    def __init__(self, idir, batch_size = 8, val_prop = 0.05, k = 8):
+class GCNDisDataGenerator(object):
+    def __init__(self, idir, batch_size = 8, 
+                     val_prop = 0.05, k = 8, 
+                     seg = False):
        
-        self.training = glob.glob(os.path.join(idir, '*/*.npz'))
-        
+        self.training = glob.glob(os.path.join(idir, '*/*/*.npz'))
+        self.models = sorted(list(set([u.split('/')[-3] for u in self.training])))
+                
         n_val = int(len(self.training) * val_prop)
         random.shuffle(self.training)
         
@@ -49,10 +52,95 @@ class GCNDataGenerator(object):
         
         self.on_epoch_end()
         self.k = k
+        self.seg = seg
         
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
+                
+    def on_epoch_end(self):
+        random.shuffle(self.training)
         
+        self.ix = 0
+        self.val_ix = 0
+        
+    def get_element(self, val = False):
+        if val:
+            ifile = np.load(self.val[self.val_ix], allow_pickle = True)
+            
+            model = self.val[self.val_ix].split('/')[-3]
+            self.val_ix += 1
+        else:
+            ifile = np.load(self.training[self.ix], allow_pickle = True)
+            
+            model = self.training[self.ix].split('/')[-3]
+            self.ix += 1
+                
+        if len(ifile['y'].shape) == 0:
+            return self.get_element(val)
+        
+        
+        
+        x = torch.FloatTensor(ifile['x'].T)
+        
+        edges = [torch.LongTensor(u) for u in ifile['edges']]
+        
+        y = torch.LongTensor([self.models.index(model)])
+        
+        return x, y, edges
+        
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y, e = self.get_element(val)
+            
+            n = x.shape[0]
+            
+            if len(edges) == 0:
+                edges = e
+            else:
+                edges = [torch.cat([edges[k], e[k] + current_node], dim = 1) for k in range(len(e))]
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(x)
+            ys.append(y)
+            
+            current_node += n
+            
+        x = torch.cat(xs)
+        y = torch.cat(ys)
+        
+        return x, y, edges, torch.LongTensor(batch)
+    
+    def __len__(self):
+        return self.length
+class GCNDataGenerator(object):
+    def __init__(self, idir, batch_size = 8, 
+                     val_prop = 0.05, k = 8, 
+                     seg = False):
+       
+        self.training = glob.glob(os.path.join(idir, '*/*.npz'))
+                
+        n_val = int(len(self.training) * val_prop)
+        random.shuffle(self.training)
+        
+        self.val = self.training[:n_val]
+        del self.training[:n_val]
+        
+        self.batch_size = batch_size
+        
+        self.on_epoch_end()
+        self.k = k
+        self.seg = seg
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+                
     def on_epoch_end(self):
         random.shuffle(self.training)
         
@@ -70,12 +158,17 @@ class GCNDataGenerator(object):
         if len(ifile['y'].shape) == 0:
             return self.get_element(val)
         
-        y = np.mean(ifile['y'].T, axis = 1)
-        y = torch.FloatTensor(y.reshape(y.shape[0], 1))
+        if not self.seg:
+            y = np.mean(ifile['y'].T, axis = 1)
+            y = torch.FloatTensor(y.reshape(y.shape[0], 1))
+        else:
+            y = torch.FloatTensor(ifile['y'].T)
         
         x = torch.FloatTensor(ifile['x'].T)
         
-        return x, y
+        edges = [torch.LongTensor(u) for u in ifile['edges']]
+        
+        return x, y, edges
         
     def get_batch(self, val = False):
         xs = []
@@ -85,15 +178,14 @@ class GCNDataGenerator(object):
         
         current_node = 0
         for ix in range(self.batch_size):
-            x, y = self.get_element(val)
+            x, y, e = self.get_element(val)
             
             n = x.shape[0]
             
             if len(edges) == 0:
-                edges = knn_1d(n, k = self.k)
+                edges = e
             else:
-                _ = knn_1d(n, k = self.k)
-                edges = [torch.cat([edges[k], _[k] + current_node], dim = 1) for k in range(len(_))]
+                edges = [torch.cat([edges[k], e[k] + current_node], dim = 1) for k in range(len(e))]
                 
             batch.extend(np.repeat(ix, n))
     
@@ -198,7 +290,17 @@ class DisDataGenerator(object):
         ms = os.path.join(self.idirs[self.ix_s], 'mig.msOut')
         anc = os.path.join(self.idirs[self.ix_s], 'out.anc')
         
-        x1, x2, y1, y2, params = load_data_dros(ms, anc)
+        try:
+            x1, x2, y1, y2, params = load_data_dros(ms, anc)
+        except:
+            self.ix_s += 1
+            
+            if self.ix_s >= len(self.idirs):
+                self.done = True
+                return False
+            else:
+                return self.read()
+        
         self.x1s = x1
         self.x2s = x2
         
@@ -212,6 +314,8 @@ class DisDataGenerator(object):
         
         if self.ix_s == len(self.idirs):
             self.done = True
+            
+        return True
         
         
     def get_batch(self):
@@ -220,11 +324,13 @@ class DisDataGenerator(object):
         y = []
 
         if len(self.x1s) < self.batch_size // 2:
-            self.read()
-            return self.get_batch()
+            if self.read():
+                return self.get_batch()
+            else:
+                return None, None, None
             
-        X1.extend(self.x1s[:self.batch_size // 2])
-        X2.extend(self.x2s[:self.batch_size // 2])
+        X1.extend([np.expand_dims(u, 0) for u in self.x1s[:self.batch_size // 2]])
+        X2.extend([np.expand_dims(u, 0) for u in self.x2s[:self.batch_size // 2]])
         
         del self.x1s[:self.batch_size // 2]
         del self.x2s[:self.batch_size // 2]
@@ -249,8 +355,8 @@ class DisDataGenerator(object):
         X2 = []
         y = []
             
-        X1.extend(self.Xs_val[0][:self.batch_size // 2])
-        X2.extend(self.Xs_val[1][:self.batch_size // 2])
+        X1.extend([np.expand_dims(u, 0) for u in self.Xs_val[0][:self.batch_size // 2]])
+        X2.extend([np.expand_dims(u, 0) for u in self.Xs_val[1][:self.batch_size // 2]])
         
         del self.Xs_val[0][:self.batch_size // 2]
         del self.Xs_val[1][:self.batch_size // 2]

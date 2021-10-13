@@ -15,12 +15,14 @@ import h5py
 # ${imports}
 
 from seriate import seriate
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
 
 from scipy.sparse.linalg import eigs
 from sklearn.metrics import pairwise_distances
+from scipy.optimize import linear_sum_assignment
 
 import matplotlib.pyplot as plt
+from sparsenn.models.gcn.topologies import knn_1d
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -77,14 +79,18 @@ def remove_singletons(x_list, y_list):
     return new_x, new_y
 
 class Formatter(object):
-    def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], sorting = None):
+    def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], 
+                 sort = True, ix_y = 1, metric = 'cosine'):
         
         self.n_pops = shape[0]
         self.pop_size = shape[1]
         self.n_sites = shape[2]
         
         self.pop_sizes = pop_sizes
-        self.sorting = sorting
+        self.sort = sort
+        
+        self.ix_y = ix_y
+        self.metric = metric
         
     # return a list of the desired array shapes
     def format(self, x, y):
@@ -97,15 +103,26 @@ class Formatter(object):
         y1 = y[x1_indices, :]
         y2 = y[x2_indices, :]
         
-        x1, i1 = seriate_spectral(x1)
-        x2, i2 = seriate_spectral(x2)
-    
-        y1 = y1[i1, :]
-        y2 = y2[i2, :]
-        
+        if self.sort:
+            x1, ix1 = seriate_spectral(x1)
+            
+            y1 = y1[ix1, :]
+            
+            C = cdist(x1, x2, metric = self.metric).astype(np.float32)
+            i, j = linear_sum_assignment(C)
+            
+            x2 = x2[j, :]
+            y2 = y2[j, :]
+            
         x = np.vstack([x1, x2])
 
-        return x, y2
+        if self.ix_y == 1:
+            return x, y2
+        elif self.ix_y == 0:
+            return x, y1
+        elif self.ix_y == -1:
+            return x, np.vstack([y1, y2])
+        
             
             
 def parse_args():
@@ -118,10 +135,12 @@ def parse_args():
     parser.add_argument("--istem", default = "None")
 
     parser.add_argument("--odir", default = "None")
-    parser.add_argument("--sorting", default = "None")
     
-    parser.add_argument("--scenario", default = "BF_to_AO")
-    parser.add_argument("--densify", action = "store_true", help = "remove singletons")
+    parser.add_argument("--k", default = "16")
+    parser.add_argument("--n_dilations", default = "7")
+    
+    parser.add_argument("--ix_y", default = "1")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -148,43 +167,43 @@ def main():
 
     chunk_size = int(args.chunk_size)
     
-    msFile = os.path.join(args.idir, '{}.txt'.format(args.istem))
-    ancFile = os.path.join(args.idir, '{}.anc'.format(args.istem))
+    msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
+    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
     
-    x, y = load_data(msFile, ancFile)
-    
-    if args.densify:
-        x, y = remove_singletons(x, y)
+    n_received = 0
 
-    comm.Barrier()
-    
-    if comm.rank != 0:
-        for ix in range(comm.rank - 1, len(x), comm.size - 1):
-            x_ = x[ix]
-            y_ = y[ix]
-            
-            if x_.shape != y_.shape:
-                comm.send([None, None], dest = 0)
+    for ix in range(len(msFiles)):
+        msFile = msFiles[ix]
+        ancFile = ancFiles[ix]
+        
+        x, y = load_data(msFile, ancFile)
+        
+        comm.Barrier()
+        
+        if comm.rank != 0:
+            for ix in range(comm.rank - 1, len(x), comm.size - 1):
+                x_ = x[ix]
+                y_ = y[ix]
                 
-                continue
+                f = Formatter(ix_y = int(args.ix_y))
+                x_, y_ = f.format(x_, y_)
             
-            f = Formatter(sorting = args.sorting)
-            x_, y_ = f.format(x_, y_)
-        
-            comm.send([x_, y_], dest = 0)
-    else:
-        n_received = 0
-        
-        while n_received < len(x):
-            x_, y = comm.recv(source = MPI.ANY_SOURCE)
-            
-            if x is not None:
-                np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y)
-            
-            n_received += 1
-
-            if (n_received + 1) % 100 == 0:
-                logging.info('on {}...'.format(n_received))
+                comm.send([x_, y_], dest = 0)
+        else:
+            while n_received < len(x):
+                x_, y = comm.recv(source = MPI.ANY_SOURCE)
+                
+                if x_ is not None:
+                    n = x_.shape[0]
+                
+                    edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+                    
+                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
+                
+                n_received += 1
+    
+                if (n_received + 1) % 100 == 0:
+                    logging.info('on {}...'.format(n_received))
     # ${code_blocks}
 
 if __name__ == '__main__':

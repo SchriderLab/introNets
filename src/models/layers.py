@@ -16,15 +16,79 @@ from typing import Callable, Any, Optional, Tuple, List
 import warnings
 from torch import Tensor
 
+from sparsenn.models.gcn.layers import DynamicGraphResBlock
+from torch_geometric.nn import global_mean_pool
+
 InceptionOutputs = namedtuple('InceptionOutputs', ['logits', 'aux_logits'])
 InceptionOutputs.__annotations__ = {'logits': Tensor, 'aux_logits': Optional[Tensor]}
+
+from torch_scatter import scatter_max, scatter
 
 # Script annotations failed with _GoogleNetOutputs = namedtuple ...
 # _InceptionOutputs set here for backwards compat
 _InceptionOutputs = InceptionOutputs
+from torch_geometric.utils import to_dense_batch
+
+class GCNUNet(nn.Module):
+    def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8):
+        super(GCNUNet, self).__init__()
+        
+        self.res = DynamicGraphResBlock(in_channels, n_features, n_layers)
+        n = n_features * (n_layers - 1)
+        
+        self.conv = nn.Conv1d(n, 1024, 1)
+        self.transform = nn.Sequential(nn.Linear(n + 1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, n_classes))
+        
+        self.activation = nn.ReLU()
+        
+    def forward(self, x, edge_indices, batch):
+        x = self.res(x, edge_indices)
+        
+        x_global = self.conv(torch.unsqueeze(x, 2))
+        x_global = torch.squeeze(self.activation(x_global))
+        
+        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        
+        x = torch.cat([x, x_global[batch]], dim = 1)
+        
+        x = self.transform(x)
+        
+        return x
+    
+class GCNClassifier(nn.Module):
+    def __init__(self, in_channels = 256, n_classes = 4, n_features = 256, n_layers = 8):
+        super(GCNClassifier, self).__init__()
+        
+        self.res = DynamicGraphResBlock(in_channels, n_features, n_layers)
+        n = n_features * (n_layers - 1)
+        
+        self.conv = nn.Conv1d(n, 1024, 1)
+        self.transform = nn.Sequential(nn.Linear(n + 1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, n_classes))
+        
+        self.activation = nn.ReLU()
+        
+    def forward(self, x, edge_indices, batch):
+        x = self.res(x, edge_indices)
+        
+        x_global = self.conv(torch.unsqueeze(x, 2))
+        x_global = torch.squeeze(self.activation(x_global))
+        
+        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        
+        x = torch.cat([x, x_global[batch]], dim = 1)
+        x = global_mean_pool(x, batch)
+        
+        #print(x.shape)
+        
+        x = self.transform(x)
+        
+        return x
 
 class Inception3(nn.Module):
-
     def __init__(
         self,
         num_classes: int = 1000,
