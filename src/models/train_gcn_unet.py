@@ -172,6 +172,9 @@ def main():
             with torch.no_grad():
                 try:
                     x, y, edges, batch = generator.get_batch(val = True)
+                    
+                    if x.shape[0] != y.shape[0]:
+                        continue
                 except:
                     break
 

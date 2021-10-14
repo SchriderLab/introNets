@@ -150,9 +150,15 @@ class GCNDataGenerator(object):
         
     def get_element(self, val = False):
         if val:
+            if self.val_ix >= len(self.val):
+                return None, None, None
+            
             ifile = np.load(self.val[self.val_ix], allow_pickle = True)
             self.val_ix += 1
         else:
+            if self.ix >= len(self.training):
+                return None, None, None
+            
             ifile = np.load(self.training[self.ix], allow_pickle = True)
             self.ix += 1
             
@@ -167,6 +173,9 @@ class GCNDataGenerator(object):
         
         x = torch.FloatTensor(ifile['x'].T)
         
+        if x.shape[0] != y.shape[0]:
+            return self.get_element(val)
+        
         edges = [torch.LongTensor(u) for u in ifile['edges']]
         
         return x, y, edges
@@ -180,6 +189,9 @@ class GCNDataGenerator(object):
         current_node = 0
         for ix in range(self.batch_size):
             x, y, e = self.get_element(val)
+            
+            if x is None:
+                break
             
             n = x.shape[0]
             
