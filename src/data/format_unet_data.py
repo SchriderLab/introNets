@@ -169,10 +169,12 @@ def main():
         
         comm.Barrier()
         
-        if comm.rank != 0:
-            logging.info('loading files...')
-            x, y = load_data(msFile, ancFile)
-            
+        logging.info('loading files...')
+        x, y = load_data(msFile, ancFile)
+        
+        n_expected = len(x)
+        
+        if comm.rank != 0:            
             for ix in range(comm.rank - 1, len(x), comm.size - 1):
                 x_ = x[ix]
                 y_ = y[ix]
@@ -190,7 +192,10 @@ def main():
             del x
             del y
         else:
-            while n_received < len(x):
+            del x
+            del y
+            
+            while n_received < n_expected:
                 x_, y = comm.recv(source = MPI.ANY_SOURCE)
                 
                 if x_ is not None:
