@@ -61,8 +61,6 @@ def load_data(msFile, ancFile):
     else:
         anc_lines = None
         
-    print(set([len(u) for u in anc_lines]))
-        
     X = []
     Y = []
     for chunk in ms_chunks:
@@ -81,10 +79,6 @@ def load_data(msFile, ancFile):
             
         X.append(x)
         Y.append(y)
-        
-        print(len(pos), x.shape, y.shape)
-        print(len(anc_lines), len(X))
-        print('-----')
         
     return X, Y
 
