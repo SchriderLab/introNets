@@ -36,6 +36,8 @@ def split(word):
 # generic function for msmodified
 # ----------------
 def load_data(msFile, ancFile):
+    print(msFile, ancFile)
+    
     msFile = open(msFile, 'r')
 
     # no migration case
