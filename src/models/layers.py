@@ -33,7 +33,7 @@ class GCNUNet(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8):
         super(GCNUNet, self).__init__()
         
-        self.res = DynamicGraphResBlock(in_channels, n_features, n_layers)
+        self.res = DynamicGraphResBlock(in_channels, 306, n_layers)
         n = n_features * (n_layers - 1)
         
         self.conv = nn.Conv1d(n, 1024, 1)
@@ -81,8 +81,6 @@ class GCNClassifier(nn.Module):
         
         x = torch.cat([x, x_global[batch]], dim = 1)
         x = global_mean_pool(x, batch)
-        
-        #print(x.shape)
         
         x = self.transform(x)
         
