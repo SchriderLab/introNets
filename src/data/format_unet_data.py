@@ -169,7 +169,6 @@ def main():
         
         comm.Barrier()
         
-        logging.info('loading files...')
         x, y = load_data(msFile, ancFile)
         
         n_expected = len(x)
@@ -181,6 +180,13 @@ def main():
                 
                 logging.info('{},{}'.format(x_.shape, y_.shape))
                 if x_.shape[0] != 306:
+                    logging.info('pop size error in sim {0} in msFile {1}'.format(ix, msFile))
+                    
+                    comm.send([None, None], dest = 0)
+                    continue
+                elif x_.shape[1] != y_.shape[1]:
+                    logging.info('seg site mismatch error in sim {0} in msFile {1}'.format(ix, msFile))
+                    
                     comm.send([None, None], dest = 0)
                     continue
                 
