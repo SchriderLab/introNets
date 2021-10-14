@@ -59,10 +59,14 @@ def load_data(msFile, ancFile):
     else:
         anc_lines = None
         
+    print(set([len(u) for u in anc_lines]))
+        
     X = []
     Y = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
+        
+        
         
         x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:-1]], dtype = np.uint8)
         if anc_lines is not None:
