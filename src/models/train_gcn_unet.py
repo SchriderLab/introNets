@@ -134,6 +134,8 @@ def main():
             
             x = x.to(device)
             y = y.to(device)
+            
+            print(x.shape, y.shape)
             edges = [u.to(device) for u in edges]
             batch = batch.to(device)
 
