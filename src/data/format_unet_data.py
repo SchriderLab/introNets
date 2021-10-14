@@ -167,12 +167,12 @@ def main():
         msFile = msFiles[ix]
         ancFile = ancFiles[ix]
         
-        logging.info('loading files...')
-        x, y = load_data(msFile, ancFile)
-        
         comm.Barrier()
         
         if comm.rank != 0:
+            logging.info('loading files...')
+            x, y = load_data(msFile, ancFile)
+            
             for ix in range(comm.rank - 1, len(x), comm.size - 1):
                 x_ = x[ix]
                 y_ = y[ix]
@@ -186,6 +186,9 @@ def main():
                 x_, y_ = f.format(x_, y_)
             
                 comm.send([x_, y_], dest = 0)
+                
+            del x
+            del y
         else:
             while n_received < len(x):
                 x_, y = comm.recv(source = MPI.ANY_SOURCE)
