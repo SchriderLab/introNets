@@ -119,6 +119,7 @@ class GCNDisDataGenerator(object):
     
     def __len__(self):
         return self.length
+
 class GCNDataGenerator(object):
     def __init__(self, idir, batch_size = 8, 
                      val_prop = 0.05, k = 8, 
@@ -304,8 +305,8 @@ class DisDataGenerator(object):
         self.x1s = x1
         self.x2s = x2
         
-        self.Xs_val[0].append(self.x1s[-100:])
-        self.Xs_val[1].append(self.x2s[-100:])
+        self.Xs_val[0].extend(self.x1s[-100:])
+        self.Xs_val[1].extend(self.x2s[-100:])
         
         del self.x1s[-100:]
         del self.x2s[-100:]

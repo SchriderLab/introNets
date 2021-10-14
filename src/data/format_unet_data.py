@@ -94,34 +94,23 @@ class Formatter(object):
         
     # return a list of the desired array shapes
     def format(self, x, y):
-        x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
-        x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
+        x1_indices = list(range(self.pop_sizes[0]))
+        x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
         
-        x1 = x[x1_indices, :]
-        x2 = x[x2_indices, :]
-        
-        y1 = y[x1_indices, :]
-        y2 = y[x2_indices, :]
+        x1 = x[x1_indices,:]
+        x2 = x[x2_indices,:]
         
         if self.sort:
             x1, ix1 = seriate_spectral(x1)
             
-            y1 = y1[ix1, :]
-            
             C = cdist(x1, x2, metric = self.metric).astype(np.float32)
             i, j = linear_sum_assignment(C)
             
-            x2 = x2[j, :]
-            y2 = y2[j, :]
+            y = y[j,:]
             
         x = np.vstack([x1, x2])
 
-        if self.ix_y == 1:
-            return x, y2
-        elif self.ix_y == 0:
-            return x, y1
-        elif self.ix_y == -1:
-            return x, np.vstack([y1, y2])
+        return x, y
         
             
             
@@ -170,29 +159,43 @@ def main():
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
     ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
     
-    n_received = 0
+    counter = 0
 
     for ix in range(len(msFiles)):
+        n_received = 0
+        
         msFile = msFiles[ix]
         ancFile = ancFiles[ix]
         
-        x, y = load_data(msFile, ancFile)
-        
         comm.Barrier()
         
-        if comm.rank != 0:
+        logging.info('loading files...')
+        x, y = load_data(msFile, ancFile)
+        
+        n_expected = len(x)
+        
+        if comm.rank != 0:            
             for ix in range(comm.rank - 1, len(x), comm.size - 1):
                 x_ = x[ix]
                 y_ = y[ix]
                 
-                print(x_.shape, y_.shape)
+                logging.info('{},{}'.format(x_.shape, y_.shape))
+                if x_.shape[0] != 306:
+                    comm.send([None, None], dest = 0)
+                    continue
                 
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
             
                 comm.send([x_, y_], dest = 0)
+                
+            del x
+            del y
         else:
-            while n_received < len(x):
+            del x
+            del y
+            
+            while n_received < n_expected:
                 x_, y = comm.recv(source = MPI.ANY_SOURCE)
                 
                 if x_ is not None:
@@ -200,12 +203,17 @@ def main():
                 
                     edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
                     
-                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(n_received)), x = x_, y = y, edges = edges)
+                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges)
                 
+                    counter += 1
+                    
                 n_received += 1
     
                 if (n_received + 1) % 100 == 0:
                     logging.info('on {}...'.format(n_received))
+                    
+        comm.Barrier()
+        
     # ${code_blocks}
 
 if __name__ == '__main__':
