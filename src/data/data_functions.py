@@ -3,7 +3,13 @@ import numpy as np
 
 import sys
 
+from seriate import seriate
+from scipy.spatial.distance import pdist
 
+def seriate_x(x):
+    Dx = pdist(x, metric = 'cosine')
+    Dx[np.where(np.isnan(Dx))] = 0.
+    ix = seriate(Dx)
 
 def load_npz(ifile):
     ifile = np.load(ifile)
@@ -57,18 +63,22 @@ def load_data(msFile, ancFile):
     Y = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
-
+        
         x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:-1]], dtype = np.uint8)
         if anc_lines is not None:
             y = np.array([list(map(int, split(u.replace('\n', '')))) for u in anc_lines[:len(pos)]], dtype = np.uint8)
             y = y.T
-
+            
             del anc_lines[:len(pos)]
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
             
         X.append(x)
         Y.append(y)
+        
+        print(len(pos), x.shape, y.shape)
+        print(len(anc_lines), len(X))
+        print('-----')
         
     return X, Y
 
