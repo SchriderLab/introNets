@@ -157,7 +157,7 @@ def main():
     chunk_size = int(args.chunk_size)
     
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
-    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*.anc')))
+    ancFiles = sorted([u for u in glob.glob(os.path.join(args.idir, '*.anc')) if not ('.1.' in u or '.alt.' in u)])
     
     counter = 0
 
