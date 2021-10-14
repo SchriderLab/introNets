@@ -135,13 +135,11 @@ def main():
             x = x.to(device)
             y = y.to(device)
             
-            print(x.shape, y.shape)
             edges = [u.to(device) for u in edges]
             batch = batch.to(device)
 
             y_pred = model(x, edges, batch)
             #print(y.shape, y_pred.shape)
-
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
