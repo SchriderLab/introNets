@@ -198,6 +198,9 @@ class GCNDataGenerator(object):
         x = torch.cat(xs)
         y = torch.cat(ys)
         
+        if x.shape[0] != y.shape[0]:
+            print('somethings wrong...')
+        
         return x, y, edges, torch.LongTensor(batch)
     
     def __len__(self):
