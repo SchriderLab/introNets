@@ -100,17 +100,28 @@ class Formatter(object):
         x1 = x[x1_indices,:]
         x2 = x[x2_indices,:]
         
+        y1 = y[x1_indices,:]
+        y2 = y[x2_indices,:]
+        
         if self.sort:
             x1, ix1 = seriate_spectral(x1)
+            
+            y1 = y1[ix1,:]
             
             C = cdist(x1, x2, metric = self.metric).astype(np.float32)
             i, j = linear_sum_assignment(C)
             
-            y = y[j,:]
+            y2 = y2[j, :]
             
         x = np.vstack([x1, x2])
+        
+        if self.ix_y == 0:
+            return x, y1
+        elif self.ix_y == 1:
+            return x, y2
+        else:
+            return x, np.vstack([y1, y2])
 
-        return x, y
         
             
             
@@ -157,7 +168,7 @@ def main():
     chunk_size = int(args.chunk_size)
     
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
-    ancFiles = sorted([u for u in glob.glob(os.path.join(args.idir, '*.anc')) if not ('.1.' in u or '.alt.' in u)])
+    ancFiles = [u.replace('txt', 'anc') for u in msFiles]    
     
     counter = 0
 
@@ -184,7 +195,7 @@ def main():
                     
                     comm.send([None, None], dest = 0)
                     continue
-                elif y_.shape[0] != 156:
+                elif y_.shape[0] != 306:
                     logging.info('pop size error (y) in sim {0} in msFile {1}'.format(ix, msFile))
                     
                     comm.send([None, None], dest = 0)
