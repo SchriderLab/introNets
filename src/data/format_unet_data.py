@@ -180,7 +180,12 @@ def main():
                 
                 logging.info('{},{}'.format(x_.shape, y_.shape))
                 if x_.shape[0] != 306:
-                    logging.info('pop size error in sim {0} in msFile {1}'.format(ix, msFile))
+                    logging.info('pop size error (x) in sim {0} in msFile {1}'.format(ix, msFile))
+                    
+                    comm.send([None, None], dest = 0)
+                    continue
+                elif y_.shape[0] != 156:
+                    logging.info('pop size error (y) in sim {0} in msFile {1}'.format(ix, msFile))
                     
                     comm.send([None, None], dest = 0)
                     continue
