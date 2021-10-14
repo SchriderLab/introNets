@@ -44,7 +44,7 @@ def main():
     args = parse_args()
     
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
-    ancFiles = sorted([u for u in glob.glob(os.path.join(args.idir, '*.anc')) if not ('.1.' in u or '.alt.' in u)])
+    ancFiles = [u.replace('txt', 'anc') for u in msFiles]
 
     for ix in range(len(msFiles)):
         x, y = load_data(msFiles[ix], ancFiles[ix])
