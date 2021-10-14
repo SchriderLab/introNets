@@ -88,7 +88,7 @@ def main():
     else:
         n_classes = 1
         
-    model = GCNUNet(n_classes = n_classes)
+    model = GCNUNet(in_channels = 306, n_classes = n_classes)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -128,7 +128,8 @@ def main():
             
             try:
                 x, y, edges, batch = generator.get_batch()
-            except:
+            except Exception as e:
+                print(e)
                 break
             
             x = x.to(device)
