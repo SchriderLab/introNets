@@ -72,7 +72,7 @@ class Formatter(object):
             x = self.x[k]
             y = self.y[k]
             
-            if x.shape[0] != sum(self.pop_sizes):
+            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                 continue
             
             x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
