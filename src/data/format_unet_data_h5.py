@@ -50,7 +50,7 @@ def remove_singletons(x_list, y_list):
     return new_x, new_y
 
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156], sorting = None):
+    def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156], sorting = None, pop = None):
         # list of x and y arrays
         self.x = x
         self.y = y
@@ -61,6 +61,7 @@ class Formatter(object):
         
         self.pop_sizes = pop_sizes
         self.sorting = sorting
+        self.pop = pop
         
     # return a list of the desired array shapes
     def format(self):
@@ -85,14 +86,10 @@ class Formatter(object):
             x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
             y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
             
-            if args.pop:
-                
-                if args.pop == "0":
-                
+            if self.pop:
+                if self.pop == "0":
                     y = y[0]
-                    
                 else:
-                    
                     y = y[1]
             
             X.append(x)
@@ -137,6 +134,8 @@ def main():
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
+    
+    print(args.pop)
 
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
