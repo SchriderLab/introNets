@@ -132,7 +132,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
 
-    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if (not '.' in u)]
+    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, 'out*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
 
     if comm.rank != 0:
@@ -142,7 +142,7 @@ def main():
             idir = idirs[ix]
             
             msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
-            ancFile = os.path.join(idir, 'out.anc')
+            ancFile = os.path.join(idir, '{}.anc'.format(idir.split('/')[-1]))
             
             x, y = load_data(msFile, ancFile)
             
