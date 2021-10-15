@@ -134,11 +134,11 @@ def main():
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*/out*/out*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
-    
-    print(args.pop)
 
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
+            logging.info('{0}: on {1}...'.format(comm.rank, ix))
+            
             idir = idirs[ix]
             
             msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
@@ -147,10 +147,9 @@ def main():
             x, y = load_data(msFile, ancFile)
             
             if args.densify:
-                
                 x, y = remove_singletons(x, y)
             
-            f = Formatter(x, y, sorting = args.sorting)
+            f = Formatter(x, y, sorting = args.sorting, pop = args.pop)
             x, y = f.format()
         
             comm.send([x, y], dest = 0)
