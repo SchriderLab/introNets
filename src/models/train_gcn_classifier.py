@@ -99,7 +99,7 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
         y_pred = [ymap[yi] for yi in y_pred]
         y_true = [ymap[yi] for yi in y_true]
         labels = [ymap[yi] for yi in labels]
-    cm = confusion_matrix(y_true, y_pred, labels=labels)
+    cm = confusion_matrix(y_true, y_pred)
     cm_sum = np.sum(cm, axis=1, keepdims=True)
     cm_perc = cm / cm_sum.astype(float) * 100
     annot = np.empty_like(cm).astype(str)
