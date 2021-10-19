@@ -19,7 +19,7 @@ N_SITES = 10000
 
 bounds = dict()
 bounds[0] = (25., 50.) # theta
-bounds[1] = (0.15, 0.25) # theta_rho
+bounds[1] = (0.1, 0.3) # theta_rho
 bounds[2] = (10., 40.) # nu_ab
 bounds[3] = (0.01, 0.15) # nu_ba
 bounds[4] = (0.01, None) # migTime
