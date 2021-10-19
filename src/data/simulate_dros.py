@@ -18,15 +18,15 @@ SIZE_B = 14
 N_SITES = 10000
 
 bounds = dict()
-bounds[0] = (1., 150.) # theta
-bounds[1] = (0.01, 0.35) # theta_rho
-bounds[2] = (0.1, 200.) # nu_ab
-bounds[3] = (0.001, 1.0) # nu_ba
+bounds[0] = (25., 50.) # theta
+bounds[1] = (0.15, 0.25) # theta_rho
+bounds[2] = (10., 40.) # nu_ab
+bounds[3] = (0.01, 0.15) # nu_ba
 bounds[4] = (0.01, None) # migTime
 bounds[5] = (0.01, 1.0) # migProb
-bounds[6] = (0.01, 15.) # T
-bounds[7] = (-10., 10.) # alpha1
-bounds[8] = (-20, 10.) # alpha2
+bounds[6] = (0.5, 1.1) # T
+bounds[7] = (-10., 1.) # alpha1
+bounds[8] = (0.1, 1.0) # alpha2
 
 params = dict()
 params['theta'] = 68.29691232
@@ -82,7 +82,7 @@ def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
     
     p = np.tile(np.array([theta, rho, nu1, nu2, alpha1, alpha2, 0, 0, T, T, migTime, 1 - migProb, migTime]), (n, 1)).astype(object)
     
-    return p
+    return p, ll
 
 def normalize(p):
     rho = p[1]
@@ -191,35 +191,14 @@ def main():
             # simulate the selected parameters
             rho, migTime, migProb = p_
             
-            P = parameters_df(df, ix, rho, migTime, migProb, n)
-            
-            odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
-            counter += 1
-            
-            os.system('mkdir -p {}'.format(odir))
-        
-            writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
-        
-            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
-            print('simulating via the recommended parameters...')
-            sys.stdout.flush()
-        
-            fout = os.path.join(odir, 'mig.msOut')
-            os.system(slurm_cmd.format(fout, cmd))
-            
-            # make some perturbed versions of the sims
-            P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-            print(P_)
-            
-            for ij in range(10):
-                x = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
-            
+            P, ll = parameters_df(df, ix, rho, migTime, migProb, n)
+            if ll > -2000:
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                 counter += 1
                 
                 os.system('mkdir -p {}'.format(odir))
             
-                writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
+                writeTbsFile(P, os.path.join(odir, 'mig.tbs'))
             
                 cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
                 print('simulating via the recommended parameters...')
@@ -227,6 +206,27 @@ def main():
             
                 fout = os.path.join(odir, 'mig.msOut')
                 os.system(slurm_cmd.format(fout, cmd))
+                
+                # make some perturbed versions of the sims
+                P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
+                print(P_)
+                
+                for ij in range(2):
+                    x = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
+                
+                    odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+                    counter += 1
+                    
+                    os.system('mkdir -p {}'.format(odir))
+                
+                    writeTbsFile(x, os.path.join(odir, 'mig.tbs'))
+                
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
+                    print('simulating via the recommended parameters...')
+                    sys.stdout.flush()
+                
+                    fout = os.path.join(odir, 'mig.msOut')
+                    os.system(slurm_cmd.format(fout, cmd))
                 
             
 if __name__ == '__main__':
