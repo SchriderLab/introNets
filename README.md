@@ -23,5 +23,10 @@ Currently Loaded Modules:
   2) cmake/3.18.0   4) matlab/2019a   6) gcc/6.3.0
   
 # for access to the openmpi packages:
-module add ~markreed/modules_longleaf
+module add ~markreed/modules_longleaf # add this to ~/.bashrc if you want it all the time
+module add openmpi_3.0.0/gcc_6.3.0
+module save # this should be sufficient tho
+
+# install mpi4py locally to LL
+pip install --user mpi4py
 ```
