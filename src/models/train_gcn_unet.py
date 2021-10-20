@@ -34,6 +34,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from layers import GCNUNet
 from data_loaders import GCNDataGenerator
+import glob
 
 def parse_args():
     # Argument Parser
@@ -55,6 +56,7 @@ def parse_args():
     
     parser.add_argument("--seg", action = "store_true")
     parser.add_argument("--loss", default = "bce")
+    parser.add_argument("--layer_type", default = "gat")
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -82,13 +84,16 @@ def main():
     # ${code_blocks}
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
-
-    if args.seg:
-        n_classes = 128
-    else:
-        n_classes = 1
-        
-    model = GCNUNet(in_channels = 306, n_features = 306, n_classes = n_classes)
+    
+    ## read a file to find out how many layers we need
+    ## ------------
+    ifile = glob.glob(os.path.join(args.idir, '*/*.npz'))[0]
+    ifile = np.load(ifile, allow_pickle = True)
+    
+    n_layers = len(ifile['edges'])
+    
+    model = GCNUNet(in_channels = 306, n_features = 306, 
+                    n_classes = 1, layer_type = args.layer_type, n_layers = n_layers)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
