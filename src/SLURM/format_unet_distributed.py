@@ -12,6 +12,8 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
     
     parser.add_argument("--odir", default = "None")
+    parser.add_argument("--densify", action = "store_true")
+    
     parser.add_argument("--ix_y", default = "0")
 
     args = parser.parse_args()
@@ -39,6 +41,9 @@ def main():
     cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --idir {0} --odir {1} --ix_y {2}"'
     for idir in idirs:
         cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y)
+        if args.densify:
+            cmd_ = cmd_ + " --densify"
+        
         os.system(cmd_)
 
 if __name__ == '__main__':

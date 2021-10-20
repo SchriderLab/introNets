@@ -139,6 +139,8 @@ def parse_args():
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
     
+    parser.add_argument("--densify", action = "store_true")
+    
     parser.add_argument("--ix_y", default = "1")
     
     args = parser.parse_args()
@@ -205,6 +207,9 @@ def main():
                     
                     comm.send([None, None], dest = 0)
                     continue
+                
+                if args.densify:
+                    x, y = remove_singletons(x, y)
                 
                 f = Formatter(ix_y = int(args.ix_y))
                 x_, y_ = f.format(x_, y_)
