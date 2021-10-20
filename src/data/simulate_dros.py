@@ -212,7 +212,7 @@ def main():
                 print(P_)
                 
                 for ij in range(2):
-                    x = simulate(normalize(P_) + np.random.normal(0., 0.01, size = P_.shape), n)
+                    x = simulate(normalize(P_) + np.random.normal(0., 0.05, size = P_.shape), n)
                 
                     odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                     counter += 1
