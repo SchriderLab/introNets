@@ -48,9 +48,23 @@ class TransferModel(nn.Module):
         self.res = list(model.children())[0]
         
         self.conv = list(model.children())[1]
-        self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1] + [nn.Linear(1024, 150)])
+        self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1])
+        
+        self.out = nn.Linear(1024, 150)
         
         self.activation = nn.ReLU()
+        
+    def freeze(self):
+        ### freeze all the layers of the network except for the last ones
+        for param in self.res.parameters():
+            param.requires_grad = False
+            
+
+    def unfreeze(self):
+        ### unfreeze
+        for param in self.res.parameters():
+            param.requires_grad = True         
+        
         
     def forward(self, x, edge_indices, batch):
         x = self.res(x, edge_indices)
@@ -63,8 +77,11 @@ class TransferModel(nn.Module):
         x = torch.cat([x, x_global[batch]], dim = 1)
         
         x = self.transform(x)
+        x = self.out(x)
         
         return x
+    
+    
     
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     """
@@ -124,7 +141,7 @@ def parse_args():
     parser.add_argument("--n_plateau", default = "5")
     parser.add_argument("--rl_factor", default = "0.5")
     parser.add_argument("--n_epochs", default = "100")
-    parser.add_argument("--n_early", default = "10")
+    parser.add_argument("--n_early", default = "5")
 
     parser.add_argument("--batch_size", default = "16")
     
@@ -170,7 +187,7 @@ def main():
     generator = GCNDataGenerator(args.idir, batch_size = int(args.batch_size), seg = True)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737]).to(device))
     
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = optim.Adam(model.parameters(), lr = 0.00001)
     early_count = 0
     #scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
@@ -179,14 +196,16 @@ def main():
     history['epoch'] = []
     history['val_loss'] = []
 
+    model.freeze()
+
     min_val_loss = np.inf
     print('training...')
     for ix in range(int(args.n_epochs)):
         model.train()
-
+    
         losses = []
         accuracies = []
-
+    
         for ij in range(generator.length):
             optimizer.zero_grad()
             
@@ -201,32 +220,32 @@ def main():
             
             edges = [u.to(device) for u in edges]
             batch = batch.to(device)
-
+    
             y_pred = model(x, edges, batch)
             #print(y.shape, y_pred.shape)
-
+    
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
-
+    
             # compute accuracy in CPU with sklearn
             y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
             y = np.round(y.detach().cpu().numpy().flatten())
-
+    
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
-
+    
             if (ij + 1) % 5 == 0:
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1))
-
+    
         model.eval()
         
         history['epoch'].append(ix)
         history['loss'].append(np.mean(losses))
-
+    
         val_losses = []
         val_accs = []
         
@@ -241,14 +260,14 @@ def main():
                         continue
                 except:
                     break
-
+    
                 x = x.to(device)
                 y = y.to(device)
                 edges = [u.to(device) for u in edges]
                 batch = batch.to(device)
     
                 y_pred = model(x, edges, batch)
-
+    
                 loss = criterion(y_pred, y)
                 val_losses.append(loss.detach().item())
                 
@@ -263,12 +282,12 @@ def main():
         
         val_loss = np.mean(val_losses)
         history['val_loss'].append(val_loss)
-
+    
         logging.info(
             'root: Epoch {0}, got val loss of {1}, acc {2}'.format(ix, val_loss, np.mean(val_accs)))
         
         # ${save_extra_history}
-
+    
         val_loss = np.mean(val_losses)
         if val_loss < min_val_loss:
             min_val_loss = val_loss
@@ -276,15 +295,126 @@ def main():
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
             
             cm_analysis(Y, Y_pred, os.path.join(args.odir, 'best.png'), ['native', 'introgressed'])
-
+    
             early_count = 0
         else:
             early_count += 1
-
+    
             # early stop criteria
             if early_count > int(args.n_early):
                 break
-
+    
+        generator.on_epoch_end()
+        
+        df = pd.DataFrame(history)
+        df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
+        
+    model.unfreeze()
+    print('training unfrozen...')
+    for ix in range(int(args.n_epochs)):
+        model.train()
+    
+        losses = []
+        accuracies = []
+    
+        for ij in range(generator.length):
+            optimizer.zero_grad()
+            
+            try:
+                x, y, edges, batch = generator.get_batch()
+            except Exception as e:
+                print(e)
+                break
+            
+            x = x.to(device)
+            y = y.to(device)
+            
+            edges = [u.to(device) for u in edges]
+            batch = batch.to(device)
+    
+            y_pred = model(x, edges, batch)
+            #print(y.shape, y_pred.shape)
+    
+            loss = criterion(y_pred, y) # ${loss_change}
+            loss.backward()
+            optimizer.step()
+            losses.append(loss.item())
+    
+            # compute accuracy in CPU with sklearn
+            y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
+            y = np.round(y.detach().cpu().numpy().flatten())
+    
+            # append metrics for this epoch
+            accuracies.append(accuracy_score(y, y_pred))
+    
+            if (ij + 1) % 5 == 0:
+                logging.info(
+                    'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
+                                                                                  np.mean(accuracies), ij + 1))
+    
+        model.eval()
+        
+        history['epoch'].append(ix)
+        history['loss'].append(np.mean(losses))
+    
+        val_losses = []
+        val_accs = []
+        
+        Y = []
+        Y_pred = []
+        for step in range(generator.val_length):
+            with torch.no_grad():
+                try:
+                    x, y, edges, batch = generator.get_batch(val = True)
+                    
+                    if x.shape[0] != y.shape[0]:
+                        continue
+                except:
+                    break
+    
+                x = x.to(device)
+                y = y.to(device)
+                edges = [u.to(device) for u in edges]
+                batch = batch.to(device)
+    
+                y_pred = model(x, edges, batch)
+    
+                loss = criterion(y_pred, y)
+                val_losses.append(loss.detach().item())
+                
+                # compute accuracy in CPU with sklearn
+                y_pred = expit(y_pred.detach().cpu().numpy().flatten())
+                y = y.detach().cpu().numpy().flatten()
+                
+                val_accs.append(accuracy_score(np.round(y), np.round(y_pred)))
+                
+                Y.extend(y)
+                Y_pred.extend(np.round(y_pred))
+        
+        val_loss = np.mean(val_losses)
+        history['val_loss'].append(val_loss)
+    
+        logging.info(
+            'root: Epoch {0}, got val loss of {1}, acc {2}'.format(ix, val_loss, np.mean(val_accs)))
+        
+        # ${save_extra_history}
+    
+        val_loss = np.mean(val_losses)
+        if val_loss < min_val_loss:
+            min_val_loss = val_loss
+            print('saving weights...')
+            torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
+            
+            cm_analysis(Y, Y_pred, os.path.join(args.odir, 'best.png'), ['native', 'introgressed'])
+    
+            early_count = 0
+        else:
+            early_count += 1
+    
+            # early stop criteria
+            if early_count > int(args.n_early):
+                break
+    
         generator.on_epoch_end()
         
         df = pd.DataFrame(history)
