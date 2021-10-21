@@ -50,8 +50,8 @@ class GCNUNet(nn.Module):
         x_global = torch.squeeze(self.activation(x_global))
         
         x_global_max = scatter_max(x_global, batch, dim = 0)[0]
-        x_global_mean = scatter_mean(x_global, batch, dim = 0)[0]
-        x_global_std = scatter_std(x_global, batch, dim = 0)[0]
+        x_global_mean = scatter_mean(x_global, batch, dim = 0)
+        x_global_std = scatter_std(x_global, batch, dim = 0)
         
         x = torch.cat([x, 
                        x_global_max[batch], 
