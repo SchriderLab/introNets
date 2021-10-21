@@ -35,7 +35,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers import GCNUNet
+from layers import GCNUNet_i1
 from data_loaders import GCNDataGenerator
 
 from torch_scatter import scatter_max
