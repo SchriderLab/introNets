@@ -175,7 +175,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
         
-    model = GCNUNet(in_channels = 306, n_features = 306, n_classes = 1)        
+    model = GCNUNet_i1(in_channels = 306, n_features = 306, n_classes = 1)        
     
     checkpoint = torch.load(args.weights, map_location = device)
     model.load_state_dict(checkpoint)
