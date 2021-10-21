@@ -37,8 +37,8 @@ class GCNUNet(nn.Module):
         n = n_features * (n_layers - 1)
         
         self.conv = nn.Conv1d(n, 512, 1)
-        self.transform = nn.Sequential(nn.Linear(n + 3 * 1024, 4096), nn.BatchNorm1d(4096), nn.ReLU(), 
-                                       nn.Linear(4096, 2048), nn.BatchNorm1d(2048), nn.ReLU(), 
+        self.transform = nn.Sequential(nn.Linear(n + 3 * 512, 4096), nn.LayerNorm(4096), nn.ReLU(), 
+                                       nn.Linear(4096, 2048), nn.LayerNorm(2048), nn.ReLU(), 
                                        nn.Linear(2048, n_classes))
         
         self.activation = nn.ReLU()
