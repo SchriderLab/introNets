@@ -29,7 +29,36 @@ from torch_scatter import scatter_max, scatter, scatter_mean, scatter_std
 _InceptionOutputs = InceptionOutputs
 from torch_geometric.utils import to_dense_batch
 
-class GCNUNet(nn.Module):
+class GCNUNet_i1(nn.Module):
+    def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8, layer_type = 'gat'):
+        super(GCNUNet, self).__init__()
+        
+        self.res = DynamicGraphResBlock(in_channels, n_features, n_layers, layer_type = layer_type)
+        n = n_features * (n_layers - 1)
+        
+        self.conv = nn.Conv1d(n, 1024, 1)
+        self.transform = nn.Sequential(nn.Linear(n + 1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
+                                       nn.Linear(1024, n_classes))
+        
+        self.activation = nn.ReLU()
+        
+    def forward(self, x, edge_indices, batch):
+        x = self.res(x, edge_indices)
+        
+        x_global = self.conv(torch.unsqueeze(x, 2))
+        x_global = torch.squeeze(self.activation(x_global))
+        
+        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
+        
+        x = torch.cat([x, 
+                       x_global_max[batch], dim = 1)
+        
+        x = self.transform(x)
+        
+        return x
+
+class GCNUNet_i2(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8, layer_type = 'gat'):
         super(GCNUNet, self).__init__()
         
@@ -37,7 +66,7 @@ class GCNUNet(nn.Module):
         n = n_features * (n_layers - 1)
         
         self.conv = nn.Conv1d(n, 512, 1)
-        self.transform = nn.Sequential(nn.Linear(n + 3 * 512, 4096), nn.LayerNorm(4096), nn.ReLU(), 
+        self.transform = nn.Sequential(nn.Linear(n + 3 * 1024, 4096), nn.LayerNorm(4096), nn.ReLU(), 
                                        nn.Linear(4096, 2048), nn.LayerNorm(2048), nn.ReLU(), 
                                        nn.Linear(2048, n_classes))
         
