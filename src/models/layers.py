@@ -22,7 +22,7 @@ from torch_geometric.nn import global_mean_pool
 InceptionOutputs = namedtuple('InceptionOutputs', ['logits', 'aux_logits'])
 InceptionOutputs.__annotations__ = {'logits': Tensor, 'aux_logits': Optional[Tensor]}
 
-from torch_scatter import scatter_max, scatter
+from torch_scatter import scatter_max, scatter, scatter_mean, scatter_std
 
 # Script annotations failed with _GoogleNetOutputs = namedtuple ...
 # _InceptionOutputs set here for backwards compat
@@ -37,9 +37,9 @@ class GCNUNet(nn.Module):
         n = n_features * (n_layers - 1)
         
         self.conv = nn.Conv1d(n, 1024, 1)
-        self.transform = nn.Sequential(nn.Linear(n + 1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
-                                       nn.Linear(1024, 1024), nn.BatchNorm1d(1024), nn.ReLU(), 
-                                       nn.Linear(1024, n_classes))
+        self.transform = nn.Sequential(nn.Linear(n + 3 * 1024, 4096), nn.BatchNorm1d(4096), nn.ReLU(), 
+                                       nn.Linear(4096, 2048), nn.BatchNorm1d(2048), nn.ReLU(), 
+                                       nn.Linear(2048, n_classes))
         
         self.activation = nn.ReLU()
         
@@ -49,9 +49,14 @@ class GCNUNet(nn.Module):
         x_global = self.conv(torch.unsqueeze(x, 2))
         x_global = torch.squeeze(self.activation(x_global))
         
-        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_mean = scatter_mean(x_global, batch, dim = 0)[0]
+        x_global_std = scatter_std(x_global, batch, dim = 0)[0]
         
-        x = torch.cat([x, x_global[batch]], dim = 1)
+        x = torch.cat([x, 
+                       x_global_max[batch], 
+                       x_global_mean[batch], 
+                       x_global_std[batch]], dim = 1)
         
         x = self.transform(x)
         
