@@ -13,6 +13,7 @@ def parse_args():
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--densify", action = "store_true")
+    parser.add_argument("--topology", default = "knn")
     
     parser.add_argument("--ix_y", default = "0")
 
@@ -38,14 +39,14 @@ def main():
     
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
     
-    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --idir {0} --odir {1} --ix_y {2}{3}"'
+    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --topology {4} --idir {0} --odir {1} --ix_y {2}{3}"'
     for idir in idirs:
         if args.densify:
             _ = ' --densify'
         else:
             _ = ''
         
-        cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y, _)
+        cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y, _, args.topology)
         
         os.system(cmd_)
 
