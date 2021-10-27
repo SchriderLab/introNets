@@ -22,7 +22,7 @@ from sklearn.metrics import pairwise_distances
 from scipy.optimize import linear_sum_assignment
 
 import matplotlib.pyplot as plt
-from sparsenn.models.gcn.topologies import knn_1d
+from sparsenn.models.gcn.topologies import knn_1d, random_graph_1d
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -140,6 +140,7 @@ def parse_args():
     parser.add_argument("--n_dilations", default = "7")
     
     parser.add_argument("--densify", action = "store_true")
+    parser.add_argument("--topology", default = "knn")
     
     parser.add_argument("--ix_y", default = "1")
     
@@ -228,8 +229,10 @@ def main():
                 if x_ is not None:
                     n = x_.shape[0]
                 
-                    edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
-                    
+                    if args.topologies == 'knn':
+                        edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+                    elif args.topologies == 'random':
+                        edges = [u.numpy() for u in 1d_random_graph(n, k = int(args.k), n_dilations = int(args.n_dilations))]
                     np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges)
                 
                     counter += 1
