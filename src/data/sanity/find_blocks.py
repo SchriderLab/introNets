@@ -84,13 +84,17 @@ def main():
         for k in range(len(y)):
             y_ = y[k]
             
-            p1, p2 = find_blocks(y_[20:,:])
+            if len(y_.shape) == 2:
+                p1, p2 = find_blocks(y_[20:,:])
+            else:
+                continue
             
             # filter no introgression case
             if p1 + p2 != 0:
                 _.append(p2 / p1)
                 
         hist.append(np.mean(_))
+        print(hist[-1])
         
     plt.hist(hist, bins = 35)
     plt.savefig('block_hist.png', dpi = 100)
