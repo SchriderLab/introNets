@@ -37,7 +37,8 @@ def split(word):
 # ----------------
 def load_data(msFile, ancFile):
     print(msFile, ancFile)
-    
+    params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
+
     msFile = open(msFile, 'r')
 
     # no migration case
@@ -78,7 +79,7 @@ def load_data(msFile, ancFile):
         X.append(x)
         Y.append(y)
         
-    return X, Y
+    return X, Y, params[0]
 
 def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_pop_size = 32):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
