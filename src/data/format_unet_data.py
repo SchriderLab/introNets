@@ -136,6 +136,7 @@ def parse_args():
 
     parser.add_argument("--odir", default = "None")
     
+    parser.add_argument("--pop_sizes", default = "150,156")
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
     
@@ -174,7 +175,6 @@ def main():
     ancFiles = [u.replace('txt', 'anc') for u in msFiles]    
     
     counter = 0
-
     for ix in range(len(msFiles)):
         n_received = 0
         
@@ -187,18 +187,21 @@ def main():
         
         n_expected = len(x)
         
+        pop_sizes = list(map(int, args.pop_sizes.split(',')))
+        pop_size = sum(pop_sizes)
+        
         if comm.rank != 0:            
             for ix in range(comm.rank - 1, len(x), comm.size - 1):
                 x_ = x[ix]
                 y_ = y[ix]
                 
                 logging.info('{},{}'.format(x_.shape, y_.shape))
-                if x_.shape[0] != 306:
+                if x_.shape[0] != pop_size:
                     logging.info('pop size error (x) in sim {0} in msFile {1}'.format(ix, msFile))
                     
                     comm.send([None, None], dest = 0)
                     continue
-                elif y_.shape[0] != 306:
+                elif y_.shape[0] != pop_size:
                     logging.info('pop size error (y) in sim {0} in msFile {1}'.format(ix, msFile))
                     
                     comm.send([None, None], dest = 0)
@@ -212,7 +215,7 @@ def main():
                 if args.densify:
                     x, y = remove_singletons(x, y)
                 
-                f = Formatter(ix_y = int(args.ix_y))
+                f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes)
                 x_, y_ = f.format(x_, y_)
             
                 comm.send([x_, y_], dest = 0)
