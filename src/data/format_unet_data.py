@@ -229,9 +229,9 @@ def main():
                 if x_ is not None:
                     n = x_.shape[0]
                 
-                    if args.topologies == 'knn':
+                    if args.topology == 'knn':
                         edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
-                    elif args.topologies == 'random':
+                    elif args.topology == 'random':
                         edges = [u.numpy() for u in random_graph_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
                     np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges)
                 
