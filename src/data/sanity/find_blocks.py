@@ -67,8 +67,8 @@ def main():
     
     args = parse_args()
 
-    msFiles = sorted(glob.glob(os.path.join(args.idir, '*/mig.msOut')))[:32]
-    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*/out.anc')))[:32]
+    msFiles = sorted(glob.glob(os.path.join(args.idir, '*/mig.msOut')))[:24]
+    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*/out.anc')))[:24]
     
     result = dict()
     result['migTime'] = []
@@ -124,11 +124,15 @@ def main():
         result['T'].append(T)
         result['ratio'].append(np.mean(_))
         
+        print(np.mean(_))
+       
     comm.Barrier()
     
     if comm.rank == 0:
         logging.info('0: writing results...')
         result = comm.gather(result, root = 0)
+        
+        print(len(result), result[0])
         
         _ = dict()
         for v in result:
