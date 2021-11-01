@@ -124,9 +124,9 @@ def main():
         result['T'].append(T)
         result['ratio'].append(np.mean(_))
         
-        print(np.mean(_))
-       
     comm.Barrier()
+    
+    result = comm.gather(result, root = 0)
     
     if comm.rank == 0:
         logging.info('0: writing results...')
@@ -140,7 +140,8 @@ def main():
         plt.hist(result['ratio'], bins = 35)
         plt.savefig('block_hist.png', dpi = 100)
         plt.close()
-            
+        
+        
         
 
 if __name__ == '__main__':
