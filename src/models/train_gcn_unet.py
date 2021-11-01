@@ -32,7 +32,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers import GCNUNet
+from layers import GCNUNet_i2
 from data_loaders import GCNDataGenerator
 import glob
 
@@ -92,7 +92,7 @@ def main():
     
     n_layers = len(ifile['edges'])
     
-    model = GCNUNet(in_channels = 306, n_features = 306, 
+    model = GCNUNet_i2(in_channels = 306, n_features = 306, 
                     n_classes = 1, layer_type = args.layer_type, n_layers = n_layers)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
