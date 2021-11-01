@@ -32,7 +32,7 @@ def find_blocks(X):
     # more realistic introgression, number of sites
     p2 = len(np.where((X > 0) & (X < 1))[0])
     
-    if p2 ! = 0:
+    if p2 != 0:
         return p1 / p2
     else:
         return None
