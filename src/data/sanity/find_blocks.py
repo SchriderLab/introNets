@@ -90,7 +90,7 @@ def main():
                 continue
             
             # filter no introgression case
-            if p1 + p2 != 0:
+            if p1 + p2 != 0 and p1 != 0:
                 _.append(p2 / p1)
                 
         hist.append(np.mean(_))
