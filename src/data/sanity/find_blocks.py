@@ -26,23 +26,16 @@ def find_blocks(X):
     X = np.mean(X, axis = 0)
     one_blocks = []
     
-    # 1 blocks ## (unrealistic introgression)
-    data = list(np.where(X == 1)[0])
+    # all individuals introgressed, number of sites
+    p1 = len(np.where(X == 1)[0])
 
-    for k, g in groupby(enumerate(data), lambda ix : ix[0] - ix[1]):
-         _ = list(map(itemgetter(1), g))
-         
-         if len(_) >= 2:
-             one_blocks.append(len(_))
-             
-    # proportion of:
-    p1 = sum(one_blocks) / len(X)
-             
-    # more realistic introgression
-    p2 = len(np.where(X > 0)[0]) / len(X)
+    # more realistic introgression, number of sites
+    p2 = len(np.where((X > 0) & (X < 1))[0])
     
-    return p1, p2
-        
+    if p2 ! = 0:
+        return p1 / p2
+    else:
+        return None
 
 def parse_args():
     # Argument Parser
@@ -112,13 +105,13 @@ def main():
             y_ = y[k]
             
             if len(y_.shape) == 2:
-                p1, p2 = find_blocks(y_[20:,:])
+                prop = find_blocks(y_[20:,:])
             else:
                 continue
             
-            # filter no introgression case
-            if p1 + p2 != 0 and p1 != 0:
-                _.append(p2 / p1)
+            # no introgression case
+            if prop is not None:
+                _.append(prop)
                 
         result['migTime'].append(migTime)
         result['migProb'].append(migProb)
@@ -134,6 +127,7 @@ def main():
     comm.Barrier()
     
     if comm.rank == 0:
+        logging.info('0: writing results...')
         result = comm.gather(result, root = 0)
         
         _ = dict()
