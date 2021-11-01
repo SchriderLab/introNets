@@ -130,7 +130,6 @@ def main():
     
     if comm.rank == 0:
         logging.info('0: writing results...')
-        result = comm.gather(result, root = 0)
         
         print(result)
                     
