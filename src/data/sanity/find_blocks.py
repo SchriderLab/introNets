@@ -67,8 +67,8 @@ def main():
     
     args = parse_args()
 
-    msFiles = sorted(glob.glob(os.path.join(args.idir, '*/mig.msOut')))[:24]
-    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*/out.anc')))[:24]
+    msFiles = sorted(glob.glob(os.path.join(args.idir, '*/mig.msOut')))
+    ancFiles = sorted(glob.glob(os.path.join(args.idir, '*/out.anc')))
     
     result = dict()
     result['migTime'] = []
