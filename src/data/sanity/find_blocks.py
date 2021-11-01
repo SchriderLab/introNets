@@ -131,12 +131,18 @@ def main():
     if comm.rank == 0:
         logging.info('0: writing results...')
         
-        print(result)
+        _ = dict()
+        for v in result:
+            for key in v.keys():
+                if key in _.keys():
+                    _[key].extend(v[key])
+                else:
+                    _[key] = v[key]
                     
-        df = pd.DataFrame(result)
+        df = pd.DataFrame(_)
         df.to_csv('blocks.csv', index = False)
         
-        plt.hist(result['ratio'], bins = 35)
+        plt.hist(_['ratio'], bins = 35)
         plt.savefig('block_hist.png', dpi = 100)
         plt.close()
         
