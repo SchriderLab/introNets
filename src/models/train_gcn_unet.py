@@ -51,6 +51,8 @@ def parse_args():
     parser.add_argument("--rl_factor", default = "0.5")
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
+    
+    parser.add_argument("--n_heads", default = "2")
 
     parser.add_argument("--batch_size", default = "16")
     
@@ -93,7 +95,7 @@ def main():
     n_layers = len(ifile['edges'])
     
     model = GCNUNet_i2(in_channels = 306, n_features = 306, 
-                    n_classes = 1, layer_type = args.layer_type, n_layers = n_layers)
+                    n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, n_heads = int(args.n_heads))
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
