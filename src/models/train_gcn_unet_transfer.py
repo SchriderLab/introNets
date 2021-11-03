@@ -310,6 +310,8 @@ def main():
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
         
     model.unfreeze()
+    early_count = 0
+    
     print('training unfrozen...')
     for ix in range(int(args.n_epochs)):
         model.train()

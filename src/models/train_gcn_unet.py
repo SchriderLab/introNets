@@ -59,6 +59,9 @@ def parse_args():
     parser.add_argument("--seg", action = "store_true")
     parser.add_argument("--loss", default = "bce")
     parser.add_argument("--layer_type", default = "gat")
+    
+    parser.add_argument("--n_features", default = "128")
+    parser.add_argument("--n_layers", default = "11")
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -92,10 +95,10 @@ def main():
     ifile = glob.glob(os.path.join(args.idir, '*/*.npz'))[0]
     ifile = np.load(ifile, allow_pickle = True)
     
-    n_layers = len(ifile['edges'])
+    # n_layers = len(ifile['edges'])
     
-    model = GCNUNet_i2(in_channels = 306, n_features = 306, 
-                    n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, n_heads = int(args.n_heads))
+    model = GCNUNet_i2(in_channels = 306, n_features = int(args.n_features), 
+                    n_classes = 1, layer_type = args.layer_type, n_layers = int(args.n_layers), n_heads = int(args.n_heads))
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
