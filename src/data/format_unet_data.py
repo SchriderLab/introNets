@@ -137,8 +137,8 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     
     parser.add_argument("--pop_sizes", default = "150,156")
-    parser.add_argument("--k", default = "16")
-    parser.add_argument("--n_dilations", default = "7")
+    parser.add_argument("--k", default = "64")
+    parser.add_argument("--n_dilations", default = "0")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")
@@ -172,7 +172,12 @@ def main():
     chunk_size = int(args.chunk_size)
     
     msFiles = sorted(glob.glob(os.path.join(args.idir, '*.txt')))
-    ancFiles = [u.replace('txt', 'anc') for u in msFiles]    
+    ancFiles = [u.replace('txt', 'anc') for u in msFiles]
+
+    ## patch for old naming system, to fix
+    if len(msFiles) == 0:
+        msFiles = [os.path.join(args.idir, 'mig.msOut')]
+        ancFiles = [os.path.join(args.idir, 'out.anc')]
     
     counter = 0
     for ix in range(len(msFiles)):

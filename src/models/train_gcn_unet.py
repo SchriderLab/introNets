@@ -142,7 +142,7 @@ def main():
             x = x.to(device)
             y = y.to(device)
             
-            edges = [u.to(device) for u in edges]
+            edges = edges[0].to(device)
             batch = batch.to(device)
 
             y_pred = model(x, edges, batch)
@@ -187,7 +187,7 @@ def main():
 
                 x = x.to(device)
                 y = y.to(device)
-                edges = [u.to(device) for u in edges]
+                edges = edges[0].to(device)
                 batch = batch.to(device)
     
                 y_pred = model(x, edges, batch)
