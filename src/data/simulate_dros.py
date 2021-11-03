@@ -179,9 +179,9 @@ def main():
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=8G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
-    rho = [0.2, 0.15]
-    migTime = [0.7, 0.5, 0.3]
-    migProb = [0.25, 0.5, 0.7, 0.1]
+    rho = [0.025, 0.05, 0.1, 0.25, 0.3]
+    migTime = [0.3, 0.2, 0.1, 0.05]
+    migProb = [0.1, 0.2, 0.05]
     
     p = list(itertools.product(rho, migTime, migProb))
     counter = 0
