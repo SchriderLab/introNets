@@ -137,8 +137,8 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     
     parser.add_argument("--pop_sizes", default = "150,156")
-    parser.add_argument("--k", default = "64")
-    parser.add_argument("--n_dilations", default = "0")
+    parser.add_argument("--k", default = "16")
+    parser.add_argument("--n_dilations", default = "7")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")
@@ -235,7 +235,7 @@ def main():
                 x_, y = comm.recv(source = MPI.ANY_SOURCE)
                 
                 if x_ is not None:
-                    n = x_.shape[0]
+                    n = x_.shape[1]
                 
                     if args.topology == 'knn':
                         edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
