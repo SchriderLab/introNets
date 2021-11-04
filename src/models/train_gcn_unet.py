@@ -95,10 +95,10 @@ def main():
     ifile = glob.glob(os.path.join(args.idir, '*/*.npz'))[0]
     ifile = np.load(ifile, allow_pickle = True)
     
-    # n_layers = len(ifile['edges'])
+    n_layers = len(ifile['edges'])
     
     model = GCNUNet_i2(in_channels = 306, n_features = int(args.n_features), 
-                    n_classes = 1, layer_type = args.layer_type, n_layers = int(args.n_layers), n_heads = int(args.n_heads))
+                    n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, n_heads = int(args.n_heads))
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -145,7 +145,7 @@ def main():
             x = x.to(device)
             y = y.to(device)
             
-            edges = edges[0].to(device)
+            edges = [u.to(device) for u in edges]
             batch = batch.to(device)
 
             y_pred = model(x, edges, batch)
@@ -190,7 +190,7 @@ def main():
 
                 x = x.to(device)
                 y = y.to(device)
-                edges = edges[0].to(device)
+                edges = [u.to(device) for u in edges]
                 batch = batch.to(device)
     
                 y_pred = model(x, edges, batch)
