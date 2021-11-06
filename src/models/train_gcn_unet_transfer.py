@@ -154,6 +154,7 @@ def parse_args():
     parser.add_argument("--n_features", default = "128")
     parser.add_argument("--n_global", default = "512")
     parser.add_argument("--n_heads", default = "2")
+    parser.add_argument("--layer_type", default = "gat")
     
     parser.add_argument("--seg", action = "store_true")
     parser.add_argument("--loss", default = "bce")
