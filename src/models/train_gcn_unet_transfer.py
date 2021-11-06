@@ -38,7 +38,7 @@ import matplotlib.pyplot as plt
 from layers import GCNUNet_i2
 from data_loaders import GCNDataGenerator
 
-from torch_scatter import scatter_max
+from torch_scatter import scatter_max, scatter_mean, scatter_std
 from scipy.special import expit
 
 import glob
@@ -74,9 +74,14 @@ class TransferModel(nn.Module):
         x_global = self.conv(torch.unsqueeze(x, 2))
         x_global = torch.squeeze(self.activation(x_global))
         
-        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_mean = scatter_mean(x_global, batch, dim = 0)
+        x_global_std = scatter_std(x_global, batch, dim = 0)
         
-        x = torch.cat([x, x_global[batch]], dim = 1)
+        x = torch.cat([x, 
+                       x_global_max[batch], 
+                       x_global_mean[batch], 
+                       x_global_std[batch]], dim = 1)
         
         x = self.transform(x)
         x = self.out(x)
