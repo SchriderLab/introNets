@@ -52,7 +52,7 @@ class TransferModel(nn.Module):
         self.conv = list(model.children())[1]
         self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1])
         
-        self.out = nn.Linear(1024, 150)
+        self.out = nn.Linear(2048, 150)
         
         self.activation = nn.ReLU()
         
