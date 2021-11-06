@@ -121,8 +121,10 @@ def main():
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
-    #scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
-
+    
+    decayRate = 0.96
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
+    
     history = dict()
     history['loss'] = []
     history['epoch'] = []
@@ -250,6 +252,8 @@ def main():
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
+        
+        lr_scheduler.step()
 
 if __name__ == '__main__':
     main()
