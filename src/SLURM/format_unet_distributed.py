@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("--topology", default = "knn")
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
+    parser.add_argument("--sort_pos", action = "store_true")
     
     parser.add_argument("--low_resources", action = "store_true")
     
@@ -45,7 +46,7 @@ def parse_args():
 def main():
     args = parse_args()
     
-    idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
+    idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if ((not '.' in u) and (not 'seedms' in u))]
     
     cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --topology {4} --idir {0} --odir {1} --ix_y {2}{3} --pop_sizes {5} --k {6} --n_dilations {7}"'
     
@@ -57,6 +58,9 @@ def main():
             _ = ' --densify'
         else:
             _ = ''
+            
+        if args.sort_pos:
+            _ = _ + ' --sort_pos'
         
         cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y, _, args.topology, args.pop_sizes, args.k, args.n_dilations)
         
