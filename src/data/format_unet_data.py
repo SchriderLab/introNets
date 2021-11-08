@@ -80,14 +80,15 @@ def remove_singletons(x_list, y_list):
 
 class Formatter(object):
     def __init__(self, shape = (2, 128, 256), pop_sizes = [150, 156], 
-                 sort = True, ix_y = 1, metric = 'cosine'):
+                 sort_pops = True, sort_pos = False, ix_y = 1, metric = 'cosine'):
         
         self.n_pops = shape[0]
         self.pop_size = shape[1]
         self.n_sites = shape[2]
         
         self.pop_sizes = pop_sizes
-        self.sort = sort
+        self.sort = sort_pops
+        self.sort_pos = sort_pos
         
         self.ix_y = ix_y
         self.metric = metric
@@ -113,14 +114,21 @@ class Formatter(object):
             
             y2 = y2[j, :]
             
+        
         x = np.vstack([x1, x2])
         
-        if self.ix_y == 0:
-            return x, y1
-        elif self.ix_y == 1:
-            return x, y2
+        if self.sort_pos:
+            x, ix = seriate_spectral(x.T)
+            x = x.T
         else:
-            return x, np.vstack([y1, y2])
+            ix = list(range(x.shape[1]))
+        
+        if self.ix_y == 0:
+            return x, y1[:, ix]
+        elif self.ix_y == 1:
+            return x, y2[:, ix]
+        else:
+            return x, np.vstack([y1, y2])[:, ix]
 
         
             
@@ -139,6 +147,7 @@ def parse_args():
     parser.add_argument("--pop_sizes", default = "150,156")
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
+    parser.add_argument("--sort_positions", action = "store_true")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")

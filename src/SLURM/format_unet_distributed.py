@@ -13,12 +13,17 @@ def parse_args():
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--densify", action = "store_true")
+    
     parser.add_argument("--topology", default = "knn")
+    parser.add_argument("--k", default = "16")
+    parser.add_argument("--n_dilations", default = "7")
+    
     parser.add_argument("--low_resources", action = "store_true")
     
     parser.add_argument("--pop_sizes", default = "150,156")
     
     parser.add_argument("--ix_y", default = "0")
+    parser.add_argument("--low_ram", action = "store_true")
 
     args = parser.parse_args()
 
@@ -42,8 +47,10 @@ def main():
     
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
     
-    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --topology {4} --idir {0} --odir {1} --ix_y {2}{3} --pop_sizes {5}"'
+    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --topology {4} --idir {0} --odir {1} --ix_y {2}{3} --pop_sizes {5} --k {6} --n_dilations {7}"'
     
+    if args.low_ram:
+        cmd = 'sbatch -n 24 --mem=8G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data.py --verbose --topology {4} --idir {0} --odir {1} --ix_y {2}{3} --pop_sizes {5} --k {6} --n_dilations {7}"'
     
     for idir in idirs:
         if args.densify:
@@ -51,7 +58,7 @@ def main():
         else:
             _ = ''
         
-        cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y, _, args.topology, args.pop_sizes)
+        cmd_ = cmd.format(idir, os.path.join(args.odir, idir.split('/')[-1]), args.ix_y, _, args.topology, args.pop_sizes, args.k, args.n_dilations)
         
         os.system(cmd_)
 
