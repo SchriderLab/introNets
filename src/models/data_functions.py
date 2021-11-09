@@ -5,6 +5,7 @@ import sys
 
 from seriate import seriate
 from scipy.spatial.distance import pdist
+import logging
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -75,6 +76,8 @@ def load_data(msFile, ancFile):
             
         X.append(x)
         Y.append(y)
+        
+        logging.info(str(len(anc_lines)))
         
     return X, Y
 

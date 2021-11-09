@@ -68,8 +68,11 @@ class TransferModel(nn.Module):
             param.requires_grad = True         
         
         
-    def forward(self, x, edge_indices, batch):
-        x = self.res(x, edge_indices)
+    def forward(self, x, edge_indices, batch, return_attention_weights = False):
+        if self.res.return_attention_weights:
+            x, att_weights, att_edges = self.res(x, edge_indices)
+        else:
+            x = self.res(x, edge_indices)
         
         x_global = self.conv(torch.unsqueeze(x, 2))
         x_global = torch.squeeze(self.activation(x_global))
@@ -86,9 +89,61 @@ class TransferModel(nn.Module):
         x = self.transform(x)
         x = self.out(x)
         
-        return x
+        if not return_attention_weights:
+            return x
+        else:
+            return x, att_weights, att_edges
     
-    
+class TransferModelGCN(nn.Module):
+    def __init__(self, model, n = 150):
+        super(TransferModelGCN, self).__init__()
+        
+        self.res = list(model.children())[0]
+        
+        self.conv = list(model.children())[1]
+        self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1])
+        
+        self.out = nn.Linear(2048, 150)
+        
+        self.activation = nn.ReLU()
+        
+    def freeze(self):
+        ### freeze all the layers of the network except for the last ones
+        for param in self.res.parameters():
+            param.requires_grad = False
+            
+
+    def unfreeze(self):
+        ### unfreeze
+        for param in self.res.parameters():
+            param.requires_grad = True         
+        
+        
+    def forward(self, x, edge_indices, batch, return_attention_weights = False):
+        if self.res.return_attention_weights:
+            x, att_weights, att_edges = self.res(x, edge_indices)
+        else:
+            x = self.res(x, edge_indices)
+        
+        x_global = self.conv(torch.unsqueeze(x, 2))
+        x_global = torch.squeeze(self.activation(x_global))
+        
+        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_mean = scatter_mean(x_global, batch, dim = 0)
+        x_global_std = scatter_std(x_global, batch, dim = 0)
+        
+        x = torch.cat([x, 
+                       x_global_max[batch], 
+                       x_global_mean[batch], 
+                       x_global_std[batch]], dim = 1)
+        
+        x = self.transform(x)
+        x = self.out(x)
+        
+        if not return_attention_weights:
+            return x
+        else:
+            return x, att_weights, att_edges
     
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     """
@@ -152,7 +207,7 @@ def parse_args():
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--n_features", default = "128")
-    parser.add_argument("--n_global", default = "512")
+    parser.add_argument("--n_global", default = "1024")
     parser.add_argument("--n_heads", default = "2")
     parser.add_argument("--layer_type", default = "gat")
     
@@ -195,8 +250,9 @@ def main():
                     n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, 
                     n_heads = int(args.n_heads), n_global = int(args.n_global))       
     
-    checkpoint = torch.load(args.weights, map_location = device)
-    model.load_state_dict(checkpoint)
+    if args.weight != "None":
+        checkpoint = torch.load(args.weights, map_location = device)
+        model.load_state_dict(checkpoint)
     
     model = TransferModel(model)
     model.to(device)    

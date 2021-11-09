@@ -61,11 +61,11 @@ class GCNUNet_i1(nn.Module):
 class GCNUNet_i2(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, 
                  n_features = 256, n_layers = 8, n_global = 1024, 
-                 layer_type = 'gat', n_heads = 2):
+                 layer_type = 'gat', n_heads = 2, return_attention_weights = False):
         super(GCNUNet_i2, self).__init__()
         
         self.res = DynamicGraphResBlock(in_channels, n_features, n_layers, 
-                                        layer_type = layer_type, heads = n_heads)
+                                        layer_type = layer_type, heads = n_heads, return_attention_weights = return_attention_weights)
         n = n_features * (n_layers - 1)
         
         self.conv = nn.Conv1d(n, n_global, 1)
