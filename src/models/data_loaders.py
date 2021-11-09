@@ -125,7 +125,7 @@ class GCNDataGenerator(object):
                      val_prop = 0.05, k = 8, 
                      seg = False):
        
-        self.training = glob.glob(os.path.join(idir, '*/*.npz'))
+        self.training = glob.glob(os.path.join(args.idir, '*/*.npz') + glob.glob(os.path.join(args.idir, '*.npz')))
                 
         n_val = int(len(self.training) * val_prop)
         random.shuffle(self.training)

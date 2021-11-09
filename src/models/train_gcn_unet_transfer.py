@@ -242,7 +242,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
         
-    ifile = glob.glob(os.path.join(args.idir, '*/*.npz'))[0]
+    ifile = glob.glob(os.path.join(args.idir, '*/*.npz') + glob.glob(os.path.join(args.idir, '*.npz')))[0]
     ifile = np.load(ifile, allow_pickle = True)
     
     n_layers = len(ifile['edges'])
