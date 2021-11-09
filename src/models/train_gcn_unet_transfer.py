@@ -42,6 +42,7 @@ from torch_scatter import scatter_max, scatter_mean, scatter_std
 from scipy.special import expit
 
 import glob
+import pickle
 
 class TransferModel(nn.Module):
     def __init__(self, model, n = 150):
@@ -259,6 +260,10 @@ def main():
     print(model)
         
     generator = GCNDataGenerator(args.idir, batch_size = int(args.batch_size), seg = True)
+    val = generator.val
+    
+    pickle.dump(val, open(os.path.join(args.odir, 'val_indices.pkl'), 'wb'))
+    
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737]).to(device))
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
