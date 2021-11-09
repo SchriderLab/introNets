@@ -151,7 +151,6 @@ def parse_args():
     parser.add_argument("--topology", default = "knn")
     
     parser.add_argument("--ix_y", default = "1")
-    parser.add_argument("--odir", default = "None")
     
     args = parser.parse_args()
 
