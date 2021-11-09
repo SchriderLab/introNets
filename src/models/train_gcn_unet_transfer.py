@@ -251,7 +251,7 @@ def main():
                     n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, 
                     n_heads = int(args.n_heads), n_global = int(args.n_global))       
     
-    if args.weight != "None":
+    if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
     
