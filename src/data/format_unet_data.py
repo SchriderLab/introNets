@@ -214,17 +214,17 @@ def main():
                 if x_.shape[0] != pop_size:
                     logging.info('pop size error (x) in sim {0} in msFile {1}'.format(ix, msFile))
                     
-                    comm.send([None, None], dest = 0)
+                    comm.send([None, None, None], dest = 0)
                     continue
                 elif y_.shape[0] != pop_size:
                     logging.info('pop size error (y) in sim {0} in msFile {1}'.format(ix, msFile))
                     
-                    comm.send([None, None], dest = 0)
+                    comm.send([None, None, None], dest = 0)
                     continue
                 elif x_.shape[1] != y_.shape[1]:
                     logging.info('seg site mismatch error in sim {0} in msFile {1}'.format(ix, msFile))
                     
-                    comm.send([None, None], dest = 0)
+                    comm.send([None, None, None], dest = 0)
                     continue
                 
                 if args.densify:
