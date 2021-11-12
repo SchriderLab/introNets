@@ -15,6 +15,7 @@ import glob
 from sparsenn.models.gcn.topologies import knn_1d
 
 from data_functions import load_data_dros
+import pickle
 
 def load_npz(ifile):
     ifile = np.load(ifile)
