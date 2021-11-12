@@ -14,6 +14,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
+    parser.add_argument("--idir", default = "None")
     # ${args}
 
     parser.add_argument("--odir", default = "None")
