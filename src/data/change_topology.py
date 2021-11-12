@@ -190,8 +190,8 @@ def main():
         x = ifile['x']
         y = ifile['y']
         
-        tag = ifiles.split('/')[-2]
-        ij = int(ifiles.split('/')[-1].split('.')[0])
+        tag = ifiles[ix].split('/')[-2]
+        ij = int(ifiles[ix].split('/')[-1].split('.')[0])
         
         if x is not None:
             n = x.shape[1]
