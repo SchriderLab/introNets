@@ -121,17 +121,24 @@ class GCNDisDataGenerator(object):
         return self.length
 
 class GCNDataGenerator(object):
-    def __init__(self, idir, batch_size = 8, 
+    def __init__(self, idir, indices, batch_size = 8, 
                      val_prop = 0.05, k = 8, 
                      seg = False):
        
-        self.training = glob.glob(os.path.join(idir, '*/*.npz')) + glob.glob(os.path.join(idir, '*.npz'))
-                
-        n_val = int(len(self.training) * val_prop)
-        random.shuffle(self.training)
         
-        self.val = self.training[:n_val]
-        del self.training[:n_val]
+        if indices == "None":
+            self.training = glob.glob(os.path.join(idir, '*/*.npz')) + glob.glob(os.path.join(idir, '*.npz'))
+                    
+            n_val = int(len(self.training) * val_prop)
+            random.shuffle(self.training)
+            
+            self.val = self.training[:n_val]
+            del self.training[:n_val]
+        else:
+            self.training, self.val = pickle.load(open(indices, 'rb'))
+            
+            self.training = [os.path.join(idir, u) for u in self.training]
+            self.val = [os.path.join(idir, u) for u in self.val]
         
         self.batch_size = batch_size
         

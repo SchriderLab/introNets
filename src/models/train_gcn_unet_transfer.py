@@ -214,6 +214,7 @@ def parse_args():
     
     parser.add_argument("--seg", action = "store_true")
     parser.add_argument("--loss", default = "bce")
+    parser.add_argument("--indices", default = "None")
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -242,7 +243,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
         
-    ifile = (glob.glob(os.path.join(args.idir, '*/*.npz') + glob.glob(os.path.join(args.idir, '*.npz')))[0]
+    ifile = (glob.glob(os.path.join(args.idir, '*/*.npz')) + glob.glob(os.path.join(args.idir, '*.npz')))[0]
     ifile = np.load(ifile, allow_pickle = True)
     
     n_layers = len(ifile['edges'])
@@ -259,10 +260,7 @@ def main():
     model.to(device)    
     print(model)
         
-    generator = GCNDataGenerator(args.idir, batch_size = int(args.batch_size), seg = True)
-    val = generator.val
-    
-    pickle.dump(val, open(os.path.join(args.odir, 'val_indices.pkl'), 'wb'))
+    generator = GCNDataGenerator(args.idir, args.indices, batch_size = int(args.batch_size), seg = True)
     
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737]).to(device))
     
@@ -356,8 +354,9 @@ def main():
                 
                 val_accs.append(accuracy_score(np.round(y), np.round(y_pred)))
                 
-                Y.extend(y)
-                Y_pred.extend(np.round(y_pred))
+                if step < 50:
+                    Y.extend(y)
+                    Y_pred.extend(np.round(y_pred))
         
         val_loss = np.mean(val_losses)
         history['val_loss'].append(val_loss)

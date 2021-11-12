@@ -51,6 +51,7 @@ def parse_args():
     parser.add_argument("--rl_factor", default = "0.5")
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
+    parser.add_argument("--indices", default = "None")
     
     parser.add_argument("--n_heads", default = "2")
 
@@ -94,7 +95,7 @@ def main():
     
     ## read a file to find out how many layers we need
     ## ------------
-    ifile = glob.glob(os.path.join(args.idir, '*/*.npz'))[0]
+    ifile = (glob.glob(os.path.join(args.idir, '*/*.npz')) + glob.glob(os.path.join(args.idir, '*.npz')))[0]
     ifile = np.load(ifile, allow_pickle = True)
     
     n_layers = len(ifile['edges'])
@@ -112,7 +113,9 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = GCNDataGenerator(args.idir, batch_size = int(args.batch_size), seg = args.seg)
+    generator = GCNDataGenerator(args.idir, args.indices, 
+                                 batch_size = int(args.batch_size), 
+                                 seg = args.seg)
     
     if not args.seg:
         criterion = nn.SmoothL1Loss()
