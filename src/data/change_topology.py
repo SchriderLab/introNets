@@ -131,7 +131,13 @@ class Formatter(object):
         else:
             return x, np.vstack([y1, y2])[:, ix]
 
-        
+def remove_singletons(x, y):
+    flt = (np.sum(x, axis=0) > 1)
+    
+    x_flt = x[:, flt]
+    y_flt = y[:, flt]
+
+    return x_flt, y_flt
             
             
 def parse_args():
@@ -196,6 +202,9 @@ def main():
                 edges = [u.numpy() for u in random_graph_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
             elif args.topology == 'random_bound':
                 edges = [u.numpy() for u in random_graph_1d_bound(n, k = int(args.k), n_dilations = int(args.n_dilations))]
+            
+            if args.densify:
+                x, y = remove_singletons(x, y)
             
             np.savez(os.path.join(args.odir, '{1}_{0:06d}.npz'.format(ij, tag)), x = x, y = y, edges = edges)
         
