@@ -42,7 +42,7 @@ def main():
     
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
     
-    cmd = 'sbatch --job-name=pytorch-ac --ntasks=1 --cpus-per-task=1 --mem=64G --time=2-00:00:00 --partition=volta-gpu --gres=gpu:1 --qos=gpu_access --wrap "export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH && python3 src/models/train_gcn_unet.py --idir {0} --odir {1} --tag {2} --indices {3}--layer_type gat --batch_size 12 && python3 src/models/train_gcn_unet_transfer.py --idir {0} --odir {1} --tag {4} --indices {3} --weights {5}"'
+    cmd = 'sbatch --job-name=pytorch-ac --ntasks=1 --cpus-per-task=1 --mem=64G --time=2-00:00:00 --partition=volta-gpu --gres=gpu:1 --qos=gpu_access --wrap "export LD_LIBRARY_PATH=~/.local/lib:$LD_LIBRARY_PATH && python3 src/models/train_gcn_unet.py --idir {0} --odir {1} --tag {2} --indices {3} --layer_type gat --batch_size 12 && python3 src/models/train_gcn_unet_transfer.py --idir {0} --odir {1} --tag {4} --indices {3} --weights {5}"'
     
     for idir in idirs:
         tag = idir.split('/')[-1]
