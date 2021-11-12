@@ -63,10 +63,9 @@ def load_data(msFile, ancFile):
         
     X = []
     Y = []
+    P = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
-        
-        
         
         x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:-1]], dtype = np.uint8)
         if anc_lines is not None:
@@ -79,8 +78,9 @@ def load_data(msFile, ancFile):
             
         X.append(x)
         Y.append(y)
+        P.append(pos)
         
-    return X, Y
+    return X, Y, P
 
 def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_pop_size = 32):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')

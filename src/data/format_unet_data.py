@@ -147,7 +147,7 @@ def parse_args():
     parser.add_argument("--pop_sizes", default = "150,156")
     parser.add_argument("--k", default = "16")
     parser.add_argument("--n_dilations", default = "7")
-    parser.add_argument("--sort_positions", action = "store_true")
+    parser.add_argument("--sort_pos", action = "store_true")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")
@@ -197,7 +197,7 @@ def main():
         
         comm.Barrier()
         
-        x, y = load_data(msFile, ancFile)
+        x, y, positions = load_data(msFile, ancFile)
         
         n_expected = len(x)
         
@@ -208,6 +208,7 @@ def main():
             for ix in range(comm.rank - 1, len(x), comm.size - 1):
                 x_ = x[ix]
                 y_ = y[ix]
+                pos = positions[ix]
                 
                 logging.info('{},{}'.format(x_.shape, y_.shape))
                 if x_.shape[0] != pop_size:
@@ -229,10 +230,10 @@ def main():
                 if args.densify:
                     x, y = remove_singletons(x, y)
                 
-                f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes)
+                f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes, sort_pos = args.sort_pos)
                 x_, y_ = f.format(x_, y_)
             
-                comm.send([x_, y_], dest = 0)
+                comm.send([x_, y_, pos], dest = 0)
                 
             del x
             del y
@@ -241,7 +242,7 @@ def main():
             del y
             
             while n_received < n_expected:
-                x_, y = comm.recv(source = MPI.ANY_SOURCE)
+                x_, y, p = comm.recv(source = MPI.ANY_SOURCE)
                 
                 if x_ is not None:
                     n = x_.shape[1]
@@ -250,7 +251,7 @@ def main():
                         edges = [u.numpy() for u in knn_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
                     elif args.topology == 'random':
                         edges = [u.numpy() for u in random_graph_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
-                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges)
+                    np.savez(os.path.join(args.odir, '{0:06d}.npz'.format(counter)), x = x_, y = y, edges = edges, pos = p)
                 
                     counter += 1
                     
