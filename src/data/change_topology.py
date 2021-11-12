@@ -184,6 +184,9 @@ def main():
         x = ifile['x']
         y = ifile['y']
         
+        tag = ifiles.split('/')[-2]
+        ij = int(ifiles.split('/')[-1].split('.')[0])
+        
         if x is not None:
             n = x.shape[1]
         
@@ -194,7 +197,7 @@ def main():
             elif args.topology == 'random_bound':
                 edges = [u.numpy() for u in random_graph_1d_bound(n, k = int(args.k), n_dilations = int(args.n_dilations))]
             
-            np.savez(os.path.join(args.odir, '{1}_{0:06d}.npz'.format(counter, comm.rank)), x = x, y = y, edges = edges)
+            np.savez(os.path.join(args.odir, '{1}_{0:06d}.npz'.format(ij, tag)), x = x, y = y, edges = edges)
         
             counter += 1
             
