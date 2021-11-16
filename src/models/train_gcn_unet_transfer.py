@@ -87,48 +87,6 @@ class TransferModel(nn.Module):
         else:
             return x2, x, att_weights, att_edges
     
-class TransferModelGCN(nn.Module):
-    def __init__(self, model, n = 150):
-        super(TransferModelGCN, self).__init__()
-        
-        self.res = list(model.children())[0]
-        
-        self.conv = list(model.children())[1]
-        self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1])
-        
-        self.out = nn.Linear(4096, 150)
-        
-        self.activation = nn.ReLU()
-        
-    def freeze(self):
-        ### freeze all the layers of the network except for the last ones
-        for param in self.res.parameters():
-            param.requires_grad = False
-            
-
-    def unfreeze(self):
-        ### unfreeze
-        for param in self.res.parameters():
-            param.requires_grad = True         
-        
-        
-    def forward(self, x, edge_indices, batch, return_attention_weights = False):
-        if self.res.return_attention_weights:
-            x, att_weights, att_edges = self.res(x, edge_indices)
-        else:
-            x = self.res(x, edge_indices)
-        
-        x_global = scatter_max(x, batch, dim = 0)[0]
-        
-        x = torch.cat([x, x_global], dim = 1)
-        
-        x = self.transform(x)
-        x = self.out(x)
-        
-        if not return_attention_weights:
-            return x
-        else:
-            return x, att_weights, att_edges
     
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     """
@@ -356,7 +314,7 @@ def main():
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
             
-            cm_analysis(Y, Y_pred, os.path.join(args.odir, 'best.png'), ['native', 'introgressed'])
+            cm_analysis(Y, Y_pred, os.path.join(args.odir, '{}_best.png'.format(args.tag)), ['native', 'introgressed'])
     
             early_count = 0
         else:

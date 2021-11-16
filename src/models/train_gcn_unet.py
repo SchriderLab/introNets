@@ -32,7 +32,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers import GCNUNet_i2
+from layers import GCNUNet_i2, GCNUNet_i3
 from data_loaders import GCNDataGenerator
 import glob
 
@@ -100,7 +100,7 @@ def main():
     
     n_layers = len(ifile['edges'])
     
-    model = GCNUNet_i2(in_channels = 306, n_features = int(args.n_features), 
+    model = GCNUNet_i3(in_channels = 306, n_features = int(args.n_features), 
                     n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, 
                     n_heads = int(args.n_heads), n_global = int(args.n_global))
     if len(device_strings) > 1:
