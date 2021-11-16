@@ -94,6 +94,36 @@ class GCNUNet_i2(nn.Module):
         
         return x
     
+class GCNUNet_i3(nn.Module):
+    def __init__(self, in_channels = 256, n_classes = 1, 
+                 n_features = 256, n_layers = 8, n_global = 1024, 
+                 layer_type = 'gat', n_heads = 2, return_attention_weights = False):
+        super(GCNUNet_i2, self).__init__()
+        
+        self.res = DynamicGraphResBlock(in_channels, n_features, n_layers, 
+                                        layer_type = layer_type, heads = n_heads, return_attention_weights = return_attention_weights)
+        n = n_features * (n_layers - 1)
+        
+        self.transform = nn.Sequential(nn.Linear(2 * n, 4096), nn.LayerNorm(4096), nn.ReLU(), 
+                                       nn.Linear(4096, 4096), nn.LayerNorm(4096), nn.ReLU(), 
+                                       nn.Linear(4096, n_classes))
+        
+        self.activation = nn.ReLU()
+        
+    def forward(self, x, edge_indices, batch):
+        x = self.res(x, edge_indices)
+        
+        x_global = self.conv(torch.unsqueeze(x, 2))
+        x_global = torch.squeeze(self.activation(x_global))
+        
+        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        
+        x = torch.cat([x, x_global], dim = 1)
+        
+        x = self.transform(x)
+        
+        return x
+    
 class GCNClassifier(nn.Module):
     def __init__(self, in_channels = 306, n_classes = 4, n_features = 306, n_layers = 8):
         super(GCNClassifier, self).__init__()

@@ -35,7 +35,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers import GCNUNet_i2
+from layers import GCNUNet_i2, GCNUNet_i3
 from data_loaders import GCNDataGenerator
 
 from torch_scatter import scatter_max, scatter_mean, scatter_std
@@ -87,13 +87,13 @@ class TransferModel(nn.Module):
                        x_global_mean[batch], 
                        x_global_std[batch]], dim = 1)
         
-        x = self.transform(x)
-        x = self.out(x)
+        x2 = self.transform(x)
+        x2 = self.out(x2)
         
         if not return_attention_weights:
-            return x
+            return x2
         else:
-            return x, att_weights, att_edges
+            return x2, x, att_weights, att_edges
     
 class TransferModelGCN(nn.Module):
     def __init__(self, model, n = 150):
@@ -248,7 +248,7 @@ def main():
     
     n_layers = len(ifile['edges'])
     
-    model = GCNUNet_i2(in_channels = 306, n_features = int(args.n_features), 
+    model = GCNUNet_i3(in_channels = 306, n_features = int(args.n_features), 
                     n_classes = 1, layer_type = args.layer_type, n_layers = n_layers, 
                     n_heads = int(args.n_heads), n_global = int(args.n_global))       
     
