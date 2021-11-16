@@ -113,10 +113,7 @@ class GCNUNet_i3(nn.Module):
     def forward(self, x, edge_indices, batch):
         x = self.res(x, edge_indices)
         
-        x_global = self.conv(torch.unsqueeze(x, 2))
-        x_global = torch.squeeze(self.activation(x_global))
-        
-        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        x_global = scatter_max(x, batch, dim = 0)[0]
         
         x = torch.cat([x, x_global], dim = 1)
         
