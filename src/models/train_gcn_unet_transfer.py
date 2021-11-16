@@ -73,9 +73,12 @@ class TransferModel(nn.Module):
             x, att_weights, att_edges = self.res(x, edge_indices)
         else:
             x = self.res(x, edge_indices)
+            
+        print(x.shape)
         
         x_global = torch.squeeze(x)
-        x_global = scatter_max(x, batch, dim = 0)[0]
+        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        print(x_global.shape)
         
         x = torch.cat([x, x_global], dim = 1)
         
