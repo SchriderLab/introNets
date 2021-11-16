@@ -194,6 +194,9 @@ def main():
         ij = int(ifiles[ix].split('/')[-1].split('.')[0])
         
         if x is not None:
+            if args.densify:
+                x, y = remove_singletons(x, y)
+            
             n = x.shape[1]
         
             if args.topology == 'knn':
@@ -202,9 +205,6 @@ def main():
                 edges = [u.numpy() for u in random_graph_1d(n, k = int(args.k), n_dilations = int(args.n_dilations))]
             elif args.topology == 'random_bound':
                 edges = [u.numpy() for u in random_graph_1d_bound(n, k = int(args.k), n_dilations = int(args.n_dilations))]
-            
-            if args.densify:
-                x, y = remove_singletons(x, y)
             
             np.savez(os.path.join(args.odir, '{1}_{0:06d}.npz'.format(ij, tag)), x = x, y = y, edges = edges)
         
