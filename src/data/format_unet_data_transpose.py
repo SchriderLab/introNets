@@ -145,8 +145,8 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     
     parser.add_argument("--pop_sizes", default = "150,156")
-    parser.add_argument("--k", default = "6")
-    parser.add_argument("--n_sites", default = "128")
+    parser.add_argument("--k", default = "5")
+    parser.add_argument("--n_sites", default = "512")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")
@@ -201,6 +201,9 @@ def main():
         
         x, y, positions = load_data(msFile, ancFile)
         
+        if args.densify:
+            x, y = remove_singletons(x, y)
+        
         n_expected = len(x)
         
         pop_sizes = list(map(int, args.pop_sizes.split(',')))
@@ -228,16 +231,13 @@ def main():
                     
                     comm.send([None, None, None], dest = 0)
                     continue
-                
-                if args.densify:
-                    x, y = remove_singletons(x, y)
                     
                 ii = np.random.choice(range(x_.shape[1] - n_sites))
                 
-                x_ = x_[:, ii]
-                y_ = y_[:, ii]
+                x_ = x_[:, ii:ii + n_sites]
+                y_ = y_[:, ii:ii + n_sites]
                 
-                f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes, sort_pos = args.sort_pos)
+                f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes)
                 x_, y_ = f.format(x_, y_)
             
                 comm.send([x_, y_, pos], dest = 0)
@@ -276,3 +276,6 @@ def main():
                     logging.info('on {}...'.format(n_received))
                     
         comm.Barrier()
+        
+if __name__ == '__main__':
+    main()
