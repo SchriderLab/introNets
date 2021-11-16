@@ -50,7 +50,6 @@ class TransferModel(nn.Module):
         
         self.res = list(model.children())[0]
         
-        self.conv = list(model.children())[1]
         self.transform = nn.Sequential(*list(list(model.children())[-2].children())[:-1])
         
         self.out = nn.Linear(2048, 150)
@@ -75,17 +74,9 @@ class TransferModel(nn.Module):
         else:
             x = self.res(x, edge_indices)
         
-        x_global = self.conv(torch.unsqueeze(x, 2))
-        x_global = torch.squeeze(self.activation(x_global))
+        x_global = scatter_max(x, batch, dim = 0)[0]
         
-        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
-        x_global_mean = scatter_mean(x_global, batch, dim = 0)
-        x_global_std = scatter_std(x_global, batch, dim = 0)
-        
-        x = torch.cat([x, 
-                       x_global_max[batch], 
-                       x_global_mean[batch], 
-                       x_global_std[batch]], dim = 1)
+        x = torch.cat([x, x_global], dim = 1)
         
         x2 = self.transform(x)
         x2 = self.out(x2)
