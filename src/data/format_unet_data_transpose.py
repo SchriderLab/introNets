@@ -113,7 +113,7 @@ class Formatter(object):
             i, j = linear_sum_assignment(C)
             
             y2 = y2[j, :]
-            
+            x2 = x2[j, :]
         
         x = np.vstack([x1, x2])
         
@@ -215,6 +215,8 @@ def main():
                 y_ = y[ix]
                 pos = positions[ix]
                 
+                print(x_.shape, y_.shape)
+                
                 logging.info('{},{}'.format(x_.shape, y_.shape))
                 if x_.shape[0] != pop_size:
                     logging.info('pop size error (x) in sim {0} in msFile {1}'.format(ix, msFile))
@@ -239,6 +241,8 @@ def main():
                 
                 f = Formatter(ix_y = int(args.ix_y), pop_sizes = pop_sizes)
                 x_, y_ = f.format(x_, y_)
+                
+                print(x_.shape, y_.shape)
             
                 comm.send([x_, y_, pos], dest = 0)
                 
