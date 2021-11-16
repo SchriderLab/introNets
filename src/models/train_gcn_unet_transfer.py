@@ -74,6 +74,7 @@ class TransferModel(nn.Module):
         else:
             x = self.res(x, edge_indices)
         
+        x_global = torch.squeeze(x)
         x_global = scatter_max(x, batch, dim = 0)[0]
         
         x = torch.cat([x, x_global], dim = 1)
