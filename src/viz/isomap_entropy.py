@@ -148,7 +148,7 @@ def main():
         axes[1, 0].set_title('pdist (pop B)')
         
         # distances (pop A)
-        Xd = pdist(np.concat([X1, X2]), metric = 'euclidean', p = 2)
+        Xd = pdist(np.concatenate([X1, X2]), metric = 'euclidean', p = 2)
         entropy = np.mean(np.log((X1.shape[0] + X2.shape[0]) * np.min(squareform(Xd) + 10e-5, axis = 0)))
         
         # plot a sample as a histogram (let's say the original sample size)
