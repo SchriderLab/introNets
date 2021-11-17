@@ -110,6 +110,8 @@ class Formatter(object):
             y1 = y1[ix1,:]
             
             C = cdist(x1, x2, metric = self.metric).astype(np.float32)
+            C[np.where(np.isnan(C))] = 0.
+            
             i, j = linear_sum_assignment(C)
             
             y2 = y2[j, :]
@@ -146,7 +148,7 @@ def parse_args():
     
     parser.add_argument("--pop_sizes", default = "150,156")
     parser.add_argument("--k", default = "5")
-    parser.add_argument("--n_sites", default = "512")
+    parser.add_argument("--n_sites", default = "256")
     
     parser.add_argument("--densify", action = "store_true")
     parser.add_argument("--topology", default = "knn")
