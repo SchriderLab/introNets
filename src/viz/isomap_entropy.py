@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 
 from scipy.sparse.linalg import eigs
 from sklearn.metrics import pairwise_distances
+
+from sklearn.manifold import Isomap
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -42,7 +44,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
 
     parser.add_argument("--n_sites", default = "128")
-    parser.add_argument("--n_samples", default = "10000")
+    parser.add_argument("--n_samples", default = "100000")
 
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
@@ -73,6 +75,9 @@ def main():
     result['entropy'] = []
     result['entropy_A'] = []
     result['entropy_B'] = []
+    
+    result['df'] = []
+    result['iso'] = []
     
     for model in models:
         ix = models.index(model)
@@ -125,7 +130,7 @@ def main():
         Y = np.array(Y)
         
         # we'll make a distance figure
-        fig, axes = plt.subplots(nrows = 3, ncols = 2, sharex = True)
+        fig, axes = plt.subplots(nrows = 3, ncols = 2, sharex = 'col')
         
         ## ====================
         #### Euclidean distance histograms (inner and outer)
@@ -171,6 +176,7 @@ def main():
         
         plt.savefig(os.path.join(args.odir, '{0}_euclidean.png'.format(model)), dpi = 200)
         plt.close()
+        
         
         
 
