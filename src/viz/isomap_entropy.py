@@ -131,7 +131,7 @@ def main():
         #### Euclidean distance histograms (inner and outer)
         # distances (pop A)
         Xd = pdist(X1, metric = 'euclidean', p = 2)
-        entropy_A = np.mean(np.log(X1.shape[0] * np.min(squareform(Xd), axis = 0)))
+        entropy_A = np.mean(np.log(X1.shape[0] * np.min(squareform(Xd) + 10e-5, axis = 0)))
         
         # plot a sample as a histogram (let's say the original sample size)
         Xd_ = np.random.choice(Xd, n_samples, replace = False)
@@ -140,7 +140,7 @@ def main():
         
         # distances (pop A)
         Xd = pdist(X2, metric = 'euclidean', p = 2)
-        entropy_B = np.mean(np.log(X1.shape[0] * np.min(squareform(Xd), axis = 0)))
+        entropy_B = np.mean(np.log(X1.shape[0] * np.min(squareform(Xd) + 10e-5, axis = 0)))
         
         # plot a sample as a histogram (let's say the original sample size)
         Xd_ = np.random.choice(Xd, n_samples, replace = False)
@@ -149,7 +149,7 @@ def main():
         
         # distances (pop A)
         Xd = pdist(np.concat([X1, X2]), metric = 'euclidean', p = 2)
-        entropy = np.mean(np.log((X1.shape[0] + X2.shape[0]) * np.min(squareform(Xd), axis = 0)))
+        entropy = np.mean(np.log((X1.shape[0] + X2.shape[0]) * np.min(squareform(Xd) + 10e-5, axis = 0)))
         
         # plot a sample as a histogram (let's say the original sample size)
         Xd_ = np.random.choice(Xd, n_samples, replace = False)
