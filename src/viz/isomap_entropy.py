@@ -7,7 +7,7 @@ import random
 import glob
 import numpy as np
 
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, squareform
 
 import matplotlib
 matplotlib.use('Agg')
