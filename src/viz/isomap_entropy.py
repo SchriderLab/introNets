@@ -44,7 +44,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
 
     parser.add_argument("--n_sites", default = "128")
-    parser.add_argument("--n_samples", default = "100000")
+    parser.add_argument("--n_samples", default = "20000")
 
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
@@ -165,13 +165,13 @@ def main():
         ## ====================
         #### Path length (for spectral seriation)
         
-        axes[0, 1].hist(path_lengths_1, bins = 35)
+        axes[0, 1].hist(path_lengths_1, bins = 20, color = 'k')
         axes[0, 1].set_title('spectral pl (pop A)')
         
-        axes[1, 1].hist(path_lengths_2, bins = 35)
+        axes[1, 1].hist(path_lengths_2, bins = 20, color = 'k')
         axes[1, 1].set_title('spectral pl (pop B)')
         
-        axes[2, 1].hist(path_lengths, bins = 35)
+        axes[2, 1].hist(path_lengths, bins = 35, color = 'k')
         axes[2, 1].set_title('spectral pl')
         
         plt.savefig(os.path.join(args.odir, '{0}_euclidean.png'.format(model)), dpi = 200)
