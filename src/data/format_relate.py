@@ -47,6 +47,8 @@ def main():
     
     dnsps = []
     
+    counter = 0
+    
     for ii in range(len(idirs_relate)):
         idir = idirs[ii]
         idir_relate = idirs_relate[ii]
@@ -141,16 +143,18 @@ def main():
                 
                 edges = np.array(edges).T
             
-                ofile.create_dataset('{2}/graph/{0}/{1}/xg'.format(ix, ij, ii), data = X, compression = 'lzf')
-                ofile.create_dataset('{2}/graph/{0}/{1}/edge_index'.format(ix, ij, ii), data = edges.astype(np.int32), compression = 'lzf')
-                ofile.create_dataset('{2}/graph/{0}/{1}/regions'.format(ix, ij, ii), data = np.array(regions).astype(np.int32), compression = 'lzf')
-                ofile.create_dataset('{2}/graph/{0}/{1}/n_mutations'.format(ix, ij, ii), data = np.array(n_mutations), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/xg'.format(counter, ij), data = X, compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/edge_index'.format(counter, ij), data = edges.astype(np.int32), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/regions'.format(counter, ij), data = np.array(regions).astype(np.int32), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(counter, ij), data = np.array(n_mutations), compression = 'lzf')
                 
             
-            ofile.create_dataset('{0}/x'.format(ii), data = x.astype(np.uint8), compression = 'lzf')
-            ofile.create_dataset('{0}/y'.format(ii), data = y.astype(np.uint8), compression = 'lzf')
-            ofile.create_dataset('{0}/positions'.format(ii), data = pos, compression = 'lzf')
-            ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
+            ofile.create_dataset('{0}/x'.format(counter), data = x.astype(np.uint8), compression = 'lzf')
+            ofile.create_dataset('{0}/y'.format(counter), data = y.astype(np.uint8), compression = 'lzf')
+            ofile.create_dataset('{0}/positions'.format(counter), data = pos, compression = 'lzf')
+            ofile.create_dataset('{0}/break_points'.format(counter), data = np.array(snps, dtype = np.int32), compression = 'lzf')
+            
+            counter += 1
             
             ofile.flush()
 
