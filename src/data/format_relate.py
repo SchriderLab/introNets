@@ -149,7 +149,7 @@ def main():
             
             ofile.create_dataset('{0}/x'.format(ii), data = x.astype(np.uint8), compression = 'lzf')
             ofile.create_dataset('{0}/y'.format(ii), data = y.astype(np.uint8), compression = 'lzf')
-            ofile.create_dataset('{0}/positions'.format(ii), data = pos, compresssion = 'lzf')
+            ofile.create_dataset('{0}/positions'.format(ii), data = pos, compression = 'lzf')
             ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
             
             ofile.flush()
