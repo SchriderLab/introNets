@@ -53,7 +53,7 @@ def main():
         
         print('working on {}...'.format(idir))
         
-        anc_files = [os.path.join(idir, u) for u in os.listdir(idir) if u.split('.')[-1] == 'anc']
+        anc_files = [os.path.join(idir_relate, u) for u in os.listdir(idir_relate) if u.split('.')[-1] == 'anc']
         
         for ix in range(len(anc_files)):
             ifile = os.path.join(idir, '{}.npz'.format(anc_files[ix].split('/')[-1].split('.')[0]))
