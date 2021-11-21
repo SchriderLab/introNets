@@ -25,7 +25,6 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None")
-    parser.add_argument("--idir_relate", default = "None")
 
     parser.add_argument("--ofile", default = "None")
     args = parser.parse_args()
@@ -41,8 +40,8 @@ def parse_args():
 def main():
     args = parse_args()
     
-    idirs_relate = sorted([os.path.join(args.idir_relate, u) for u in os.listdir(args.idir_relate) if 'relate' in u])
-    idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir)])
+    idirs_relate = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir) if 'relate' in u])
+    idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir) if not ('relate' in u)])
     
     ofile = h5py.File(args.ofile, 'w')
     
@@ -57,7 +56,7 @@ def main():
         anc_files = [os.path.join(idir, u) for u in os.listdir(idir) if u.split('.')[-1] == 'anc']
         
         for ix in range(len(anc_files)):
-            ifile = os.path.join(idir, '{0:06d}.npz'.format(int(anc_files[ix].split('/')[-1].split('.')[0])))
+            ifile = os.path.join(idir, '{}.npz'.format(anc_files[ix].split('/')[-1].split('.')[0]))
             ifile = np.load(ifile)
             
             x = ifile['x']
