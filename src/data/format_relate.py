@@ -194,6 +194,8 @@ def main():
                 ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
                 
                 n_received += 1
+                
+                print(n_received, len(anc_files))
             
             ofile.flush()
                     
