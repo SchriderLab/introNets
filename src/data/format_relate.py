@@ -162,7 +162,7 @@ def main():
         n_received = 0
         index = dict()
         
-        while n_received < len(anc_files):
+        while n_received < len(anc_files) - 1:
         
             v = comm.recv(source = MPI.ANY_SOURCE)
         
@@ -187,7 +187,7 @@ def main():
                 
                 ofile.create_dataset('{0}/x'.format(ii), data = x.astype(np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/y'.format(ii), data = y.astype(np.uint8), compression = 'lzf')
-                ofile.create_dataset('{0}/positions'.format(counter), data = pos, compression = 'lzf')
+                ofile.create_dataset('{0}/positions'.format(ii), data = pos, compression = 'lzf')
             elif len(v) == 2:
                 _, snps = v
                 
