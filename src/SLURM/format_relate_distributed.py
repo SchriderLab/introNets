@@ -36,7 +36,7 @@ def main():
     
     idirs = sorted([os.path.join(args.idir, u) for u in os.listdir(args.idir) if ((not '.' in u) and (not 'relate' in u))])
     
-    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_relate.py --idir {0} --idir_relate {1} --ofile {2}'
+    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_relate.py --idir {0} --idir_relate {1} --ofile {2}"'
     for idir in idirs:
         cmd_ = cmd.format(idir, idir + '_relate', os.path.join(args.odir, '{0:04d}.hdf5'.format(idirs.index(idir))))
         
