@@ -95,15 +95,18 @@ def main():
                 start_snp = int(line[0])
                 snps.append(start_snp)
                 
-                for j in range(2, len(line), 5):
-                    nodes.append((j - 1) // 5)
-                    
-                    parents.append(int(line[j]))
-                    lengths.append(float(line[j + 1]))
-                    n_mutations.append(float(line[j + 2]))
-                    regions.append((int(line[j + 3]), int(line[j + 4])))
-                    
-                    edges.append((parents[-1], nodes[-1]))
+                try:
+                    for j in range(2, len(line), 5):
+                        nodes.append((j - 1) // 5)
+                        
+                        parents.append(int(line[j]))
+                        lengths.append(float(line[j + 1]))
+                        n_mutations.append(float(line[j + 2]))
+                        regions.append((int(line[j + 3]), int(line[j + 4])))
+                        
+                        edges.append((parents[-1], nodes[-1]))
+                except:
+                    break
                     
                 G = nx.DiGraph()
                 G.add_edges_from(edges)
