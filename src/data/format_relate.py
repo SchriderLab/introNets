@@ -170,6 +170,8 @@ def main():
             
             if len(v) < 2:
                 n_done += 1
+                
+                print('have {} processes done...'.format(n_done))
                 continue
         
             if v[0] in index.keys():
@@ -180,7 +182,7 @@ def main():
                 
                 ii = index[v[0]]
                 
-                print(np.max(index.values()))
+                print('have {} total simulations...'.format(np.max(index.values())))
         
             if len(v) == 6:
                 ix, ij, edges, X, regions, n_mutations = v
