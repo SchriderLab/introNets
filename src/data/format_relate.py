@@ -108,7 +108,7 @@ def main():
                 except:
                     break
                     
-                G = nx.Graph()
+                G = nx.DiGraph()
                 
                 for k in range(len(edges)):
                     G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
@@ -123,6 +123,7 @@ def main():
                     
                     if d == 0:
                         current_day_nodes.append(node)
+                        
                         
                 for node in current_day_nodes[:len(current_day_nodes) // 2]:
                     data[node] = [0., 1., 0., 0.]
@@ -152,6 +153,8 @@ def main():
                     
                 X = np.array(X)
                 X[:,0] /= np.max(X[:,0])
+                
+                G = G.to_undirected()
                 
                 # sum of the branch lengths to get from node i to j
                 D = nx.floyd_warshall_numpy(G, weight = 'weight', nodelist = list(range(300)))
