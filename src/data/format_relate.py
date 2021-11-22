@@ -161,14 +161,11 @@ def main():
         comm.send([None], dest = 0)
         
         comm.Barrier()
-        
-    
     else:
         n_done = 0
         index = dict()
         
         while n_done < comm.size - 1:
-        
             v = comm.recv(source = MPI.ANY_SOURCE)
             
             if len(v) < 2:
@@ -182,6 +179,8 @@ def main():
                 counter += 1
                 
                 ii = index[v[0]]
+                
+                print(np.max(index.values()))
         
             if len(v) == 6:
                 ix, ij, edges, X, regions, n_mutations = v
