@@ -165,6 +165,8 @@ def main():
         n_done = 0
         index = dict()
         
+        sims_done = 0
+        
         while n_done < comm.size - 1:
             v = comm.recv(source = MPI.ANY_SOURCE)
             
@@ -182,8 +184,8 @@ def main():
                 
                 ii = index[v[0]]
                 
-                print('have {} total simulations...'.format(np.max(index.values())))
-        
+                print('seen {0} simulations out of {1}...'.format(np.max(list(index.values())), len(anc_files)))
+              
             if len(v) == 6:
                 ix, ij, edges, X, regions, n_mutations = v
                 
@@ -202,7 +204,10 @@ def main():
                 _, snps = v
                 
                 ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
-         
+                sims_done += 1
+                
+                print('wrote {0} simulations out of {1}...'.format(sims_done, len(anc_files)))
+            
             ofile.flush()
                     
                 
