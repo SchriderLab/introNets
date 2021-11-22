@@ -162,7 +162,7 @@ def main():
         n_received = 0
         index = dict()
         
-        while n_received < len(anc_files) - 1:
+        while n_received < len(anc_files):
         
             v = comm.recv(source = MPI.ANY_SOURCE)
         
