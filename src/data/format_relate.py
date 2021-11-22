@@ -159,8 +159,7 @@ def main():
     
         # done signal
         comm.send([None], dest = 0)
-        
-        comm.Barrier()
+    
     else:
         n_done = 0
         index = dict()
