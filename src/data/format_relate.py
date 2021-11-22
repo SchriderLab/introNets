@@ -156,15 +156,24 @@ def main():
                 comm.send([ix, ij, edges, X, regions, n_mutations], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
+    
+        # done signal
+        comm.send([None], dest = 0)
         
         comm.Barrier()
+        
+    
     else:
-        n_received = 0
+        n_done = 0
         index = dict()
         
-        while n_received < len(anc_files):
+        while n_done < comm.size - 1:
         
             v = comm.recv(source = MPI.ANY_SOURCE)
+            
+            if len(v) < 2:
+                n_done += 1
+                continue
         
             if v[0] in index.keys():
                 ii = index[v[0]]
@@ -192,11 +201,7 @@ def main():
                 _, snps = v
                 
                 ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
-                
-                n_received += 1
-                
-                print(n_received, len(anc_files))
-            
+         
             ofile.flush()
                     
                 
