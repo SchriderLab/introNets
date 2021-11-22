@@ -57,7 +57,8 @@ def main():
         idir = idirs[ii]
         idir_relate = idirs_relate[ii]
         
-        print('working on {}...'.format(idir))
+        if comm.rank == 0:
+            print('working on {}...'.format(idir))
         
         anc_files = [os.path.join(idir_relate, u) for u in os.listdir(idir_relate) if u.split('.')[-1] == 'anc']
         
@@ -155,48 +156,50 @@ def main():
                     comm.send([ix, ij, edges, X, regions, n_mutations], dest = 0)
                     
                 comm.send([ix, snps], dest = 0)
-            else:
-                n_received = 0
-                index = dict()
-                
-                while n_received < len(anc_files):
-                
-                    v = comm.recv(source = MPI.ANY_SOURCE)
-                
-                    if v[0] in index.keys():
-                        ii = index[v[0]]
-                    else:
-                        index[v[0]] = counter
-                        counter += 1
-                        
-                        ii = index[v[0]]
-                
-                    if len(v) == 6:
-                        ix, ij, edges, X, regions, n_mutations = v
-                        
-                        ofile.create_dataset('{0}/graph/{1}/xg'.format(ii, ij), data = X, compression = 'lzf') # time, population
-                        ofile.create_dataset('{0}/graph/{1}/edge_index'.format(ii, ij), data = edges.astype(np.int32), compression = 'lzf') # indices of branches (i.e. graph edges as index pairs)
-                        ofile.create_dataset('{0}/graph/{1}/regions'.format(ii, ij), data = np.array(regions).astype(np.int32), compression = 'lzf')
-                        ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(ii, ij), data = np.array(n_mutations), compression = 'lzf')
-                        
-                    elif len(v) == 4:
-                        _, x, y, pos = v
-                        
-                        ofile.create_dataset('{0}/x'.format(ii), data = x.astype(np.uint8), compression = 'lzf')
-                        ofile.create_dataset('{0}/y'.format(ii), data = y.astype(np.uint8), compression = 'lzf')
-                        ofile.create_dataset('{0}/positions'.format(counter), data = pos, compression = 'lzf')
-                    elif len(v) == 2:
-                        _, snps = v
-                        
-                        ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
-                        
-                        n_received += 1
-                    
-                    ofile.flush()
-                    
-                
             
-    ofile.close()
+            comm.Barrier()
+        else:
+            n_received = 0
+            index = dict()
+            
+            while n_received < len(anc_files):
+            
+                v = comm.recv(source = MPI.ANY_SOURCE)
+            
+                if v[0] in index.keys():
+                    ii = index[v[0]]
+                else:
+                    index[v[0]] = counter
+                    counter += 1
+                    
+                    ii = index[v[0]]
+            
+                if len(v) == 6:
+                    ix, ij, edges, X, regions, n_mutations = v
+                    
+                    ofile.create_dataset('{0}/graph/{1}/xg'.format(ii, ij), data = X, compression = 'lzf') # time, population
+                    ofile.create_dataset('{0}/graph/{1}/edge_index'.format(ii, ij), data = edges.astype(np.int32), compression = 'lzf') # indices of branches (i.e. graph edges as index pairs)
+                    ofile.create_dataset('{0}/graph/{1}/regions'.format(ii, ij), data = np.array(regions).astype(np.int32), compression = 'lzf')
+                    ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(ii, ij), data = np.array(n_mutations), compression = 'lzf')
+                    
+                elif len(v) == 4:
+                    _, x, y, pos = v
+                    
+                    ofile.create_dataset('{0}/x'.format(ii), data = x.astype(np.uint8), compression = 'lzf')
+                    ofile.create_dataset('{0}/y'.format(ii), data = y.astype(np.uint8), compression = 'lzf')
+                    ofile.create_dataset('{0}/positions'.format(counter), data = pos, compression = 'lzf')
+                elif len(v) == 2:
+                    _, snps = v
+                    
+                    ofile.create_dataset('{0}/break_points'.format(ii), data = np.array(snps, dtype = np.int32), compression = 'lzf')
+                    
+                    n_received += 1
+                
+                ofile.flush()
+                    
+                
+    if comm.rank == 0:     
+        ofile.close()
     
     # ${code_blocks}
 
