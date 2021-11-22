@@ -108,8 +108,10 @@ def main():
                 except:
                     break
                     
-                G = nx.DiGraph()
-                G.add_edges_from(edges)
+                G = nx.Graph()
+                
+                for k in range(len(edges)):
+                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 current_day_nodes = []
                 
@@ -151,9 +153,18 @@ def main():
                 X = np.array(X)
                 X[:,0] /= np.max(X[:,0])
                 
+                # sum of the branch lengths to get from node i to j
+                D = nx.floyd_warshall_numpy(G, weight = 'weight', nodelist = list(range(300)))
+                
+                # number of mutations from i to j
+                N = nx.floyd_warshall_numpy(G, weight = 'n_mutations', nodelist = list(range(300)))
+                
+                # number of hops
+                Nh = nx.floyd_warshall_numpy(G, weight = 'hops', nodelist = list(range(300))) 
+                
                 edges = np.array(edges).T
                 
-                comm.send([ix, ij, edges, X, regions, n_mutations], dest = 0)
+                comm.send([ix, ij, edges, X, regions, n_mutations, D, N, Nh], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
     
@@ -185,14 +196,17 @@ def main():
                 
                 print('seen {0} simulations out of {1}...'.format(np.max(list(index.values())), len(anc_files)))
               
-            if len(v) == 6:
-                ix, ij, edges, X, regions, n_mutations = v
+            if len(v) == 9:
+                ix, ij, edges, X, regions, n_mutations, D, N, Nh = v
                 
                 ofile.create_dataset('{0}/graph/{1}/xg'.format(ii, ij), data = X, compression = 'lzf') # time, population
                 ofile.create_dataset('{0}/graph/{1}/edge_index'.format(ii, ij), data = edges.astype(np.int32), compression = 'lzf') # indices of branches (i.e. graph edges as index pairs)
                 ofile.create_dataset('{0}/graph/{1}/regions'.format(ii, ij), data = np.array(regions).astype(np.int32), compression = 'lzf')
                 ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(ii, ij), data = np.array(n_mutations), compression = 'lzf')
-                
+                ofile.create_dataset('{0}/graph/{1}/D'.format(ii, ij), data = np.array(D), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/N'.format(ii, ij), data = np.array(N), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/Nh'.format(ii, ij), data = np.array(Nh), compression = 'lzf')
+
             elif len(v) == 4:
                 _, x, y, pos = v
                 
