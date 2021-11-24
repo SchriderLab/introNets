@@ -218,7 +218,7 @@ class GATRelateCNet(nn.Module):
         self.stem_conv = nn.Sequential(nn.Conv2d(in_channels, stem_channels, (1, k_conv), 
                                              stride = (1, 1), 
                                              padding = (0, 1), bias = True), 
-                                             nn.LayerNorm((1, pop_size, n_sites)))
+                                             nn.LayerNorm((stem_channels, pop_size, n_sites)))
         
         self.gcn = VanillaConv()
         self.stem_norm = nn.LayerNorm((1, pop_size, n_sites))
@@ -272,7 +272,7 @@ class GATRelateCNet(nn.Module):
         x0 = to_dense_batch(x0, batch)[0]
         x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
-        x0 = self.stem_norm(x0).relu_()        
+        x0 = self.stem_norm(x0).relu_()      
         x0 = torch.cat([x, x0])
         
         #print('after_stem: {}'.format(x.shape))
