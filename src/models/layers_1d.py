@@ -288,7 +288,7 @@ class GATRelateCNet(nn.Module):
             xl = self.down_l[k](xs[-1][:,:,:n_ind // 2,:])
             xr = self.down_r[k](xs[-1][:,:,n_ind // 2:,:])
             
-            xs.append(torch.cat([xl, xr], dim = 1)
+            xs.append(torch.cat([xl, xr], dim = 1))
             #print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
             
             n_sites = n_sites // 2
