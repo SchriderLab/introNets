@@ -112,6 +112,11 @@ def main():
                 
                 data = dict()
                 
+                G = nx.DiGraph()
+                
+                for k in range(len(edges)):
+                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
+                
                 # find the nodes which have no out degree
                 for node in G.nodes():
                     d = G.out_degree(node)
