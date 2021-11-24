@@ -277,7 +277,7 @@ class GATRelateCNet(nn.Module):
             del xs[-1]         
             
             x = torch.cat([self.norms_up[k](self.up[k](x)), xs[-1]], dim = 1)
-            print('conv_up_{0}: {1}'.format(k, x.shape))
+            #print('conv_up_{0}: {1}'.format(k, x.shape))
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
