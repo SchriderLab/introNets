@@ -172,8 +172,6 @@ class VanillaConv(MessagePassing):
         self.negative_slope = negative_slope
 
     def forward(self, x, edge_index):
-        x = F.leaky_relu_(x, self.negative_slope)
-        
         return self.propagate(edge_index, x=x)
 
     def message(self, x_j):
