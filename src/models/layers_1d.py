@@ -227,6 +227,7 @@ class GATRelateCNet(nn.Module):
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
+            
             self.down_l.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
             self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
             
@@ -274,8 +275,8 @@ class GATRelateCNet(nn.Module):
         
         x0 = self.stem_norm(x0).relu_()      
         x0 = torch.cat([x, x0], dim = 1)
-        
-        #print('after_stem: {}'.format(x.shape))
+    
+        print('after_stem: {}'.format(x.shape))
         
         xs = [x0]
         for k in range(len(self.down_l)):
@@ -284,7 +285,7 @@ class GATRelateCNet(nn.Module):
             xr = self.down_r[k](xs[-1][:,:,n_ind // 2:,:])
             
             xs.append(torch.cat([xl, xr], dim = 2))
-            #print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
+            print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
             
             n_sites = n_sites // 2
             n_channels = xs[-1].shape[1]
