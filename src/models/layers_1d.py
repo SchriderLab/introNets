@@ -240,8 +240,8 @@ class GATRelateCNet(nn.Module):
             
                         
     def forward(self, x, edge_index, batch, save_steps = False):
-        print('initial shape: {}'.format(x.shape))
-        print('edge_shape: {}'.format(edge_index.shape))
+        #print('initial shape: {}'.format(x.shape))
+        #print('edge_shape: {}'.format(edge_index.shape))
         batch_size, n_channels, n_ind, n_sites = x.shape
         
         x = self.stem_conv(x)
@@ -255,12 +255,12 @@ class GATRelateCNet(nn.Module):
         
         x = x.reshape(batch_size, n_channels, n_ind, n_sites)
         
-        print('after_stem: {}'.format(x.shape))
+        #print('after_stem: {}'.format(x.shape))
         
         xs = [x]
         for k in range(len(self.down)):
             xs.append(self.down[k](xs[-1]))
-            print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
+            #print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
             
             n_sites = n_sites // 2
             n_channels = xs[-1].shape[1]
@@ -277,7 +277,7 @@ class GATRelateCNet(nn.Module):
             del xs[-1]         
             
             x = torch.cat([self.norms_up[k](self.up[k](x)), xs[-1]], dim = 1)
-            print('conv_up_{0}: {1}'.format(k, x.shape))
+            #print('conv_up_{0}: {1}'.format(k, x.shape))
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
