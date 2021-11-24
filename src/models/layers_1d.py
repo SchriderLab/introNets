@@ -304,13 +304,14 @@ class GATRelateCNet(nn.Module):
         x = xs[-1]        
         for k in range(len(self.up_l)):
             del xs[-1]
+            
             # pass each pop to it's 1d conv
             xl = self.up_l[k](x[:,:,:n_ind // 2,:])
             xr = self.up_r[k](x[:,:,n_ind // 2:,:])
             
             x = torch.cat([xl, xr], dim = 2)
             
-            print('conv_up_{0}: {1}'.format(k, x.shape))
+            #print('conv_up_{0}: {1}'.format(k, x.shape))
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
@@ -325,7 +326,8 @@ class GATRelateCNet(nn.Module):
             
             x = self.norms_up[k](x)
             
-            xs.append(torch.cat([x, xs[-1]], dim = 1))
+            x = torch.cat([x, xs[-1]], dim = 1)
+        
                 
         # final concatenation
         x = torch.cat([x, x0])
