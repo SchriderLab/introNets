@@ -231,7 +231,7 @@ class GATRelateCNet(nn.Module):
             self.down_l.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
             self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
             
-            self.norms_down.append(nn.LayerNorm((res_channels[ix], pop_size, n_sites // 2)))
+            self.norms_down.append(nn.LayerNorm((res_channels[ix] * (n_res_layers), pop_size, n_sites // 2)))
             channels = res_channels[ix] * (n_res_layers)
             
             n_sites = n_sites // 2
@@ -308,7 +308,7 @@ class GATRelateCNet(nn.Module):
             xl = self.up_l[k](x[:,:,:n_ind // 2,:])
             xr = self.up_r[k](x[:,:,n_ind // 2:,:])
             
-            x = torch.cat([torch.cat([xl, xr], dim = 2), xs[-1]], dim = 1)
+            x = torch.cat([xl, xr], dim = 2)
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
@@ -318,10 +318,12 @@ class GATRelateCNet(nn.Module):
             x = self.gcn(x, edge_index)
             ###################
             
+            x = self.norms_up[k](x)
+            
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
             
-            x = self.norms_up[k](x).relu_()
+            xs.append(torch.cat([x, xs[-1]], dim = 1))
                 
         # final concatenation
         x = torch.cat([x, x0])
