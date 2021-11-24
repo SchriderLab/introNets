@@ -126,6 +126,7 @@ class GCNDisDataGenerator(object):
     def __len__(self):
         return self.length
     
+# Fibonacci sequence
 def F(n):
     if n == 0: return 0
     elif n == 1: return 1
@@ -156,8 +157,9 @@ class GCNDataGeneratorTv2(object):
         
         self.nn_samp = list(range(k - 1))
         
+        # knn + fibonacci spaced sampling w.r. to topological distance
         ii = 1
-        f = F(ii) * f_factor + k - 1
+        f = F(ii) + k - 1
         while f < pop_size - 1:
             self.nn_samp.append(f)
             
@@ -201,13 +203,22 @@ class GCNDataGeneratorTv2(object):
         
         gix = list(np.where((bp >= s[0]) & (bp < s[-1]))[0])
         
+        if len(gix) == 0:
+            return self.get_element(val)
+        
         D = np.zeros((300, 300))
         count = 0
         
+        # currently a weighted average of the distance matrices in the region
         for k in gix:
-            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D']))
+            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D'][:,:,0]))
+            
+            if bp[k + 1] <= s[-1]:
+                w = (bp[k + 1] - bp[k]) / self.n_sites
+            else:
+                w = (s[-1] - bp[k]) / self.n_sites
         
-            D += D_
+            D += D_ * w
             count += 1
         
         D = D / count
