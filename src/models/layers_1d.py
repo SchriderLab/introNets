@@ -254,7 +254,7 @@ class GATRelateCNet(nn.Module):
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
         
         # up channels + in_channels + stem conv
-        self.out_res = Res1dBlock((up_channels[-1] + in_channels + 1, pop_size, n_sites) 32, 2, pool = None)
+        self.out_res = Res1dBlock((up_channels[-1] + in_channels + stem_channels, pop_size, n_sites), 32, 2, pool = None)
         self.out_norm = self.LayerNorm((32, pop_size, n_sites))
         
         self.final_conv = nn.Conv2d(1, 1)
