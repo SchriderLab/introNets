@@ -181,7 +181,7 @@ class VanillaConv(MessagePassing):
         # x_j has shape [E, out_channels]
 
         # Step 4: Normalize node features.
-        return norm.view(-1, 1) * x_j
+        return x_j
     
     def update(self, inputs, x):
         return self.norm(x, inputs)
@@ -247,7 +247,7 @@ class GATRelateCNet(nn.Module):
         x = self.stem_conv(x)
         
         n_channels = 1
-        x = torch.flatten(x, 0, 2)
+        x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
                 
         #  insert graph convolution here...
         x = self.gcn(x, edge_index)
@@ -264,7 +264,9 @@ class GATRelateCNet(nn.Module):
             
             n_sites = n_sites // 2
             n_channels = xs[-1].shape[1]
-            xs[-1] = torch.flatten(xs[-1], 0, 2)   
+            xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+            
+            #print(xs[-1].shape, batch.shape)
             
             # insert graph convolution here...
             xs[-1] = self.gcn(xs[-1], edge_index)        
@@ -281,7 +283,7 @@ class GATRelateCNet(nn.Module):
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
-            x = torch.flatten(x, 0, 2)  
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
             x = self.gcn(x, edge_index)
