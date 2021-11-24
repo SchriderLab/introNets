@@ -218,11 +218,10 @@ class GATRelateCNet(nn.Module):
         ## stem
         self.stem_conv = nn.Sequential(nn.Conv2d(in_channels, stem_channels, (1, k_conv), 
                                              stride = (1, 1), 
-                                             padding = (0, 1), bias = True), 
-                                             nn.LayerNorm((stem_channels, pop_size, n_sites)))
+                                             padding = (0, 1), bias = True))
         
         self.gcn = VanillaConv()
-        self.stem_norm = nn.LayerNorm((1, pop_size, n_sites))
+        self.stem_norm = nn.LayerNorm((stem_channels, pop_size, n_sites))
         
         # after concatenating
         channels = stem_channels + in_channels
