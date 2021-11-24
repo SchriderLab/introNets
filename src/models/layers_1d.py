@@ -165,19 +165,12 @@ class VanillaConv(MessagePassing):
 
     def forward(self, x, edge_index):
         # x has shape [N, in_channels]
-        # edge_index has shape [2, E]    
-
-        # Step 3: Compute normalization.
-        row, col = edge_index
-        deg = degree(col, x.size(0), dtype=x.dtype)
-        deg_inv_sqrt = deg.pow(-0.5)
-        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-        norm = deg_inv_sqrt[row] * deg_inv_sqrt[col]
+        # edge_index has shape [2, E]
 
         # Step 4-5: Start propagating messages.
-        return self.propagate(edge_index, x=x, norm=norm)
+        return self.propagate(edge_index, x=x)
 
-    def message(self, x_j, norm):
+    def message(self, x_j):
         # x_j has shape [E, out_channels]
 
         # Step 4: Normalize node features.
@@ -253,7 +246,8 @@ class GATRelateCNet(nn.Module):
         x = self.gcn(x, edge_index)
         ###################
         
-        x = x.reshape(batch_size, n_channels, n_ind, n_sites)
+        x = to_dense_batch(x, batch)[0]
+        x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
         #print('after_stem: {}'.format(x.shape))
         
@@ -272,7 +266,8 @@ class GATRelateCNet(nn.Module):
             xs[-1] = self.gcn(xs[-1], edge_index)        
             ##################
             
-            xs[-1] = xs[-1].reshape(batch_size, n_channels, n_ind, n_sites)
+            xs[-1] = to_dense_batch(xs[-1], batch)[0]
+            xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
 
         x = xs[-1]        
         for k in range(len(self.up)):
@@ -289,7 +284,8 @@ class GATRelateCNet(nn.Module):
             x = self.gcn(x, edge_index)
             ###################
             
-            x = x.reshape(batch_size, n_channels, n_ind, n_sites)
+            x = to_dense_batch(x, batch)[0]
+            x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
                 
         x = x[:,:,150:300,:]
         #print(x.shape)
