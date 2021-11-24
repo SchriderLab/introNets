@@ -318,10 +318,10 @@ class GATRelateCNet(nn.Module):
             x = self.gcn(x, edge_index)
             ###################
             
-            x = self.norms_up[k](x)
-            
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+            
+            x = self.norms_up[k](x)
             
             xs.append(torch.cat([x, xs[-1]], dim = 1))
                 
