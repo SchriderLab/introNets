@@ -252,7 +252,7 @@ class GATRelateCNet(nn.Module):
         self.out_res = Res1dBlock((up_channels[-1] + in_channels + stem_channels, pop_size, n_sites), 32, 2, pooling = None)
         self.out_norm = nn.LayerNorm((32, pop_size, n_sites))
         
-        self.final_conv = nn.Conv2d(1, 1)
+        self.final_conv = nn.Conv2d(1, 1, 1)
             
                         
     def forward(self, x, edge_index, batch, save_steps = False):
@@ -283,7 +283,7 @@ class GATRelateCNet(nn.Module):
             xl = self.down_l[k](xs[-1][:,:,:n_ind // 2,:])
             xr = self.down_r[k](xs[-1][:,:,n_ind // 2:,:])
             
-            xs.append(torch.cat([xl, xr], dim = 1))
+            xs.append(torch.cat([xl, xr], dim = 2))
             #print('conv_down_{0}: {1}'.format(k, xs[-1].shape))
             
             n_sites = n_sites // 2
@@ -307,7 +307,7 @@ class GATRelateCNet(nn.Module):
             xl = self.up_l[k](x[:,:,:n_ind // 2,:])
             xr = self.up_r[k](x[:,:,n_ind // 2:,:])
             
-            x = torch.cat([torch.cat([xl, xr], dim = 1), xs[-1]], dim = 1)
+            x = torch.cat([torch.cat([xl, xr], dim = 2), xs[-1]], dim = 1)
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
