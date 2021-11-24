@@ -205,7 +205,7 @@ class GCNDataGeneratorTv2(object):
         count = 0
         
         for k in gix:
-            D_ = np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D'])
+            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D']))
         
             D += D_
             count += 1
