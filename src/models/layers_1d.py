@@ -167,14 +167,15 @@ class VanillaAttConv(MessagePassing):
     
 class VanillaConv(MessagePassing):
     def __init__(self):
-        super().__init__(aggr='add')  # "Add" aggregation (Step 5).
+        super().__init__(aggr='add', negative_slope = 0.2)  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
+        self.negative_slope = 0.2
 
     def forward(self, x, edge_index):
         return self.propagate(edge_index, x=x)
 
     def message(self, x_j):
-        return x_j
+        return F.leaky_relu(x_j, negative_slope = self.negative_slope)
     
     def update(self, inputs, x):
         return self.norm(x, inputs)
@@ -248,13 +249,8 @@ class GATRelateCNet(nn.Module):
             
             self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
-        
-        # up channels + in_channels + stem conv
-        self.out_res = Res1dBlock((up_channels[-1] + (in_channels + stem_channels), pop_size // 2, n_sites), 16, 2, pooling = None)
-        self.out_norm = nn.LayerNorm((32, pop_size // 2, n_sites))
-        
-        self.final_conv = nn.Conv2d(32, 1, 1)
-            
+    
+        self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
                         
     def forward(self, x, edge_index, batch, save_steps = False):
         #print('initial shape: {}'.format(x.shape))
@@ -339,9 +335,6 @@ class GATRelateCNet(nn.Module):
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:n_ind // 2,:]
-        
-        # one more res block
-        x = self.out_norm(self.out_res(x)).relu_()
         
         # go back to one channel
         x = torch.squeeze(self.final_conv(x))
