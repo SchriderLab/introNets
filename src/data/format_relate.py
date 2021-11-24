@@ -207,8 +207,8 @@ def main():
                 
                 print('seen {0} simulations out of {1}...'.format(np.max(list(index.values())), len(anc_files)))
               
-            if len(v) == 8:
-                ix, ij, edges, X, regions, n_mutations, D, Nh = v
+            if len(v) == 7:
+                ix, ij, edges, X, regions, n_mutations, D = v
                 
                 ofile.create_dataset('{0}/graph/{1}/xg'.format(ii, ij), data = X, compression = 'lzf') # time, population
                 ofile.create_dataset('{0}/graph/{1}/edge_index'.format(ii, ij), data = edges.astype(np.int32), compression = 'lzf') # indices of branches (i.e. graph edges as index pairs)
