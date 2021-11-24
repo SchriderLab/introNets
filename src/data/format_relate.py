@@ -16,6 +16,8 @@ import matplotlib
 matplotlib.use('Agg')
 from scipy.spatial.distance import squareform
 
+import time
+import itertools
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -160,17 +162,20 @@ def main():
                 for k in range(len(edges)):
                     G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
-                # sum of the branch lengths to get from node i to j
-                D = nx.floyd_warshall_numpy(G, weight = 'weight')
-                D = squareform(D[np.ix_(list(range(1, 301)), list(range(1, 301)))])
+                t1 = time.time()
+                paths = nx.shortest_paths(G)
+                print('getting paths took {}...'.format(time.time() - t1))
                 
-                # number of hops
-                Nh = nx.floyd_warshall_numpy(G, weight = 'hops')
-                Nh = squareform(Nh[np.ix_(list(range(1, 301)), list(range(1, 301)))])
+                nodes = list(range(0, 300))
+                
+                t1 = time.time()
+                indices = list(itertools.combinations(nodes, 2))
+                
+                D = np.array([len(paths[i][j]) for (i,j) in indices])
                 
                 edges = np.array(edges).T
                 
-                comm.send([ix, ij, edges, X, regions, n_mutations, D, Nh], dest = 0)
+                comm.send([ix, ij, edges, X, regions, D], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
     
@@ -211,7 +216,7 @@ def main():
                 ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(ii, ij), data = np.array(n_mutations), compression = 'lzf')
                 ofile.create_dataset('{0}/graph/{1}/D'.format(ii, ij), data = np.array(D, dtype = np.float32), compression = 'lzf')
                 #ofile.create_dataset('{0}/graph/{1}/N'.format(ii, ij), data = np.array(N, dtype = np.float32), compression = 'lzf')
-                ofile.create_dataset('{0}/graph/{1}/Nh'.format(ii, ij), data = np.array(Nh, dtype = np.float32), compression = 'lzf')
+                #ofile.create_dataset('{0}/graph/{1}/Nh'.format(ii, ij), data = np.array(Nh, dtype = np.float32), compression = 'lzf')
 
             elif len(v) == 4:
                 _, x, y, pos = v
