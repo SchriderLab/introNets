@@ -200,7 +200,7 @@ class GATRelateCNet(nn.Module):
         
         stem_channels = 2
         
-        res_channels = [48, 24, 12]
+        res_channels = [32, 16, 8]
         up_channels = [16, 16, 16]
         
         self.pred_pop = pred_pop
@@ -227,8 +227,8 @@ class GATRelateCNet(nn.Module):
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
-            self.down_l.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
-            self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
+            self.down_l.append(Res1dBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers // 2))
+            self.down_r.append(Res1dBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers // 2))
             
             self.norms_down.append(nn.LayerNorm((res_channels[ix], pop_size, n_sites // 2)))
             channels = res_channels[ix] * (n_res_layers)
@@ -242,8 +242,8 @@ class GATRelateCNet(nn.Module):
         for ix in range(len(res_channels)):
             n_sites *= 2
             
-            self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix] // 2, (1, 2), stride = (1, 2), padding = 0))
-            self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix] // 2, (1, 2), stride = (1, 2), padding = 0))
+            self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
+            self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             
             self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
