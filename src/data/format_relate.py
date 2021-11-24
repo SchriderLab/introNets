@@ -201,7 +201,7 @@ def main():
                         D_r.append(np.mean(_))
     
                 # hops, mutations, branch lengths, and mean region size along shortest paths
-                D = np.array([D, D_mut, D_branch, D_r], dtype = np.float32).transpose(1, 2, 0)
+                D = np.array([D, D_mut, D_branch, D_r], dtype = np.float32)
                 
                 edges = np.array(edges).T
                 comm.send([ix, ij, edges, X, regions, n_mutations, D], dest = 0)
