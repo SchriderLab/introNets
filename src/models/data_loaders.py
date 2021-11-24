@@ -204,8 +204,8 @@ class GCNDataGeneratorTv2(object):
         D = np.zeros((300, 300))
         count = 0
         
-        for ix in gix:
-            D_ = np.array(self.ifiles[key]['graph']['{}'.format(ix)]['D'])
+        for k in gix:
+            D_ = np.array(self.ifiles[ix]['graph']['{}'.format(k)]['D'])
         
             D += D_
             count += 1
