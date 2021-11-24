@@ -183,7 +183,7 @@ def main():
                 for i,j in indices:
                     path = paths[i][j]
                     
-                    _ = [G.edge[path[k]][path[k + 1]]['n_mutations'] for k in range(len(path) - 1)]
+                    _ = [G.edges[path[k], path[k + 1]]['n_mutations'] for k in range(len(path) - 1)]
 
                     D_mut.append(sum(_))
                         
@@ -191,7 +191,7 @@ def main():
                 for i,j in indices:
                     path = paths[i][j]
                     
-                    _ = [G.edge[path[k]][path[k + 1]]['weight'] for k in range(len(path) - 1)]
+                    _ = [G.edges[path[k], path[k + 1]]['weight'] for k in range(len(path) - 1)]
     
                     D_branch.append(sum(_))
     
@@ -199,7 +199,7 @@ def main():
                 for i,j in indices:
                     path = paths[i][j]
                     
-                    _ = [G.edge[path[k]][path[k + 1]]['r'] for k in range(len(path) - 1)]
+                    _ = [G.edges[path[k], path[k + 1]]['r'] for k in range(len(path) - 1)]
     
                     D_r.append(np.mean(_))
     
