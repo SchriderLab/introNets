@@ -161,6 +161,7 @@ def main():
                 
                 for k in range(len(edges)):
                     G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
+                    G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 t1 = time.time()
                 
