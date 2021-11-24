@@ -161,17 +161,15 @@ def main():
                 
                 # sum of the branch lengths to get from node i to j
                 D = nx.floyd_warshall_numpy(G, weight = 'weight')
-                #print(np.where(D == np.inf))
-                
-                # number of mutations from i to j
-                N = nx.floyd_warshall_numpy(G, weight = 'n_mutations')
+                D = D[np.ix_(list(range(1, 301)), list(range(1, 301)))]
                 
                 # number of hops
                 Nh = nx.floyd_warshall_numpy(G, weight = 'hops')
+                Nh = Nh[np.ix_(list(range(1, 301)), list(range(1, 301)))]
                 
                 edges = np.array(edges).T
                 
-                comm.send([ix, ij, edges, X, regions, n_mutations, D, N, Nh], dest = 0)
+                comm.send([ix, ij, edges, X, regions, n_mutations, D, Nh], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
     
@@ -203,16 +201,16 @@ def main():
                 
                 print('seen {0} simulations out of {1}...'.format(np.max(list(index.values())), len(anc_files)))
               
-            if len(v) == 9:
-                ix, ij, edges, X, regions, n_mutations, D, N, Nh = v
+            if len(v) == 8:
+                ix, ij, edges, X, regions, n_mutations, D, Nh = v
                 
                 ofile.create_dataset('{0}/graph/{1}/xg'.format(ii, ij), data = X, compression = 'lzf') # time, population
                 ofile.create_dataset('{0}/graph/{1}/edge_index'.format(ii, ij), data = edges.astype(np.int32), compression = 'lzf') # indices of branches (i.e. graph edges as index pairs)
                 ofile.create_dataset('{0}/graph/{1}/regions'.format(ii, ij), data = np.array(regions).astype(np.int32), compression = 'lzf')
                 ofile.create_dataset('{0}/graph/{1}/n_mutations'.format(ii, ij), data = np.array(n_mutations), compression = 'lzf')
-                ofile.create_dataset('{0}/graph/{1}/D'.format(ii, ij), data = np.array(D), compression = 'lzf')
-                ofile.create_dataset('{0}/graph/{1}/N'.format(ii, ij), data = np.array(N), compression = 'lzf')
-                ofile.create_dataset('{0}/graph/{1}/Nh'.format(ii, ij), data = np.array(Nh), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/D'.format(ii, ij), data = np.array(D, dtype = np.float32), compression = 'lzf')
+                #ofile.create_dataset('{0}/graph/{1}/N'.format(ii, ij), data = np.array(N, dtype = np.float32), compression = 'lzf')
+                ofile.create_dataset('{0}/graph/{1}/Nh'.format(ii, ij), data = np.array(Nh, dtype = np.float32), compression = 'lzf')
 
             elif len(v) == 4:
                 _, x, y, pos = v
