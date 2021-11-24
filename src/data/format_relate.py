@@ -164,7 +164,7 @@ def main():
                     #G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 t1 = time.time()
-                paths = dict(nx.all_pairs_shortest_paths(G))
+                paths = nx.shortest_path(G)
                 
                 nodes = list(range(0, 300))
                 
