@@ -164,19 +164,13 @@ def main():
                     #G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 t1 = time.time()
-                
-                logging.info('computing paths for {}...'.format(ij))
-                #paths = nx.shortest_path(G)
+                paths = nx.shortest_path(G)
                 
                 nodes = list(range(0, 300))
                 
                 indices = list(itertools.combinations(nodes, 2))
                 
-                D = []
-                for i,j in indices:
-                    D.append(len(nx.shortest_path(G, i, j)))
-                    
-                logging.info('getting paths took {}...'.format(time.time() - t1))
+                D = np.array([paths[i][j] for (i,j) in indices])
                 logging.info('{}'.format(np.where(D == 0)))
                 
                 edges = np.array(edges).T
