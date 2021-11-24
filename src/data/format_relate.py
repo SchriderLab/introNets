@@ -181,24 +181,27 @@ def main():
                 
                 D_mut = []
                 for i,j in indices:
-                    for u in paths[i][j]:
-                        _ = [G.edge[u[k]][u[k + 1]]['n_mutations'] for k in range(len(u) - 1)]
-    
-                        D_mut.append(sum(_))
+                    path = paths[i][j]
+                    
+                    _ = [G.edge[path[k]][path[k + 1]]['n_mutations'] for k in range(len(path) - 1)]
+
+                    D_mut.append(sum(_))
                         
                 D_branch = []
                 for i,j in indices:
-                    for u in paths[i][j]:
-                        _ = [G.edge[u[k]][u[k + 1]]['weight'] for k in range(len(u) - 1)]
+                    path = paths[i][j]
+                    
+                    _ = [G.edge[path[k]][path[k + 1]]['weight'] for k in range(len(path) - 1)]
     
-                        D_branch.append(sum(_))
+                    D_branch.append(sum(_))
     
                 D_r = []
                 for i,j in indices:
-                    for u in paths[i][j]:
-                        _ = [G.edge[u[k]][u[k + 1]]['r'] for k in range(len(u) - 1)]
+                    path = paths[i][j]
+                    
+                    _ = [G.edge[path[k]][path[k + 1]]['r'] for k in range(len(path) - 1)]
     
-                        D_r.append(np.mean(_))
+                    D_r.append(np.mean(_))
     
                 # hops, mutations, branch lengths, and mean region size along shortest paths
                 D = np.array([D, D_mut, D_branch, D_r], dtype = np.float32)
