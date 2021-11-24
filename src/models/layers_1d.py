@@ -128,7 +128,7 @@ class Res1dBlock(nn.Module):
         for ix in range(1, len(self.norms)):
             xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
             
-        x = torch.cat(xs, dim = 1).relu_()
+        x = torch.cat(xs, dim = 1)
         
         if self.pool is not None:
             return self.pool(x)
@@ -170,16 +170,9 @@ class VanillaConv(MessagePassing):
         self.norm = MessageNorm(True)
 
     def forward(self, x, edge_index):
-        # x has shape [N, in_channels]
-        # edge_index has shape [2, E]
-
-        # Step 4-5: Start propagating messages.
         return self.propagate(edge_index, x=x)
 
     def message(self, x_j):
-        # x_j has shape [E, out_channels]
-
-        # Step 4: Normalize node features.
         return x_j
     
     def update(self, inputs, x):
@@ -279,7 +272,7 @@ class GATRelateCNet(nn.Module):
         x0 = to_dense_batch(x0, batch)[0]
         x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
-        x0 = self.stem_norm(x0)        
+        x0 = self.stem_norm(x0).relu_()        
         x0 = torch.cat([x, x0])
         
         #print('after_stem: {}'.format(x.shape))
@@ -304,7 +297,7 @@ class GATRelateCNet(nn.Module):
             xs[-1] = to_dense_batch(xs[-1], batch)[0]
             xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
             
-            xs[-1] = self.norms_down[k](xs[-1])
+            xs[-1] = self.norms_down[k](xs[-1]).relu_()
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
@@ -327,7 +320,7 @@ class GATRelateCNet(nn.Module):
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
             
-            x = self.norms_up[k](x)
+            x = self.norms_up[k](x).relu_()
                 
         # final concatenation
         x = torch.cat([x, x0])
