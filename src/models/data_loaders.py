@@ -205,13 +205,10 @@ class GCNDataGeneratorTv2(object):
         count = 0
         
         for ix in gix:
-            if str(ix) in list(self.ifiles[ix][key]['graph'].keys()):
-                D_ = np.array(self.ifiles[ix][key]['graph']['{}'.format(ix)]['D'])
-            
-                D += D_
-                count += 1
-                
-        print(count)
+            D_ = np.array(self.ifiles[key]['graph']['{}'.format(ix)]['D'])
+        
+            D += D_
+            count += 1
         
         D = D / count
         
