@@ -173,6 +173,8 @@ def main():
                 t1 = time.time()
                 indices = list(itertools.combinations(nodes, 2))
                 
+                print(dist, paths)
+                
                 D = np.array([dist[i][j] for (i,j) in indices])
                 logging.info('{}'.format(np.where(D == 0)))
                 
