@@ -249,7 +249,9 @@ class GATRelateCNet(nn.Module):
         for ix in range(len(res_channels)):
             n_sites *= 2
             
-            self.up.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
+            self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix] // 2, (1, 2), stride = (1, 2), padding = 0))
+            self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix] // 2, (1, 2), stride = (1, 2), padding = 0))
+            
             self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
         
@@ -283,7 +285,7 @@ class GATRelateCNet(nn.Module):
         #print('after_stem: {}'.format(x.shape))
         
         xs = [x0]
-        for k in range(len(self.down)):
+        for k in range(len(self.down_l)):
             # pass each pop to it's 1d conv
             xl = self.down_l[k](xs[-1][:,:,:n_ind // 2,:])
             xr = self.down_r[k](xs[-1][:,:,n_ind // 2:,:])
@@ -306,11 +308,11 @@ class GATRelateCNet(nn.Module):
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
-        for k in range(len(self.up)):
+        for k in range(len(self.up_l)):
             del xs[-1]
             # pass each pop to it's 1d conv
-            xl = self.down_l[k](x[:,:,:n_ind // 2,:])
-            xr = self.down_r[k](x[:,:,n_ind // 2:,:])
+            xl = self.up_l[k](x[:,:,:n_ind // 2,:])
+            xr = self.up_r[k](x[:,:,n_ind // 2:,:])
             
             x = torch.cat([torch.cat([xl, xr], dim = 1), xs[-1]], dim = 1)
             
