@@ -166,10 +166,10 @@ class VanillaAttConv(MessagePassing):
         return self.norm(x, inputs)
     
 class VanillaConv(MessagePassing):
-    def __init__(self):
-        super().__init__(aggr='add', negative_slope = 0.2)  # "Add" aggregation (Step 5).
+    def __init__(self, negative_slope = 0.2):
+        super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
-        self.negative_slope = 0.2
+        self.negative_slope = negative_slope
 
     def forward(self, x, edge_index):
         return self.propagate(edge_index, x=x)
