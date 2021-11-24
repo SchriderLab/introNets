@@ -165,7 +165,7 @@ def main():
                 t1 = time.time()
                 
                 logging.info('computing paths for {}...'.format(ij))
-                paths = nx.multi_source_dijkstra(G, source = list(range(0, 300)))
+                paths = nx.multi_source_dijkstra(G, sources = list(range(0, 300)))
                 logging.info('getting paths took {}...'.format(time.time() - t1))
                 
                 nodes = list(range(0, 300))
