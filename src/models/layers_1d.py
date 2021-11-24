@@ -227,8 +227,8 @@ class GATRelateCNet(nn.Module):
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
-            self.down_l.append(Res1dBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers // 2))
-            self.down_r.append(Res1dBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers // 2))
+            self.down_l.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
+            self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers // 2))
             
             self.norms_down.append(nn.LayerNorm((res_channels[ix], pop_size, n_sites // 2)))
             channels = res_channels[ix] * (n_res_layers)
