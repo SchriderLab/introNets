@@ -159,7 +159,7 @@ class GCNDataGeneratorTv2(object):
         
         # knn + fibonacci spaced sampling w.r. to topological distance
         ii = 1
-        f = F(ii) + k - 1
+        f = F(ii) * f_factor + k - 1
         while f < pop_size - 1:
             self.nn_samp.append(f)
             

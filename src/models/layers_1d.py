@@ -175,7 +175,7 @@ class VanillaConv(MessagePassing):
         return self.propagate(edge_index, x=x)
 
     def message(self, x_j):
-        return x_j
+        return F.leaky_relu_(x_j, self.negative_slope)
     
     def update(self, inputs, x):
         return self.norm(x, inputs)
