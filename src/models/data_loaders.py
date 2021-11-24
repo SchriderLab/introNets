@@ -211,7 +211,7 @@ class GCNDataGeneratorTv2(object):
         
         # currently a weighted average of the distance matrices in the region
         for k in gix:
-            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D'][:,:,0]))
+            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D']))
             
             if bp[k + 1] <= s[-1]:
                 w = (bp[k + 1] - bp[k]) / self.n_sites
