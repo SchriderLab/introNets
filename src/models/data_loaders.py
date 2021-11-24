@@ -233,7 +233,7 @@ class GCNDataGeneratorTv2(object):
         for ix in range(D.shape[0]):
             ij = np.argsort(D[ix])[self.nn_samp]
             edge_index.extend([(ix, u) for u in ij])
-            edge_index.extend([(u, ix) for u in ij])
+            #edge_index.extend([(u, ix) for u in ij])
             
         edge_index = list(set(edge_index))
         
