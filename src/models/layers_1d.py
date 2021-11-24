@@ -112,7 +112,8 @@ class Res1dBlock(nn.Module):
         self.norms = nn.ModuleList()
         
         for ix in range(n_layers):
-            self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+            self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
             self.norms.append(nn.LayerNorm(in_shape[1:]))
             
             in_shape[0] = out_channels
@@ -262,7 +263,7 @@ class GATRelateCNet(nn.Module):
         
         x0 = self.stem_conv(x)
         
-        n_channels = 1
+        n_channels = x0.shape[1]
         x0 = torch.flatten(x0.transpose(1, 2), 2, 3).flatten(0, 1)   
                 
         #  insert graph convolution here...
