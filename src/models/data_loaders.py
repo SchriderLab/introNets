@@ -159,7 +159,7 @@ class GCNDataGeneratorTv2(object):
         
         # knn + fibonacci spaced sampling w.r. to topological distance
         ii = 1
-        f = F(ii) * f_factor + k - 1
+        f = F(ii) + k - 1
         while f < pop_size - 1:
             self.nn_samp.append(f)
             
@@ -233,7 +233,7 @@ class GCNDataGeneratorTv2(object):
         for ix in range(D.shape[0]):
             ij = np.argsort(D[ix])[self.nn_samp]
             edge_index.extend([(ix, u) for u in ij])
-            #edge_index.extend([(u, ix) for u in ij])
+            edge_index.extend([(u, ix) for u in ij])
             
         edge_index = list(set(edge_index))
         
