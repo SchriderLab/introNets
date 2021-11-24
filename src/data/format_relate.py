@@ -160,14 +160,14 @@ def main():
                     G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 # sum of the branch lengths to get from node i to j
-                D = nx.floyd_warshall_numpy(G, weight = 'weight', nodelist = list(range(300)))
+                D = nx.floyd_warshall_numpy(G, weight = 'weight')
                 print(np.where(D == np.inf))
                 
                 # number of mutations from i to j
-                N = nx.floyd_warshall_numpy(G, weight = 'n_mutations', nodelist = list(range(300)))
+                N = nx.floyd_warshall_numpy(G, weight = 'n_mutations')
                 
                 # number of hops
-                Nh = nx.floyd_warshall_numpy(G, weight = 'hops', nodelist = list(range(300))) 
+                Nh = nx.floyd_warshall_numpy(G, weight = 'hops')
                 
                 edges = np.array(edges).T
                 
