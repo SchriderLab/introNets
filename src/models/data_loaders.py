@@ -14,8 +14,13 @@ from torch_geometric.data import Data
 import glob
 from sparsenn.models.gcn.topologies import knn_1d
 
+from scipy.spatial.distance import squareform
+
 from data_functions import load_data_dros
 import pickle
+from sklearn.neighbors import kneighbors_graph
+
+import networkx as nx
 
 def load_npz(ifile):
     ifile = np.load(ifile)
@@ -105,6 +110,243 @@ class GCNDisDataGenerator(object):
                 edges = e
             else:
                 edges = [torch.cat([edges[k], e[k] + current_node], dim = 1) for k in range(len(e))]
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(x)
+            ys.append(y)
+            
+            current_node += n
+            
+        x = torch.cat(xs)
+        y = torch.cat(ys)
+        
+        return x, y, edges, torch.LongTensor(batch)
+    
+    def __len__(self):
+        return self.length
+    
+def F(n):
+    if n == 0: return 0
+    elif n == 1: return 1
+    else: return F(n-1)+F(n-2)
+    
+class GCNDataGeneratorTv2(object):
+    def __init__(self, idir, n_sites = 128, 
+                 batch_size = 4, val_prop = 0.05, k = 4, pop_size = 300, f_factor = 2):
+        self.ifiles = [h5py.File(os.path.join(idir, u), 'r') for u in os.listdir(idir)]
+        
+        self.training = []
+        for ix in range(len(self.ifiles)):
+            keys_ = list(self.ifiles[ix])
+            
+            self.training.extend([(ix, u) for u in keys_])
+            
+        n_val = int(len(self.training) * val_prop)
+        random.shuffle(self.training)
+        
+        self.val = self.training[:n_val]
+        del self.training[:n_val]
+        
+        self.n_sites = n_sites
+        self.batch_size = batch_size
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+        
+        self.nn_samp = list(range(k - 1))
+        
+        ii = 1
+        f = F(ii) * f_factor + k - 1
+        while f < pop_size - 1:
+            self.nn_samp.append(f)
+            
+            ii += 1
+            f = F(ii) * f_factor + k - 1
+            
+        self.on_epoch_end()
+        
+    def on_epoch_end(self):
+        random.shuffle(self.training)
+        
+        self.ix = 0
+        self.val_ix = 0
+        
+    def get_element(self, val = False):
+        if val:
+            if self.val_ix >= len(self.val):
+                return None, None, None
+            
+            ix, key = self.val[self.val_ix]
+            self.val_ix += 1
+        else:
+            if self.ix >= len(self.training):
+                return None, None, None
+            
+            ix, key = self.training[self.ix]
+            self.ix += 1
+            
+        x = np.array(self.ifiles[ix][key]['x'])
+        y = np.array(self.ifiles[ix][key]['y'])
+        bp = np.array(self.ifiles[ix][key]['break_points'])
+        D = squareform(np.array(self.ifiles[ix][key]['D']))
+        
+        if len(bp) == 0:
+            return self.get_element(val)
+        
+        if np.max(bp) <= self.n_sites:
+            return self.get_element(val)
+        
+        s = np.random.choice(range(np.max(bp) - self.n_sites))
+        s = list(range(s, s + self.n_sites))
+        
+        gix = list(np.where((bp >= s[0]) & (bp < s[-1]))[0])
+        
+        x = x[:,s]
+        y = y[150:,s]
+        
+        bp = [u for u in bp if u in s]        
+        bp = list(np.array(bp) - int(np.min(bp)))
+        
+        edge_index = []
+        for ix in range(D.shape[0]):
+            ij = np.argsort(D[ix])[self.nn_samp]
+            edge_index.extend([(ix, u) for u in ij])
+            edge_index.extend([(u, ix) for u in ij])
+            
+        edge_index = list(set(edge_index))
+        
+        edge_index = np.array(edge_index, dtype = np.int32)
+        
+        bp_x = np.zeros(x.shape)
+        bp_x[:, bp] = 1.
+        
+        x = np.array((x, bp_x))
+        
+        return x, y, torch.LongTensor(edge_index).T
+    
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y, e = self.get_element(val)
+
+            
+            if x is None:
+                break
+            
+            n = x.shape[1]
+            
+            if len(edges) == 0:
+                edges = e
+            else:
+                edges = torch.cat([edges, e + current_node], dim = 1)
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(torch.FloatTensor(x))
+            ys.append(torch.FloatTensor(y))
+            
+            current_node += n
+            
+        x = torch.stack(xs)
+        y = torch.stack(ys)
+        
+        return x, y, edges, torch.LongTensor(batch)
+        
+    
+class GCNDataGeneratorT(object):
+    def __init__(self, idir, indices, batch_size = 8, 
+                     val_prop = 0.05, k = 12, 
+                     seg = False, n = 300):
+       
+        
+        if indices == "None":
+            self.training = glob.glob(os.path.join(idir, '*/*.npz')) + glob.glob(os.path.join(idir, '*.npz'))
+                    
+            n_val = int(len(self.training) * val_prop)
+            random.shuffle(self.training)
+            
+            self.val = self.training[:n_val]
+            del self.training[:n_val]
+        else:
+            self.training, self.val = pickle.load(open(indices, 'rb'))
+            
+            self.training = [os.path.join(idir, u) for u in self.training]
+            self.val = [os.path.join(idir, u) for u in self.val]
+            
+        co = []
+        for ix in range(150):
+            co.append((0, ix))
+            
+        for ix in range(150, 300):
+            co.append((1, ix))
+            
+        co = np.array(co, dtype = np.float32)
+        
+        A = kneighbors_graph(co, k, mode='connectivity', include_self = False).tocoo()
+        self.edge_index = torch.LongTensor(np.array([A.row, A.col]))
+        
+        self.batch_size = batch_size
+        
+        self.on_epoch_end()
+        self.k = k
+        self.seg = seg
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+                
+    def on_epoch_end(self):
+        random.shuffle(self.training)
+        
+        self.ix = 0
+        self.val_ix = 0
+        
+    def get_element(self, val = False):
+        if val:
+            if self.val_ix >= len(self.val):
+                return None, None, None
+            
+            ifile = np.load(self.val[self.val_ix], allow_pickle = True)
+            self.val_ix += 1
+        else:
+            if self.ix >= len(self.training):
+                return None, None, None
+            
+            ifile = np.load(self.training[self.ix], allow_pickle = True)
+            self.ix += 1
+            
+        if len(ifile['y'].shape) == 0:
+            return self.get_element(val)
+        
+        y = torch.FloatTensor(ifile['y'])[:,:255]
+        x = torch.FloatTensor(ifile['x'])[:,:255]
+        
+        return x, y, self.edge_index
+        
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y, e = self.get_element(val)
+            
+            if x is None:
+                break
+            
+            n = x.shape[0]
+            
+            if len(edges) == 0:
+                edges = e
+            else:
+                edges = torch.cat([edges, e + current_node], dim = 1)
                 
             batch.extend(np.repeat(ix, n))
     
