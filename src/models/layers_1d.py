@@ -273,7 +273,7 @@ class GATRelateCNet(nn.Module):
         x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
         x0 = self.stem_norm(x0).relu_()      
-        x0 = torch.cat([x, x0])
+        x0 = torch.cat([x, x0], dim = 1)
         
         #print('after_stem: {}'.format(x.shape))
         
