@@ -175,7 +175,7 @@ def main():
                 
                 edges = np.array(edges).T
                 
-                comm.send([ix, ij, edges, X, regions, D], dest = 0)
+                comm.send([ix, ij, edges, X, regions, n_mutations, D], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
     
