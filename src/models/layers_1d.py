@@ -347,7 +347,7 @@ class GATRelateCNet(nn.Module):
         x = self.out_norm(self.out_res(x)).relu_()
         
         # go back to one channel
-        x = self.final_conv(x)
+        x = torch.squeeze(self.final_conv(x))
 
         return x        
     
