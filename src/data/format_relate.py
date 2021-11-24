@@ -167,14 +167,16 @@ def main():
                 
                 logging.info('computing paths for {}...'.format(ij))
                 paths = nx.shortest_path(G)
-                logging.info('getting paths took {}...'.format(time.time() - t1))
                 
                 nodes = list(range(0, 300))
                 
-                t1 = time.time()
                 indices = list(itertools.combinations(nodes, 2))
                 
-                D = np.array([paths[i][j] for (i,j) in indices])
+                D = []
+                for i,j in indices:
+                    D.append(len(nx.shortest_path(G, i, j)))
+                    
+                logging.info('getting paths took {}...'.format(time.time() - t1))
                 logging.info('{}'.format(np.where(D == 0)))
                 
                 edges = np.array(edges).T
