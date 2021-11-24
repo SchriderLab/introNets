@@ -161,12 +161,12 @@ def main():
                 
                 for k in range(len(edges)):
                     G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
-                    G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
+                    #G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 t1 = time.time()
                 
                 logging.info('computing paths for {}...'.format(ij))
-                dist, paths = nx.multi_source_dijkstra(G, sources = list(range(0, 300)), weight = None)
+                paths = nx.shortest_path(G)
                 logging.info('getting paths took {}...'.format(time.time() - t1))
                 
                 nodes = list(range(0, 300))
@@ -174,9 +174,7 @@ def main():
                 t1 = time.time()
                 indices = list(itertools.combinations(nodes, 2))
                 
-                print(dist, paths)
-                
-                D = np.array([dist[i][j] for (i,j) in indices])
+                D = np.array([paths[i][j] for (i,j) in indices])
                 logging.info('{}'.format(np.where(D == 0)))
                 
                 edges = np.array(edges).T
