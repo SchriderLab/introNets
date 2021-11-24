@@ -166,7 +166,7 @@ def main():
                 t1 = time.time()
                 
                 logging.info('computing paths for {}...'.format(ij))
-                paths = nx.shortest_path(G)
+                #paths = nx.shortest_path(G)
                 
                 nodes = list(range(0, 300))
                 
