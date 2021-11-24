@@ -161,7 +161,7 @@ def main():
                 
                 # sum of the branch lengths to get from node i to j
                 D = nx.floyd_warshall_numpy(G, weight = 'weight')
-                print(np.where(D == np.inf))
+                #print(np.where(D == np.inf))
                 
                 # number of mutations from i to j
                 N = nx.floyd_warshall_numpy(G, weight = 'n_mutations')
