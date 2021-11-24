@@ -330,7 +330,7 @@ class GATRelateCNet(nn.Module):
         
                 
         # final concatenation
-        x = torch.cat([x, x0])
+        x = torch.cat([x, x0], dim = 1)
         
         # gc
         del x0
