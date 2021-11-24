@@ -107,11 +107,6 @@ def main():
                         edges.append((parents[-1], nodes[-1]))
                 except:
                     break
-                    
-                G = nx.DiGraph()
-                
-                for k in range(len(edges)):
-                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 current_day_nodes = []
                 
@@ -154,10 +149,14 @@ def main():
                 X = np.array(X)
                 X[:,0] /= np.max(X[:,0])
                 
-                G = G.to_undirected()
+                G = nx.Graph()
+                
+                for k in range(len(edges)):
+                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 # sum of the branch lengths to get from node i to j
                 D = nx.floyd_warshall_numpy(G, weight = 'weight', nodelist = list(range(300)))
+                print(np.where(D == np.inf))
                 
                 # number of mutations from i to j
                 N = nx.floyd_warshall_numpy(G, weight = 'n_mutations', nodelist = list(range(300)))
