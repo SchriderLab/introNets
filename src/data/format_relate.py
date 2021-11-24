@@ -171,7 +171,7 @@ def main():
                 indices = list(itertools.combinations(nodes, 2))
                 
                 D = np.array([len(paths[i][j]) for (i,j) in indices])
-                logging.info('{}'.format(np.where(D == 0)))
+                #logging.info('{}'.format(np.where(D == 0)))
                 
                 edges = np.array(edges).T
                 
