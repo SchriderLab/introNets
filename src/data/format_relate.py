@@ -14,6 +14,7 @@ from mpi4py import MPI
 
 import matplotlib
 matplotlib.use('Agg')
+from scipy.spatial.distance import squareform
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -161,11 +162,11 @@ def main():
                 
                 # sum of the branch lengths to get from node i to j
                 D = nx.floyd_warshall_numpy(G, weight = 'weight')
-                D = D[np.ix_(list(range(1, 301)), list(range(1, 301)))]
+                D = squareform(D[np.ix_(list(range(1, 301)), list(range(1, 301)))])
                 
                 # number of hops
                 Nh = nx.floyd_warshall_numpy(G, weight = 'hops')
-                Nh = Nh[np.ix_(list(range(1, 301)), list(range(1, 301)))]
+                Nh = squareform(Nh[np.ix_(list(range(1, 301)), list(range(1, 301)))])
                 
                 edges = np.array(edges).T
                 
