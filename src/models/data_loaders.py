@@ -205,7 +205,7 @@ class GCNDataGeneratorTv2(object):
         count = 0
         
         for ix in gix:
-            D_ = np.array(self.ifile[ix][key]['graph']['{}'.format(ix)]['D'])
+            D_ = np.array(self.ifiles[ix][key]['graph']['{}'.format(ix)]['D'])
             
             D += D_
             count += 1

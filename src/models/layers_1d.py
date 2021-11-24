@@ -236,7 +236,7 @@ class GATRelateCNet(nn.Module):
             self.norms_up.append(nn.BatchNorm2d(up_channels[ix]))
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
         
-        self.out = nn.Conv2d(140, 1, 1)
+        self.out = nn.Conv2d(17, 1, 1)
             
                         
     def forward(self, x, edge_index, batch, save_steps = False):
@@ -277,7 +277,7 @@ class GATRelateCNet(nn.Module):
             del xs[-1]         
             
             x = torch.cat([self.norms_up[k](self.up[k](x)), xs[-1]], dim = 1)
-            #print('conv_up_{0}: {1}'.format(k, x.shape))
+            print('conv_up_{0}: {1}'.format(k, x.shape))
             
             n_sites = n_sites * 2
             n_channels = x.shape[1]
@@ -289,7 +289,7 @@ class GATRelateCNet(nn.Module):
             
             x = x.reshape(batch_size, n_channels, n_ind, n_sites)
                 
-        x = torch.cat([x[:,:,:150,:], x[:,:,150:300,:]], dim = 1)
+        x = x[:,:,150:300,:]
         #print(x.shape)
         
         return torch.squeeze(self.out(x))
