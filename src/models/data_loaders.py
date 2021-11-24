@@ -189,7 +189,6 @@ class GCNDataGeneratorTv2(object):
         x = np.array(self.ifiles[ix][key]['x'])
         y = np.array(self.ifiles[ix][key]['y'])
         bp = np.array(self.ifiles[ix][key]['break_points'])
-        D = squareform(np.array(self.ifiles[ix][key]['D']))
         
         if len(bp) == 0:
             return self.get_element(val)
@@ -201,6 +200,17 @@ class GCNDataGeneratorTv2(object):
         s = list(range(s, s + self.n_sites))
         
         gix = list(np.where((bp >= s[0]) & (bp < s[-1]))[0])
+        
+        D = np.zeros((300, 300))
+        count = 0
+        
+        for ix in gix:
+            D_ = np.array(self.ifile[ix][key]['graph']['{}'.format(ix)]['D'])
+            
+            D += D_
+            count += 1
+        
+        D = D / count
         
         x = x[:,s]
         y = y[150:,s]
@@ -234,8 +244,7 @@ class GCNDataGeneratorTv2(object):
         current_node = 0
         for ix in range(self.batch_size):
             x, y, e = self.get_element(val)
-
-            
+    
             if x is None:
                 break
             
