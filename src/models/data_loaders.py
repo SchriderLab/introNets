@@ -337,9 +337,7 @@ class GCNDataGeneratorTv2(object):
         y = torch.stack(ys)
         edge_attr = torch.cat(edge_attr, dim = 0)
         
-        print(edge_attr.shape, edges.shape)
-        
-        return x, y, edges, torch.LongTensor(batch), edge_attr
+        return x, y, edges, edge_attr, torch.LongTensor(batch)
         
     
 class GCNDataGeneratorT(object):
