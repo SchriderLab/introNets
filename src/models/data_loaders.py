@@ -134,6 +134,11 @@ def F(n):
     elif n == 1: return 1
     else: return F(n-1)+F(n-2)
     
+EDGE_MEAN = np.array([
+       8.9814079e-01, 1.0996692e+00, 1.0816846e+03, 1.5813326e+01],
+      dtype=np.float32)
+EDGE_STD = np.array([5.2765501e-01, 8.9487451e-01, 1.1330474e+03, 2.4047951e+01])
+
 class GCNDataGeneratorTv2(object):
     def __init__(self, idir, n_sites = 128, 
                  batch_size = 4, val_prop = 0.05, k = 3, pop_size = 300, f_factor = 2):
@@ -260,7 +265,7 @@ class GCNDataGeneratorTv2(object):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([D[:,ix,u] for u in ij])
+            _ = np.vstack([(D[:,ix,u] - EDGE_MEAN) / EDGE_STD for u in ij])
         
             ## i -> j
             edge_index.extend([(ix, u) for u in ij])
@@ -286,7 +291,7 @@ class GCNDataGeneratorTv2(object):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([D[:,u,ix] for u in ij])
+            _ = np.vstack([(D[:,u,ix] - EDGE_MEAN) / EDGE_STD for u in ij])
             
             ## i -> j
             edge_index.extend([(u, ix) for u in ij])
