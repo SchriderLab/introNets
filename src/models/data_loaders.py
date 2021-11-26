@@ -290,8 +290,6 @@ class GCNDataGeneratorTv2(object):
             ## i -> j
             edge_index.extend([(u, ix) for u in ij])
             edge_attr.extend(list(np.concatenate([edge_class, _], axis = 1)))
-            
-        edge_index = list(set(edge_index))
         
         edge_index = np.array(edge_index, dtype = np.int32)
         edge_attr = np.array(edge_attr, dtype = np.float32)
