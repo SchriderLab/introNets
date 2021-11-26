@@ -217,7 +217,7 @@ class GCNDataGeneratorTv2(object):
         for k in gix:
             D_ = np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D'])
             
-            D_ = [squareform(u) for u in D_]
+            D_ = np.array([squareform(u) for u in D_], dtype = np.float32)
             
             if bp[k + 1] <= s[-1]:
                 w = (bp[k + 1] - bp[k]) / self.n_sites
