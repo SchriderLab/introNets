@@ -147,7 +147,7 @@ class VanillaAttConv(MessagePassing):
                                      nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1))
 
     def forward(self, x, edge_index, edge_attr):
-        att = torch.tanh(self.att_mlp(edge_attr))
+        att = self.att_mlp(edge_attr)
         
         return self.propagate(edge_index, x = x, att = att)
 
