@@ -22,6 +22,8 @@ from sklearn.neighbors import kneighbors_graph
 
 import networkx as nx
 
+
+
 def load_npz(ifile):
     ifile = np.load(ifile)
     pop1_x = ifile['simMatrix'].T
@@ -155,8 +157,10 @@ class GCNDataGeneratorTv2(object):
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
         
-        self.nn_samp = list(range(k - 1))
+        # 1 dilation
+        self.nn_samp = list(range(k)) + list(range(k, 3*k, 2))
         
+        """
         # knn + fibonacci spaced sampling w.r. to topological distance
         ii = 1
         f = F(ii) * f_factor + k - 1
@@ -165,7 +169,7 @@ class GCNDataGeneratorTv2(object):
             
             ii += 1
             f = F(ii) * f_factor + k - 1
-            
+        """
         self.on_epoch_end()
         
     def on_epoch_end(self):
@@ -206,12 +210,14 @@ class GCNDataGeneratorTv2(object):
         if len(gix) == 0:
             return self.get_element(val)
         
-        D = np.zeros((300, 300))
+        D = np.zeros((4, 300, 300))
         count = 0
         
         # currently a weighted average of the distance matrices in the region
         for k in gix:
-            D_ = squareform(np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D']))
+            D_ = np.array(self.ifiles[ix][key]['graph']['{}'.format(k)]['D'])
+            
+            D_ = [squareform(u) for u in D_]
             
             if bp[k + 1] <= s[-1]:
                 w = (bp[k + 1] - bp[k]) / self.n_sites
@@ -221,7 +227,10 @@ class GCNDataGeneratorTv2(object):
             D += D_ * w
             count += 1
         
-        D = D / count
+        D /= count
+        
+        # preserve n_mutations as the un-scaled one
+        D[1,:,:] *= count
         
         x = x[:,s]
         y = y[150:,s]
@@ -230,31 +239,82 @@ class GCNDataGeneratorTv2(object):
         bp = list(np.array(bp) - int(np.min(bp)))
         
         edge_index = []
-        for ix in range(D.shape[0]):
-            ij = np.argsort(D[ix])[self.nn_samp]
+        edge_attr = []
+        
+        # from pop 1
+        for ix in range(D.shape[1] // 2):
+            # to pop 1
+            ij1 = np.argsort(D[0, ix, :D.shape[1] // 2])[self.nn_samp]
+            ij2 = np.argsort(D[0, ix, D.shape[1] // 2:])[self.nn_samp]
+            
+            # pop 1 -> 2
+            edge_class = np.zeros((len(self.nn_samp), 4))
+            edge_class[:,2] = 1
+            
+            # pop 1 -> 1
+            edge_class_ = np.zeros((len(self.nn_samp), 4))
+            edge_class_[:,0] = 1
+            
+            edge_class = np.concatenate([edge_class, edge_class_], axis = 0)
+            
+            ij = np.array(list(ij1) + list(ij2))
+            
+            _ = np.array([D[:,ix,u] for u in ij])
+            _ = np.concatenate([_, edge_class])
+            
+            ## i -> j
             edge_index.extend([(ix, u) for u in ij])
-            edge_index.extend([(u, ix) for u in ij])
+            edge_attr.extend(list(np.concatenate([edge_class, _], axis = 1)))
+           
+            
+        # from pop 2
+        for ix in range(D.shape[0] // 2, D.shape[1]):
+            # to pop 1
+            ij1 = np.argsort(D[0, ix, :D.shape[1] // 2])[self.nn_samp]
+            # to pop 2
+            ij2 = np.argsort(D[0, ix, D.shape[1] // 2:])[self.nn_samp]
+            
+            # pop 2 -> 2
+            edge_class = np.zeros((len(self.nn_samp), 4))
+            edge_class[:,3] = 1
+            
+            # pop 2 -> 1
+            edge_class_ = np.zeros((len(self.nn_samp), 4))
+            edge_class_[:,1] = 1
+            
+            edge_class = np.concatenate([edge_class, edge_class_], axis = 0)
+            
+            ij = np.array(list(ij1) + list(ij2))
+            
+            _ = np.array([D[:,ix,u] for u in ij])
+            _ = np.concatenate([_, edge_class])
+            
+            ## i -> j
+            edge_index.extend([(ix, u) for u in ij])
+            edge_attr.extend(list(np.concatenate([edge_class, _], axis = 1)))
             
         edge_index = list(set(edge_index))
         
         edge_index = np.array(edge_index, dtype = np.int32)
+        edge_attr = np.array(edge_attr, dtype = np.float32)
         
         bp_x = np.zeros(x.shape)
         bp_x[:, bp] = 1.
         
         x = np.array((x, bp_x))
         
-        return x, y, torch.LongTensor(edge_index).T
+        return x, y, torch.LongTensor(edge_index).T, torch.FloatTensor(edge_attr)
     
     def get_batch(self, val = False):
         xs = []
         ys = []
         edges = []
+        edge_attr = []
         batch = []
         
         current_node = 0
         for ix in range(self.batch_size):
-            x, y, e = self.get_element(val)
+            x, y, e, ea = self.get_element(val)
     
             if x is None:
                 break
@@ -271,12 +331,15 @@ class GCNDataGeneratorTv2(object):
             xs.append(torch.FloatTensor(x))
             ys.append(torch.FloatTensor(y))
             
+            edge_attr.append(ea)
+            
             current_node += n
             
         x = torch.stack(xs)
         y = torch.stack(ys)
+        edge_attr = torch.stack(edge_attr)
         
-        return x, y, edges, torch.LongTensor(batch)
+        return x, y, edges, torch.LongTensor(batch), edge_attr
         
     
 class GCNDataGeneratorT(object):

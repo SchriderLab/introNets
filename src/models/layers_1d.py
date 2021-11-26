@@ -138,29 +138,21 @@ class Res1dBlock(nn.Module):
     
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self, negative_slope = 0.2):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
+        self.negative_slope = negative_slope
+        
+        self.att_mlp = nn.Sequential(nn.LayerNorm((8,)), nn.Linear(8, 64), nn.ReLU(), 
+                                     nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1), nn.LeakyReLU())
 
-    def forward(self, x, edge_index):
-        # x has shape [N, in_channels]
-        # edge_index has shape [2, E]    
+    def forward(self, x, edge_index, edge_attr):
+        att = F.sigmoid(self.att_mlp(edge_attr))
+        
+        return self.propagate(edge_index, x = x, att = att)
 
-        # Step 3: Compute normalization.
-        row, col = edge_index
-        deg = degree(col, x.size(0), dtype=x.dtype)
-        deg_inv_sqrt = deg.pow(-0.5)
-        deg_inv_sqrt[deg_inv_sqrt == float('inf')] = 0
-        norm = deg_inv_sqrt[row] * deg_inv_sqrt[col]
-
-        # Step 4-5: Start propagating messages.
-        return self.propagate(edge_index, x=x, norm=norm)
-
-    def message(self, x_j, norm):
-        # x_j has shape [E, out_channels]
-
-        # Step 4: Normalize node features.
-        return norm.view(-1, 1) * x_j
+    def message(self, x_j, att):
+        return x_j * att
     
     def update(self, inputs, x):
         return self.norm(x, inputs)
@@ -186,6 +178,10 @@ class VanillaConv(MessagePassing):
 ## -----
 ## There is a "stem" that takes the (genotype matrix (cat) breakpoints) -> 1 channel image.
 ## After the stem and each convolution operation (up and down) there is a GCN.
+
+## i1 (had a single sum operator across edges)
+## i2 (introduced edge attrs) + edge conditioned single sigmoid function to
+##### go from edge attr -> a; giving x_j = x_j * a
     
 class GATRelateCNet(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
@@ -215,13 +211,16 @@ class GATRelateCNet(nn.Module):
         
         self.norms_down = nn.ModuleList()
         self.norms_up = nn.ModuleList()
+        
+        self.gcns_down = nn.ModuleList()
+        self.gcns_up = nn.ModuleList()
     
         ## stem
         self.stem_conv = nn.Sequential(nn.Conv2d(in_channels, stem_channels, (1, k_conv), 
                                              stride = (1, 1), 
                                              padding = (0, 1), bias = True))
         
-        self.gcn = VanillaConv()
+        self.stem_gcn = VanillaAttConv()
         self.stem_norm = nn.LayerNorm((stem_channels, pop_size, n_sites))
         
         # after concatenating
@@ -233,6 +232,8 @@ class GATRelateCNet(nn.Module):
             self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
             
             self.norms_down.append(nn.LayerNorm((res_channels[ix] * (n_res_layers), pop_size, n_sites // 2)))
+            self.gcns_down.append(VanillaAttConv())
+            
             channels = res_channels[ix] * (n_res_layers)
             
             n_sites = n_sites // 2
@@ -248,11 +249,13 @@ class GATRelateCNet(nn.Module):
             self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             
             self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
+            self.gcns_up.append(VanillaAttConv())
+            
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
     
         self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
                         
-    def forward(self, x, edge_index, batch, save_steps = False):
+    def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
         #print('initial shape: {}'.format(x.shape))
         #print('edge_shape: {}'.format(edge_index.shape))
         batch_size, n_channels, n_ind, n_sites = x.shape
@@ -263,7 +266,7 @@ class GATRelateCNet(nn.Module):
         x0 = torch.flatten(x0.transpose(1, 2), 2, 3).flatten(0, 1)   
                 
         #  insert graph convolution here...
-        x0 = self.gcn(x0, edge_index)
+        x0 = self.stem_gcn(x0, edge_index, edge_attr)
         ###################
         
         x0 = to_dense_batch(x0, batch)[0]
@@ -288,7 +291,7 @@ class GATRelateCNet(nn.Module):
             xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
-            xs[-1] = self.gcn(xs[-1], edge_index)        
+            xs[-1] = self.gcns_down[k](xs[-1], edge_index, edge_attr)        
             ##################
             
             xs[-1] = to_dense_batch(xs[-1], batch)[0]
@@ -314,7 +317,7 @@ class GATRelateCNet(nn.Module):
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
-            x = self.gcn(x, edge_index)
+            x = self.gcns_up[k](x, edge_index, edge_attr)
             ###################
             
             x = to_dense_batch(x, batch)[0]
