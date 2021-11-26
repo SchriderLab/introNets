@@ -300,7 +300,7 @@ class GCNDataGeneratorTv2(object):
         edge_index = np.array(edge_index, dtype = np.int32)
         edge_attr = np.array(edge_attr, dtype = np.float32)
         
-        np.savez('edge_attrs/edge_attr_{0:04d}.npz'.format(self.ix), edge_attr = edge_attr)
+        #np.savez('edge_attrs/edge_attr_{0:04d}.npz'.format(self.ix), edge_attr = edge_attr)
         
         bp_x = np.zeros(x.shape)
         bp_x[:, bp] = 1.
