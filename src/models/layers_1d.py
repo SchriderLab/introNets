@@ -263,7 +263,9 @@ class GATRelateCNet(nn.Module):
         x0 = self.stem_conv(x)
         
         n_channels = x0.shape[1]
-        x0 = torch.flatten(x0.transpose(1, 2), 2, 3).flatten(0, 1)   
+        x0 = torch.flatten(x0.transpose(1, 2), 2, 3).flatten(0, 1)
+        
+        print(edge_attr.shape)
                 
         #  insert graph convolution here...
         x0 = self.stem_gcn(x0, edge_index, edge_attr)
