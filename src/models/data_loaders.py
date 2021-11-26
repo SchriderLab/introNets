@@ -136,7 +136,7 @@ def F(n):
     
 class GCNDataGeneratorTv2(object):
     def __init__(self, idir, n_sites = 128, 
-                 batch_size = 4, val_prop = 0.05, k = 4, pop_size = 300, f_factor = 2):
+                 batch_size = 4, val_prop = 0.05, k = 3, pop_size = 300, f_factor = 2):
         self.ifiles = [h5py.File(os.path.join(idir, u), 'r') for u in os.listdir(idir)]
         
         self.training = []
