@@ -301,6 +301,8 @@ class GCNDataGeneratorTv2(object):
         
         x = np.array((x, bp_x))
         
+        print(edge_attr.shape)
+        
         return x, y, torch.LongTensor(edge_index).T, torch.FloatTensor(edge_attr)
     
     def get_batch(self, val = False):
