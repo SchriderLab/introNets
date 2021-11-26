@@ -185,18 +185,16 @@ def main():
         for ij in range(generator.length):
             optimizer.zero_grad()
             
-            try:
-                x, y, edges, batch = generator.get_batch()
-            except:
-                break
+            x, y, edges, edge_attr, batch = generator.get_batch()
             
             x = x.to(device)
             y = y.to(device)
             
             edges = edges.to(device)
             batch = batch.to(device)
+            edge_attr = edge_attr.to(device)
             
-            y_pred = model(x, edges, batch)
+            y_pred = model(x, edges, edge_attr, batch)
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -228,7 +226,7 @@ def main():
         for step in range(generator.val_length):
             with torch.no_grad():
                 try:
-                    x, y, edges, batch = generator.get_batch(val = True)
+                    x, y, edges, edge_attr, batch = generator.get_batch()
                 except:
                     break
 
@@ -236,8 +234,9 @@ def main():
                 y = y.to(device)
                 edges = edges.to(device)
                 batch = batch.to(device)
+                edge_attr = edge_attr.to(device)
     
-                y_pred = model(x, edges, batch)
+                y_pred = model(x, edges, edge_attr, batch)
 
                 loss = criterion(y_pred, y)
                 val_losses.append(loss.detach().item())
