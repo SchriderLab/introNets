@@ -259,9 +259,8 @@ class GCNDataGeneratorTv2(object):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.array([D[:,ix,u] for u in ij])
-            _ = np.concatenate([_, edge_class])
-            
+            _ = np.vstack([D[:,ix,u] for u in ij])
+        
             ## i -> j
             edge_index.extend([(ix, u) for u in ij])
             edge_attr.extend(list(np.concatenate([edge_class, _], axis = 1)))
@@ -286,8 +285,7 @@ class GCNDataGeneratorTv2(object):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.array([D[:,ix,u] for u in ij])
-            _ = np.concatenate([_, edge_class])
+            _ = np.vstack([D[:,ix,u] for u in ij])
             
             ## i -> j
             edge_index.extend([(ix, u) for u in ij])
