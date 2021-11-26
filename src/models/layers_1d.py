@@ -144,7 +144,7 @@ class VanillaAttConv(MessagePassing):
         self.negative_slope = negative_slope
         
         self.att_mlp = nn.Sequential(nn.Linear(8, 64), nn.ReLU(), 
-                                     nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1), nn.LeakyReLU())
+                                     nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1))
 
     def forward(self, x, edge_index, edge_attr):
         att = torch.sigmoid(self.att_mlp(edge_attr))
