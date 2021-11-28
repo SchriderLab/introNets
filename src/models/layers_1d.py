@@ -122,6 +122,8 @@ class Res1dBlock(nn.Module):
             self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
         else:
             self.pool = None
+            
+        self.activation = nn.ELU()
         
     def forward(self, x):
         xs = [self.norms[0](self.convs[0](x))]
@@ -129,7 +131,7 @@ class Res1dBlock(nn.Module):
         for ix in range(1, len(self.norms)):
             xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
             
-        x = torch.cat(xs, dim = 1).elu_()
+        x = self.activation(torch.cat(xs, dim = 1))
         
         if self.pool is not None:
             return self.pool(x)
