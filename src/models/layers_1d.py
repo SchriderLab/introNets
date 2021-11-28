@@ -129,7 +129,7 @@ class Res1dBlock(nn.Module):
         for ix in range(1, len(self.norms)):
             xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
             
-        x = torch.cat(xs, dim = 1)
+        x = torch.cat(xs, dim = 1).elu_()
         
         if self.pool is not None:
             return self.pool(x)
@@ -138,7 +138,7 @@ class Res1dBlock(nn.Module):
     
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, negative_slope = 0.05, leaky = True):
+    def __init__(self, negative_slope = 0.05, leaky = False):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
@@ -297,7 +297,7 @@ class GATRelateCNet(nn.Module):
             xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
-            xs[-1] = self.gcns_down[k](xs[-1], edge_index, edge_attr)        
+            xs[-1] = self.gcns_down[k](xs[-1], edge_index, edge_attr)     
             ##################
             
             xs[-1] = to_dense_batch(xs[-1], batch)[0]
