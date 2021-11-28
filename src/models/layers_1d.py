@@ -138,14 +138,20 @@ class Res1dBlock(nn.Module):
     
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, negative_slope = 0.2):
+    def __init__(self, negative_slope = 0.05, leaky = True):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
         
-        self.att_mlp = nn.Sequential(nn.Linear(8, 64), nn.ReLU(), 
-                                     nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1))
-
+        _ = [nn.Linear(8, 64), nn.ReLU(), 
+                                     nn.Linear(64, 64), nn.LayerNorm((64,)), nn.Linear(64, 1)]
+        
+        if leaky:
+            _.append(nn.LeakyReLU(negative_slope = negative_slope))
+        
+        self.att_mlp = nn.Sequential(*_)
+        
+    
     def forward(self, x, edge_index, edge_attr):
         att = self.att_mlp(edge_attr)
         
