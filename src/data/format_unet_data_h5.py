@@ -162,6 +162,8 @@ def main():
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
     
+    print(idirs)
+    
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
 
