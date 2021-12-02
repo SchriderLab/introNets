@@ -177,12 +177,12 @@ def main():
                 msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
                 ancFile = os.path.join(idir, '{}.anc'.format(idir.split('/')[-1]))
                 
-                x, y = load_data(msFile, ancFile)
+                x, y, _ = load_data(msFile, ancFile)
             except:
                 msFile = os.path.join(idir, 'mig.msOut')
                 ancFile = os.path.join(idir, 'out.anc')
                 
-                x, y = load_data(msFile, ancFile)
+                x, y, _ = load_data(msFile, ancFile)
             
             if args.densify:
                 x, y = remove_singletons(x, y)
