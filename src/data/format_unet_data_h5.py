@@ -16,7 +16,9 @@ import h5py
 # ${imports}
 
 from seriate import seriate
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
+
+from scipy.optimize import linear_sum_assignment
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -50,7 +52,7 @@ def remove_singletons(x_list, y_list):
     return new_x, new_y
 
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 128, 128), pop_sizes = [150, 156], sorting = None, pop = None):
+    def __init__(self, x, y, shape = (2, 32, 64), pop_sizes = [150, 156], sorting = None, pop = None):
         # list of x and y arrays
         self.x = x
         self.y = y
@@ -86,14 +88,33 @@ class Formatter(object):
             
             six = np.random.choice(range(x1.shape[1] - self.n_sites))
             
-            x = np.array([x1[:,six:six + self.n_sites], x2[:, six:six + self.n_sites]])
-            y = np.array([y1[:,six:six + self.n_sites], y2[:, six:six + self.n_sites]])
+            x1 = x1[:,six:six + self.n_sites]
+            x2 = x2[:,six:six + self.n_sites]
+            
+            y1 = y1[:,six:six + self.n_sites]
+            y2 = y2[:,six:six + self.n_sites]
+            
+            if self.sorting == "seriate_match":
+                x1, ix1 = seriate_x(x1)
+                
+                D = cdist(x1, x2, metric = 'cosine')
+                D[np.where(np.isnan(D))] = 0.
+                
+                i, j = linear_sum_assignment(D)
+                
+                x2 = x2[j,:]
+                
+                y1 = y1[ix1, :]
+                y2 = y2[j, :]
+            
+            x = np.array([x1, x2])
+            y = np.array([y1, y2])
             
             if self.pop:
                 if self.pop == "0":
-                    y = y[0]
+                    y = np.expand_dims(y[0])
                 else:
-                    y = y[1]
+                    y = np.expand_dims(y[1])
             
             X.append(x)
             Y.append(y)
@@ -111,6 +132,9 @@ def parse_args():
 
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--sorting", default = "None")
+    
+    parser.add_argument("--pop_sizes", default = "150,156")
+    parser.add_argument("--out_shape", default = "2,128,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     
@@ -137,6 +161,9 @@ def main():
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, 'out*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
+    
+    pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
+    out_shape = tuple(list(map(int, args.out_shape.split(','))))
 
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
