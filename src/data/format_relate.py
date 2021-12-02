@@ -160,21 +160,53 @@ def main():
                 G = nx.Graph()
                 
                 for k in range(len(edges)):
-                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
+                    G.add_edge(edges[k][0], edges[k][1], weight = lengths[k], 
+                               n_mutations = n_mutations[k], hop = 0.5, r = regions[k][1] - regions[k][0],
+                               rp = np.mean(regions[k]))
                     #G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5)
                 
                 t1 = time.time()
                 paths = nx.shortest_path(G)
                 
+                for k in range(len(edges)):
+                    G.add_edge(edges[k][1], edges[k][0], weight = lengths[k], n_mutations = n_mutations[k], hop = 0.5, 
+                               r = regions[k][1] - regions[k][0],
+                               rp = np.mean(regions[k]))
+                
                 nodes = list(range(0, 300))
                 
                 indices = list(itertools.combinations(nodes, 2))
                 
-                D = np.array([len(paths[i][j]) for (i,j) in indices])
-                #logging.info('{}'.format(np.where(D == 0)))
+                D = np.array([len(paths[i][j]) for (i,j) in indices]) / 2.
+                
+                D_mut = []
+                for i,j in indices:
+                    path = paths[i][j]
+                    
+                    _ = [G.edges[path[k], path[k + 1]]['n_mutations'] for k in range(len(path) - 1)]
+
+                    D_mut.append(sum(_))
+                        
+                D_branch = []
+                for i,j in indices:
+                    path = paths[i][j]
+                    
+                    _ = [G.edges[path[k], path[k + 1]]['weight'] for k in range(len(path) - 1)]
+    
+                    D_branch.append(sum(_))
+    
+                D_r = []
+                for i,j in indices:
+                    path = paths[i][j]
+                    
+                    _ = [G.edges[path[k], path[k + 1]]['r'] for k in range(len(path) - 1)]
+    
+                    D_r.append(np.mean(_))
+    
+                # hops, mutations, branch lengths, and mean region size along shortest paths
+                D = np.array([D, D_mut, D_branch, D_r], dtype = np.float32)
                 
                 edges = np.array(edges).T
-                
                 comm.send([ix, ij, edges, X, regions, n_mutations, D], dest = 0)
                 
             comm.send([ix, snps], dest = 0)
