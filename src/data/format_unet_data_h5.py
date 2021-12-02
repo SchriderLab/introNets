@@ -159,7 +159,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
 
-    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, 'out*'))) if (not '.' in u)]
+    idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*'))) if (not '.' in u)]
     chunk_size = int(args.chunk_size)
     
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
