@@ -74,7 +74,7 @@ class Formatter(object):
             x = self.x[k]
             y = self.y[k]
             
-            print(x.shape, y.shape)
+            #print(x.shape, y.shape)
             
             if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                 continue
@@ -121,6 +121,7 @@ class Formatter(object):
             X.append(x)
             Y.append(y)
             
+        #print(len(X), len(Y))
         return X, Y
             
             
@@ -189,7 +190,8 @@ def main():
             if args.densify:
                 x, y = remove_singletons(x, y)
             
-            f = Formatter(x, y, sorting = args.sorting, pop = args.pop)
+            f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
+                          pop_sizes = pop_sizes, shape = out_shape)
             x, y = f.format()
         
             comm.send([x, y], dest = 0)
