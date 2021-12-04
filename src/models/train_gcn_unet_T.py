@@ -112,6 +112,7 @@ def parse_args():
     
     parser.add_argument("--n_features", default = "128")
     parser.add_argument("--n_global", default = "1024")
+    parser.add_argument("--n_sites", default = "128")
     
     parser.add_argument("--n_layers", default = "11")
     # ${args}
@@ -144,7 +145,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GATRelateCNetV2()
+    model = GATRelateCNetV2(n_sites = int(args.n_sites))
     #print(model)
     
     if len(device_strings) > 1:
@@ -158,7 +159,7 @@ def main():
         model.load_state_dict(checkpoint)
         
     generator = GCNDataGeneratorTv2(args.idir,
-                                 batch_size = int(args.batch_size))
+                                 batch_size = int(args.batch_size), n_sites = int(args.n_sites))
    
     print(generator.length)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737]).to(device))
