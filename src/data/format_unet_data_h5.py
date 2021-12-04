@@ -74,7 +74,7 @@ class Formatter(object):
             x = self.x[k]
             y = self.y[k]
             
-            print(x.shape, y.shape)
+            #print(x.shape, y.shape)
             
             if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                 continue
