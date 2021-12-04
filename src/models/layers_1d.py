@@ -154,9 +154,9 @@ class Res1dGraphBlock(nn.Module):
         
         for ix in range(n_layers):
             self.convs_l.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
-                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
-                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             
             self.gcns.append(VanillaAttConv())
             self.norms.append(nn.LayerNorm([out_channels] + in_shape[1:]))
