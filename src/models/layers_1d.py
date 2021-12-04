@@ -522,7 +522,7 @@ class GATRelateCNetV2(nn.Module):
         #print('after_stem: {}'.format(x.shape))
         
         xs = [x0]
-        for k in range(len(self.down_l)):
+        for k in range(len(self.down)):
             # pass each pop to it's 1d conv
             xs.append(self.norms_down[k](self.down[k](xs[-1], edge_index, edge_attr, batch)))
 
