@@ -221,7 +221,7 @@ class VanillaAttConv(MessagePassing):
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
         
-        _ = [nn.BatchNorm1d(8), nn.Linear(8, 64), nn.LayerNorm((128,)), nn.ELU(), 
+        _ = [nn.BatchNorm1d(8), nn.Linear(8, 128), nn.LayerNorm((128,)), nn.ELU(), 
                                      nn.Linear(128, 128), nn.LayerNorm((128,)), nn.ELU(), nn.Linear(128, 1)]
         
         if leaky:
