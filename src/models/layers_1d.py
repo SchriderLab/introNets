@@ -216,7 +216,7 @@ class Res1dGraphBlock(nn.Module):
             return x
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, negative_slope = 0.05, leaky = False):
+    def __init__(self, negative_slope = 0.2, leaky = True):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
@@ -226,6 +226,7 @@ class VanillaAttConv(MessagePassing):
         
         if leaky:
             _.append(nn.LeakyReLU(negative_slope = negative_slope))
+            _.append(nn.Sigmoid())
         
         self.att_mlp = nn.Sequential(*_)
         
@@ -496,6 +497,7 @@ class GATRelateCNetV2(nn.Module):
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
     
         self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
+        self.act = nn.ELU()
                         
     def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
         #print('initial shape: {}'.format(x.shape))
@@ -548,7 +550,7 @@ class GATRelateCNetV2(nn.Module):
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
             
-            x = self.norms_up[k](x).relu_()
+            x = self.act(self.norms_up[k](x))
             
             x = torch.cat([x, xs[-1]], dim = 1)
         
