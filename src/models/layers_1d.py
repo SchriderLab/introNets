@@ -159,7 +159,7 @@ class Res1dGraphBlock(nn.Module):
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
             
             self.gcns.append(VanillaAttConv())
-            self.norms.append(nn.LayerNorm(in_shape[1:]))
+            self.norms.append(nn.LayerNorm(in_shape))
             
             in_shape[0] = out_channels
         
