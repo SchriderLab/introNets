@@ -141,7 +141,7 @@ class Res1dBlock(nn.Module):
 class Res1dGraphBlock(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, 
                              k = 3, pooling = 'max'):
-        super(Res1dBlock, self).__init__()
+        super(Res1dGraphBlock, self).__init__()
         
         in_shape = list(in_shape)
         
@@ -170,7 +170,7 @@ class Res1dGraphBlock(nn.Module):
             
         self.activation = nn.ELU()
         
-    def forward(self, x, edge_index, edge_attr):
+    def forward(self, x, edge_index, edge_attr, batch):
         batch_size, n_channels, n_ind, n_sites = x.shape
         
         xs = []
@@ -524,7 +524,7 @@ class GATRelateCNetV2(nn.Module):
         xs = [x0]
         for k in range(len(self.down_l)):
             # pass each pop to it's 1d conv
-            xs.append(self.norms_down[k](self.down[k](xs[-1], edge_index, edge_attr)))
+            xs.append(self.norms_down[k](self.down[k](xs[-1], edge_index, edge_attr, batch)))
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
