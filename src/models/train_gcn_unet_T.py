@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GGRUCNet, GATCNet, GATRelateCNet
+from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2
 from data_loaders import GCNDataGeneratorTv2
 import glob
 from scipy.special import expit
@@ -144,7 +144,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GATRelateCNet()
+    model = GATRelateCNetV2()
     #print(model)
     
     if len(device_strings) > 1:
@@ -166,7 +166,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    decayRate = 0.96
+    decayRate = 0.99
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
     
     history = dict()

@@ -138,6 +138,84 @@ class Res1dBlock(nn.Module):
         else:
             return x
     
+class Res1dGraphBlock(nn.Module):
+    def __init__(self, in_shape, out_channels, n_layers, 
+                             k = 3, pooling = 'max'):
+        super(Res1dBlock, self).__init__()
+        
+        in_shape = list(in_shape)
+        
+        # pass each pop through their own convolutions
+        self.convs_l = nn.ModuleList()
+        self.convs_r = nn.ModuleList()
+        
+        self.norms = nn.ModuleList()
+        self.gcns = nn.ModuleList()
+        
+        for ix in range(n_layers):
+            self.convs_l.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+            self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+            
+            self.gcns.append(VanillaAttConv())
+            self.norms.append(nn.LayerNorm(in_shape[1:]))
+            
+            in_shape[0] = out_channels
+        
+        if pooling == 'max':
+            self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
+        else:
+            self.pool = None
+            
+        self.activation = nn.ELU()
+        
+    def forward(self, x, edge_index, edge_attr):
+        batch_size, n_channels, n_ind, n_sites = x.shape
+        
+        xs = []
+        
+        xl = self.convs_l[0](x[:,:,:n_ind // 2,:])
+        xr = self.convs_r[0](x[:,:,n_ind // 2:,:])
+        
+        xs.append(torch.cat([xl, xr], dim = 2))
+        
+        n_sites = n_sites // 2
+        n_channels = xs[-1].shape[1]
+        xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+        
+        # insert graph convolution here...
+        xs[-1] = self.gcns[0](xs[-1], edge_index, edge_attr)     
+        ##################
+        
+        xs[-1] = to_dense_batch(xs[-1], batch)[0]
+        xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+        xs[-1] = self.norms[0](xs[-1])
+        
+        for ix in range(1, len(self.norms)):
+            xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
+            xr = self.convs_r[ix](xs[-1][:,:,n_ind // 2:,:])
+            
+            xs.append(torch.cat([xl, xr], dim = 2))
+        
+            n_sites = n_sites // 2
+            n_channels = xs[-1].shape[1]
+            xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+            
+            # insert graph convolution here...
+            xs[-1] = self.gcns[ix](xs[-1], edge_index, edge_attr)     
+            ##################
+            
+            xs[-1] = to_dense_batch(xs[-1], batch)[0]
+            xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+            xs[-1] = self.norms[ix](xs[-1] + xs[-2])
+            
+        x = self.activation(torch.cat(xs, dim = 1))
+        
+        if self.pool is not None:
+            return self.pool(x)
+        else:
+            return x
 
 class VanillaAttConv(MessagePassing):
     def __init__(self, negative_slope = 0.05, leaky = False):
@@ -350,8 +428,149 @@ class GATRelateCNet(nn.Module):
         # go back to one channel
         x = torch.squeeze(self.final_conv(x))
 
-        return x        
+        return x
     
+## Notes:
+## Making a copy of the class as V2 because I feel this is a big enough design change, putting gcns at every 1d convolution
+## Made the class Res1dGraphBlock.  This makes the definition of the net much simpler / consolidated.
+class GATRelateCNetV2(nn.Module):
+    def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
+                         n_layers = 4, in_channels = 2, 
+                         n_cycles = 1, hidden_channels = 16):
+        super(GATRelateCNetV2, self).__init__()
+        
+        k_conv = 3
+        pool_size = 2
+        pool_stride = 2
+        n_gat_layers = 3
+        n_res_layers = 3
+        
+        stem_channels = 2
+        
+        res_channels = [32, 16, 8]
+        up_channels = [16, 16, 16]
+        
+        self.pred_pop = pred_pop
+        
+        # Two sets of convolutional filters
+        self.down = nn.ModuleList()
+        
+        self.up_l = nn.ModuleList()
+        self.up_r = nn.ModuleList()
+        
+        self.norms_down = nn.ModuleList()
+        self.norms_up = nn.ModuleList()
+        
+        self.gcns_up = nn.ModuleList()
+    
+        ## stem
+        self.stem_conv = nn.Sequential(nn.Conv2d(in_channels, stem_channels, (1, k_conv), 
+                                             stride = (1, 1), 
+                                             padding = (0, 1), bias = True))
+        
+        self.stem_gcn = VanillaAttConv()
+        self.stem_norm = nn.LayerNorm((stem_channels, pop_size, n_sites))
+        
+        # after concatenating
+        channels = stem_channels + in_channels
+        
+        for ix in range(len(res_channels)):
+            self.down.append(Res1dGraphBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
+            self.norms_down.append(nn.LayerNorm((res_channels[ix] * (n_res_layers), pop_size, n_sites // 2)))
+
+            channels = res_channels[ix] * (n_res_layers)
+            
+            n_sites = n_sites // 2
+                             
+        print(res_channels)
+        res_channels = list(np.array(res_channels)[::-1][1:]) + [128]
+        print(res_channels)
+        
+        for ix in range(len(res_channels)):
+            n_sites *= 2
+            
+            self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
+            self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
+            
+            self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
+            self.gcns_up.append(VanillaAttConv())
+            
+            channels = res_channels[ix] * n_res_layers + up_channels[ix]
+    
+        self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
+                        
+    def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
+        #print('initial shape: {}'.format(x.shape))
+        #print('edge_shape: {}'.format(edge_index.shape))
+        batch_size, n_channels, n_ind, n_sites = x.shape
+        
+        x0 = self.stem_conv(x)
+        
+        n_channels = x0.shape[1]
+        x0 = torch.flatten(x0.transpose(1, 2), 2, 3).flatten(0, 1)
+                
+        #  insert graph convolution here...
+        x0 = self.stem_gcn(x0, edge_index, edge_attr)
+        ###################
+        
+        x0 = to_dense_batch(x0, batch)[0]
+        x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+        
+        x0 = self.stem_norm(x0).relu_()      
+        x0 = torch.cat([x, x0], dim = 1)
+    
+        #print('after_stem: {}'.format(x.shape))
+        
+        xs = [x0]
+        for k in range(len(self.down_l)):
+            # pass each pop to it's 1d conv
+            xs.append(self.norms_down[k](self.down[k](xs[-1], edge_index, edge_attr)))
+
+        # x0 has the original catted with it so overwrite x
+        x = xs[-1]        
+        for k in range(len(self.up_l)):
+            del xs[-1]
+            
+            # pass each pop to it's 1d conv
+            xl = self.up_l[k](x[:,:,:n_ind // 2,:])
+            xr = self.up_r[k](x[:,:,n_ind // 2:,:])
+            
+            x = torch.cat([xl, xr], dim = 2)
+            
+            #print('conv_up_{0}: {1}'.format(k, x.shape))
+            
+            n_sites = n_sites * 2
+            n_channels = x.shape[1]
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
+            
+            # insert graph convolution here...
+            x = self.gcns_up[k](x, edge_index, edge_attr)
+            ###################
+            
+            x = to_dense_batch(x, batch)[0]
+            x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+            
+            x = self.norms_up[k](x).relu_()
+            
+            x = torch.cat([x, xs[-1]], dim = 1)
+        
+        # gc
+        del x0
+        del xl
+        del xr
+        
+        # we only want the second pop
+        if self.pred_pop == 1:
+            x = x[:,:,n_ind // 2:,:]
+        # we only want the first pop
+        elif self.pred_pop == 0:
+            x = x[:,:,:n_ind // 2,:]
+        
+        # go back to one channel
+        x = torch.squeeze(self.final_conv(x))
+
+        return x
+
 
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
