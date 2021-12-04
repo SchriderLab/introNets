@@ -23,6 +23,8 @@ from sparsenn.models.gcn.layers import DynamicGraphResBlock, GraphCyclicGRUBlock
 from torch_geometric.nn import global_mean_pool, MessageNorm
 from torch_geometric.nn import MessagePassing
 from torch_geometric.utils import add_self_loops, degree
+
+from torch_geometric.nn.inits import glorot
             
 class GATCNet(nn.Module):
     def __init__(self):
@@ -159,7 +161,7 @@ class Res1dGraphBlock(nn.Module):
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             
             self.gcns.append(VanillaAttConv())
-            self.norms.append(nn.LayerNorm([out_channels] + in_shape[1:]))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
             
             in_shape[0] = out_channels
         
@@ -316,7 +318,7 @@ class GATRelateCNet(nn.Module):
             self.down_l.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
             self.down_r.append(Res1dBlock((channels, pop_size // 2, n_sites), res_channels[ix], n_res_layers))
             
-            self.norms_down.append(nn.LayerNorm((res_channels[ix] * (n_res_layers), pop_size, n_sites // 2)))
+            self.norms_down.append(nn.InstanceNorm2d(res_channels[ix] * (n_res_layers)))
             self.gcns_down.append(VanillaAttConv())
             
             channels = res_channels[ix] * (n_res_layers)
@@ -333,7 +335,7 @@ class GATRelateCNet(nn.Module):
             self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             
-            self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
+            self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.gcns_up.append(VanillaAttConv())
             
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
@@ -446,8 +448,8 @@ class GATRelateCNetV2(nn.Module):
         
         stem_channels = 2
         
-        res_channels = [32, 16, 8]
-        up_channels = [16, 16, 16]
+        res_channels = [128, 64, 32, 16]
+        up_channels = [16, 32, 64, 128]
         
         self.pred_pop = pred_pop
         
@@ -457,8 +459,8 @@ class GATRelateCNetV2(nn.Module):
         self.up_l = nn.ModuleList()
         self.up_r = nn.ModuleList()
         
-        self.norms_down = nn.ModuleList()
         self.norms_up = nn.ModuleList()
+        self.norms_down = nn.ModuleList()
         
         self.gcns_up = nn.ModuleList()
     
@@ -468,15 +470,14 @@ class GATRelateCNetV2(nn.Module):
                                              padding = (0, 1), bias = True))
         
         self.stem_gcn = VanillaAttConv()
-        self.stem_norm = nn.LayerNorm((stem_channels, pop_size, n_sites))
+        self.stem_norm = nn.InstanceNorm2d(stem_channels)
         
         # after concatenating
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
             self.down.append(Res1dGraphBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers))
-            self.norms_down.append(nn.LayerNorm((res_channels[ix] * (n_res_layers), pop_size, n_sites // 2)))
-
+            self.norms_down.append(nn.Dropout(0.1))
             channels = res_channels[ix] * (n_res_layers)
             
             n_sites = n_sites // 2
@@ -491,7 +492,7 @@ class GATRelateCNetV2(nn.Module):
             self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
             
-            self.norms_up.append(nn.LayerNorm((up_channels[ix], pop_size, n_sites)))
+            self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.gcns_up.append(VanillaAttConv())
             
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
