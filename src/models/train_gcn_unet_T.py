@@ -136,7 +136,19 @@ def parse_args():
 
     return args
 
+from prettytable import PrettyTable
 
+def count_parameters(model):
+    table = PrettyTable(["Modules", "Parameters"])
+    total_params = 0
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad: continue
+        param = parameter.numel()
+        table.add_row([name, param])
+        total_params+=param
+    print(table)
+    print(f"Total Trainable Params: {total_params}")
+    return total_params
 
 def main():
     args = parse_args()
@@ -146,7 +158,8 @@ def main():
     device = torch.device(device_strings[0])
     
     model = GATRelateCNetV2(n_sites = int(args.n_sites))
-    #print(model)
+    print(model)
+    d_model = count_parameters(model)
     
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
