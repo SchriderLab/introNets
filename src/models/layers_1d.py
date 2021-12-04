@@ -449,7 +449,7 @@ class GATRelateCNetV2(nn.Module):
         stem_channels = 2
         
         res_channels = [64, 32, 16]
-        up_channels = [32, 16, 12]
+        up_channels = [16, 16, 8]
         
         self.pred_pop = pred_pop
         
