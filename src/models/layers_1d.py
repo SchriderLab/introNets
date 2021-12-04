@@ -180,7 +180,6 @@ class Res1dGraphBlock(nn.Module):
         
         xs.append(torch.cat([xl, xr], dim = 2))
         
-        n_sites = n_sites // 2
         n_channels = xs[-1].shape[1]
         xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
         
@@ -198,7 +197,6 @@ class Res1dGraphBlock(nn.Module):
             
             xs.append(torch.cat([xl, xr], dim = 2))
         
-            n_sites = n_sites // 2
             n_channels = xs[-1].shape[1]
             xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
             
@@ -398,7 +396,7 @@ class GATRelateCNet(nn.Module):
             
             #print('conv_up_{0}: {1}'.format(k, x.shape))
             
-            n_sites = n_sites * 2
+            n_sites = xs[-1].shape[-1]
             n_channels = x.shape[1]
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
             
