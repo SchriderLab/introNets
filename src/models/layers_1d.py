@@ -599,7 +599,7 @@ class GATRelateCNetV2(nn.Module):
         for k in range(len(self.up)):
             del xs[-1]
             
-            x = self.norms_up[k](self.up[k](x))
+            x = self.norms_up[k](self.up[k](x, edge_index, edge_attr, batch))
             
             x = torch.cat([x, xs[-1]], dim = 1)
         
