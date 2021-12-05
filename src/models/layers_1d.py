@@ -596,23 +596,10 @@ class GATRelateCNetV2(nn.Module):
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
-        for k in range(len(self.up_l)):
+        for k in range(len(self.up)):
             del xs[-1]
-        
-            x = self.up[k](x)
             
-            n_sites = xs[-1].shape[-1]
-            n_channels = x.shape[1]
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
-            
-            # insert graph convolution here...
-            x = self.gcns_up[k](x, edge_index, edge_attr)
-            ###################
-            
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
-            
-            x = self.act(self.norms_up[k](x))
+            x = self.norms_up[k](self.up[k](x))
             
             x = torch.cat([x, xs[-1]], dim = 1)
         
