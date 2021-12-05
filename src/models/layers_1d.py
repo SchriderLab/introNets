@@ -562,7 +562,8 @@ class GATRelateCNetV2(nn.Module):
             self.up.append(Res1dGraphBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             
-            channels = res_channels[ix] * (n_res_layers) + channels + up_channels[ix]
+            if ix != len(res_channels) - 1:
+                channels = res_channels[ix] * (n_res_layers) + channels + up_channels[ix]
     
         self.final_conv = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 1, 1)
         self.act = nn.ELU()
