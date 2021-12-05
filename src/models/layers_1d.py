@@ -102,7 +102,6 @@ class GATCNet(nn.Module):
         x = torch.squeeze(self.out(x))
           
         return x
-
     
 class Res1dBlock(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, 
@@ -139,10 +138,83 @@ class Res1dBlock(nn.Module):
             return self.pool(x)
         else:
             return x
-    
+        
+class Res1dGraphBlockUp(nn.Module):
+    def __init__(self, in_shape, out_channels, n_layers, 
+                             k = 3, pooling = 'max', up = False):
+        super(Res1dGraphBlockUp, self).__init__()
+        
+        in_shape = list(in_shape)
+        
+        # pass each pop through their own convolutions
+        self.convs_l = nn.ModuleList()
+        self.convs_r = nn.ModuleList()
+        
+        self.norms = nn.ModuleList()
+        self.gcns = nn.ModuleList()
+        
+        for ix in range(n_layers):
+            self.convs_l.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            
+            self.gcns.append(VanillaAttConv())
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
+            
+            in_shape[0] = out_channels
+        
+        self.up = nn.Upsample(scale_factor=(1,2), mode='bicubic', align_corners=True)
+            
+        self.activation = nn.ELU()
+        
+    def forward(self, x, edge_index, edge_attr, batch):
+        batch_size, n_channels, n_ind, n_sites = x.shape
+        
+        x = self.up(x)
+        
+        xs = []
+        
+        xl = self.convs_l[0](x[:,:,:n_ind // 2,:])
+        xr = self.convs_r[0](x[:,:,n_ind // 2:,:])
+        
+        xs.append(torch.cat([xl, xr], dim = 2))
+        
+        n_channels = xs[-1].shape[1]
+        xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+        
+        # insert graph convolution here...
+        xs[-1] = self.gcns[0](xs[-1], edge_index, edge_attr)     
+        ##################
+        
+        xs[-1] = to_dense_batch(xs[-1], batch)[0]
+        xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+        xs[-1] = self.norms[0](xs[-1])
+        
+        for ix in range(1, len(self.norms)):
+            xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
+            xr = self.convs_r[ix](xs[-1][:,:,n_ind // 2:,:])
+            
+            xs.append(torch.cat([xl, xr], dim = 2))
+        
+            n_channels = xs[-1].shape[1]
+            xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+            
+            # insert graph convolution here...
+            xs[-1] = self.gcns[ix](xs[-1], edge_index, edge_attr)     
+            ##################
+            
+            xs[-1] = to_dense_batch(xs[-1], batch)[0]
+            xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+            xs[-1] = self.norms[ix](xs[-1] + xs[-2])
+            
+        x = torch.cat([x, self.activation(torch.cat(xs, dim = 1))], dim = 1)
+        
+        return x
+
 class Res1dGraphBlock(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, 
-                             k = 3, pooling = 'max'):
+                             k = 3, pooling = 'max', up = False):
         super(Res1dGraphBlock, self).__init__()
         
         in_shape = list(in_shape)
@@ -434,6 +506,8 @@ class GATRelateCNet(nn.Module):
 ## Notes:
 ## Making a copy of the class as V2 because I feel this is a big enough design change, putting gcns at every 1d convolution
 ## Made the class Res1dGraphBlock.  This makes the definition of the net much simpler / consolidated.
+
+##
 class GATRelateCNetV2(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
                          n_layers = 4, in_channels = 2, 
@@ -455,14 +529,10 @@ class GATRelateCNetV2(nn.Module):
         
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
-        
-        self.up_l = nn.ModuleList()
-        self.up_r = nn.ModuleList()
+        self.up = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
         self.norms_down = nn.ModuleList()
-        
-        self.gcns_up = nn.ModuleList()
     
         ## stem
         self.stem_conv = nn.Sequential(nn.Conv2d(in_channels, stem_channels, (1, k_conv), 
@@ -489,13 +559,10 @@ class GATRelateCNetV2(nn.Module):
         for ix in range(len(res_channels)):
             n_sites *= 2
             
-            self.up_l.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
-            self.up_r.append(nn.ConvTranspose2d(channels, up_channels[ix], (1, 2), stride = (1, 2), padding = 0))
-            
+            self.up.append(Res1dGraphBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
-            self.gcns_up.append(VanillaAttConv())
             
-            channels = res_channels[ix] * n_res_layers + up_channels[ix]
+            channels = channels + up_channels[ix]
     
         self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
         self.act = nn.ELU()
@@ -517,7 +584,7 @@ class GATRelateCNetV2(nn.Module):
         x0 = to_dense_batch(x0, batch)[0]
         x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
-        x0 = self.stem_norm(x0).relu_()      
+        x0 = self.act(self.stem_norm(x0))     
         x0 = torch.cat([x, x0], dim = 1)
     
         #print('after_stem: {}'.format(x.shape))
@@ -531,14 +598,8 @@ class GATRelateCNetV2(nn.Module):
         x = xs[-1]        
         for k in range(len(self.up_l)):
             del xs[-1]
-            
-            # pass each pop to it's 1d conv
-            xl = self.up_l[k](x[:,:,:n_ind // 2,:])
-            xr = self.up_r[k](x[:,:,n_ind // 2:,:])
-            
-            x = torch.cat([xl, xr], dim = 2)
-            
-            #print('conv_up_{0}: {1}'.format(k, x.shape))
+        
+            x = self.up[k](x)
             
             n_sites = xs[-1].shape[-1]
             n_channels = x.shape[1]
@@ -557,8 +618,6 @@ class GATRelateCNetV2(nn.Module):
         
         # gc
         del x0
-        del xl
-        del xr
         
         # we only want the second pop
         if self.pred_pop == 1:
