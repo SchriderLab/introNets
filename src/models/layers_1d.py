@@ -169,9 +169,9 @@ class Res1dGraphBlockUp(nn.Module):
         self.activation = nn.ELU()
         
     def forward(self, x, edge_index, edge_attr, batch):
-        batch_size, n_channels, n_ind, n_sites = x.shape
-        
         x = self.up(x)
+        
+        batch_size, n_channels, n_ind, n_sites = x.shape
         
         xs = []
         
