@@ -564,7 +564,7 @@ class GATRelateCNetV2(nn.Module):
             
             channels = res_channels[ix] * (n_res_layers) + channels + up_channels[ix]
     
-        self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
+        self.final_conv = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 1, 1)
         self.act = nn.ELU()
                         
     def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
