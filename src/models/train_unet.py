@@ -182,10 +182,8 @@ def main():
             axes[0,1].imshow(x[k,1,:,:], cmap = 'gray')
             
             axes[1,0].imshow(y[k,0,:,:], cmap = 'gray')
-            axes[1,1].imshow(y[k,1,:,:], cmap = 'gray')
             
             axes[2,0].imshow(y_pred[k,0,:,:], cmap = 'gray')
-            axes[2,1].imshow(y_pred[k,1,:,:], cmap = 'gray')
             
             plt.savefig(os.path.join(os.path.join(args.odir, '{}_plots'.format(args.tag)), '{0:03d}.png'.format(k)), dpi = 100)
             plt.close()
