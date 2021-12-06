@@ -103,6 +103,57 @@ class GATCNet(nn.Module):
           
         return x
     
+class Res1dBlockUp(nn.Module):
+    def __init__(self, in_shape, out_channels, n_layers, 
+                             k = 3, pooling = 'max', up = False):
+        super(Res1dBlockUp, self).__init__()
+        
+        in_shape = list(in_shape)
+        
+        # pass each pop through their own convolutions
+        self.convs_l = nn.ModuleList()
+        self.convs_r = nn.ModuleList()
+        
+        self.norms = nn.ModuleList()
+        
+        for ix in range(n_layers):
+            self.convs_l.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
+            
+            in_shape[0] = out_channels
+        
+        self.up = nn.Upsample(scale_factor=(1,2), mode='bicubic', align_corners=True)
+            
+        self.activation = nn.ELU()
+        
+    def forward(self, x, edge_index, edge_attr, batch):
+        x = self.up(x)
+        
+        batch_size, n_channels, n_ind, n_sites = x.shape
+        
+        xs = []
+        
+        xl = self.convs_l[0](x[:,:,:n_ind // 2,:])
+        xr = self.convs_r[0](x[:,:,n_ind // 2:,:])
+        
+        
+        
+        for ix in range(1, len(self.norms)):
+            xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
+            xr = self.convs_r[ix](xs[-1][:,:,n_ind // 2:,:])
+            
+            xs.append(torch.cat([xl, xr], dim = 2))
+        
+            xs[-1] = self.norms[ix](xs[-1] + xs[-2])
+            
+        x = torch.cat([x, self.activation(torch.cat(xs, dim = 1))], dim = 1)
+        
+        return x
+    
 class Res1dGraphBlockUp(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, 
                              k = 3, pooling = 'max', up = False):
@@ -511,7 +562,7 @@ class GATRelateCNet(nn.Module):
 class GATRelateCNetV2(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
                          n_layers = 4, in_channels = 2, 
-                         n_cycles = 1, hidden_channels = 16):
+                         n_cycles = 1, hidden_channels = 16, graph_up = False):
         super(GATRelateCNetV2, self).__init__()
         
         k_conv = 3
@@ -559,7 +610,10 @@ class GATRelateCNetV2(nn.Module):
         for ix in range(len(res_channels)):
             n_sites *= 2
             
-            self.up.append(Res1dGraphBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
+            if not graph_up:
+                self.up.append(Res1dBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
+            else:
+                self.up.append(Res1dGraphBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             
             if ix != len(res_channels) - 1:
