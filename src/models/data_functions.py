@@ -52,13 +52,15 @@ def load_data(msFile, ancFile):
     else:
         idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
 
-    ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list) - 1)]
+    ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list))]
     ms_chunks[-1] += ['\n']
 
     if ancFile is not None:
         anc_lines = ancFile.readlines()
     else:
         anc_lines = None
+        
+    print(len(anc_lines))
         
     X = []
     Y = []
