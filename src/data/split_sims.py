@@ -50,6 +50,7 @@ def main():
         T = P[-4]
 
         v = int(np.round((migTime / T) * 10))
+        print(v)
 
         if v in ret.keys():
             ret[v].append(idir)
