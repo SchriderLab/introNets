@@ -529,7 +529,9 @@ class GATRelateCNetV2(nn.Module):
         
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
-        self.up = nn.ModuleList()
+        
+        self.up_l = nn.ModuleList()
+        self.up_r = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
         self.norms_down = nn.ModuleList()
