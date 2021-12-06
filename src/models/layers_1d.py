@@ -103,42 +103,6 @@ class GATCNet(nn.Module):
           
         return x
     
-class Res1dBlock(nn.Module):
-    def __init__(self, in_shape, out_channels, n_layers, 
-                             k = 3, pooling = 'max'):
-        super(Res1dBlock, self).__init__()
-        
-        in_shape = list(in_shape)
-        self.convs = nn.ModuleList()
-        self.norms = nn.ModuleList()
-        
-        for ix in range(n_layers):
-            self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
-                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
-            self.norms.append(nn.LayerNorm(in_shape[1:]))
-            
-            in_shape[0] = out_channels
-        
-        if pooling == 'max':
-            self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
-        else:
-            self.pool = None
-            
-        self.activation = nn.ELU()
-        
-    def forward(self, x):
-        xs = [self.norms[0](self.convs[0](x))]
-        
-        for ix in range(1, len(self.norms)):
-            xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
-            
-        x = self.activation(torch.cat(xs, dim = 1))
-        
-        if self.pool is not None:
-            return self.pool(x)
-        else:
-            return x
-        
 class Res1dGraphBlockUp(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, 
                              k = 3, pooling = 'max', up = False):
@@ -330,6 +294,42 @@ class VanillaConv(MessagePassing):
     
     def update(self, inputs, x):
         return self.norm(x, inputs)
+    
+class Res1dBlock(nn.Module):
+    def __init__(self, in_shape, out_channels, n_layers, 
+                             k = 3, pooling = 'max'):
+        super(Res1dBlock, self).__init__()
+        
+        in_shape = list(in_shape)
+        self.convs = nn.ModuleList()
+        self.norms = nn.ModuleList()
+        
+        for ix in range(n_layers):
+            self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
+            self.norms.append(nn.LayerNorm(in_shape[1:]))
+            
+            in_shape[0] = out_channels
+        
+        if pooling == 'max':
+            self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
+        else:
+            self.pool = None
+            
+        self.activation = nn.ELU()
+        
+    def forward(self, x):
+        xs = [self.norms[0](self.convs[0](x))]
+        
+        for ix in range(1, len(self.norms)):
+            xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
+            
+        x = self.activation(torch.cat(xs, dim = 1))
+        
+        if self.pool is not None:
+            return self.pool(x)
+        else:
+            return x
         
 ### Notes:
 ## As it stands, this is a traditional UNet with (ResBlock + MaxPool) as the down sampling routine
@@ -529,10 +529,7 @@ class GATRelateCNetV2(nn.Module):
         
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
-        
-        self.up_l = nn.ModuleList()
-        self.up_r = nn.ModuleList()
-        self.gcns_up = nn.ModuleList()
+        self.up = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
         self.norms_down = nn.ModuleList()
@@ -562,17 +559,13 @@ class GATRelateCNetV2(nn.Module):
         for ix in range(len(res_channels)):
             n_sites *= 2
             
-            self.up_l.append(nn.Sequential(nn.Conv2d(channels, up_channels[ix], 1, 1), 
-                                           nn.ConvTranspose2d(up_channels[ix], up_channels[ix], (1, 2), stride = (1, 2), padding = 0)))
-            self.up_r.append(nn.Sequential(nn.Conv2d(channels, up_channels[ix], 1, 1), 
-                                           nn.ConvTranspose2d(up_channels[ix], up_channels[ix], (1, 2), stride = (1, 2), padding = 0)))
-            
+            self.up.append(Res1dGraphBlockUp((channels, pop_size, n_sites), up_channels[ix] // 2, 2))
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
-            self.gcns_up.append(VanillaAttConv())
             
-            channels = res_channels[ix] * n_res_layers + up_channels[ix]
+            if ix != len(res_channels) - 1:
+                channels = res_channels[ix] * (n_res_layers) + channels + up_channels[ix]
     
-        self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
+        self.final_conv = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 1, 1)
         self.act = nn.ELU()
                         
     def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
@@ -604,36 +597,14 @@ class GATRelateCNetV2(nn.Module):
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
-        for k in range(len(self.up_l)):
+        for k in range(len(self.up)):
             del xs[-1]
             
-            # pass each pop to it's 1d conv
-            xl = self.up_l[k](x[:,:,:n_ind // 2,:])
-            xr = self.up_r[k](x[:,:,n_ind // 2:,:])
-            
-            x = torch.cat([xl, xr], dim = 2)
-            
-            #print('conv_up_{0}: {1}'.format(k, x.shape))
-            
-            n_sites = xs[-1].shape[-1]
-            n_channels = x.shape[1]
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
-            
-            # insert graph convolution here...
-            x = self.gcns_up[k](x, edge_index, edge_attr)
-            ###################
-            
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
-            
-            x = self.act(self.norms_up[k](x))
-            
+            x = self.norms_up[k](self.up[k](x, edge_index, edge_attr, batch))
             x = torch.cat([x, xs[-1]], dim = 1)
         
         # gc
         del x0
-        del xl
-        del xr
         
         # we only want the second pop
         if self.pred_pop == 1:
