@@ -290,7 +290,7 @@ class Res1dGraphBlock(nn.Module):
         xg = xg.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
         # this will have out_channels + graph channels
-        xs[-1] = self.norms[0](torch.cat([xg, xs[-1]]))
+        xs[-1] = self.norms[0](torch.cat([xg, xs[-1]], dim = 1))
         
         for ix in range(1, len(self.norms)):
             xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
