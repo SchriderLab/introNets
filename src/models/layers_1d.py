@@ -604,15 +604,36 @@ class GATRelateCNetV2(nn.Module):
 
         # x0 has the original catted with it so overwrite x
         x = xs[-1]        
-        for k in range(len(self.up)):
+        for k in range(len(self.up_l)):
             del xs[-1]
             
-            x = self.norms_up[k](self.up[k](x, edge_index, edge_attr, batch))
+            # pass each pop to it's 1d conv
+            xl = self.up_l[k](x[:,:,:n_ind // 2,:])
+            xr = self.up_r[k](x[:,:,n_ind // 2:,:])
+            
+            x = torch.cat([xl, xr], dim = 2)
+            
+            #print('conv_up_{0}: {1}'.format(k, x.shape))
+            
+            n_sites = xs[-1].shape[-1]
+            n_channels = x.shape[1]
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)   
+            
+            # insert graph convolution here...
+            x = self.gcns_up[k](x, edge_index, edge_attr)
+            ###################
+            
+            x = to_dense_batch(x, batch)[0]
+            x = x.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+            
+            x = self.act(self.norms_up[k](x))
             
             x = torch.cat([x, xs[-1]], dim = 1)
         
         # gc
         del x0
+        del xl
+        del xr
         
         # we only want the second pop
         if self.pred_pop == 1:
