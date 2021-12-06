@@ -140,7 +140,7 @@ class Res1dBlockUp(nn.Module):
         xl = self.convs_l[0](x[:,:,:n_ind // 2,:])
         xr = self.convs_r[0](x[:,:,n_ind // 2:,:])
         
-        
+        xs.append(torch.cat([xl, xr], dim = 2))
         
         for ix in range(1, len(self.norms)):
             xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
@@ -562,7 +562,8 @@ class GATRelateCNet(nn.Module):
 class GATRelateCNetV2(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
                          n_layers = 4, in_channels = 2, 
-                         n_cycles = 1, hidden_channels = 16, graph_up = False):
+                         n_cycles = 1, hidden_channels = 16, 
+                         graph_up = False):
         super(GATRelateCNetV2, self).__init__()
         
         k_conv = 3
