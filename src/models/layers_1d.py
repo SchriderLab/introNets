@@ -281,7 +281,6 @@ class Res1dGraphBlock(nn.Module):
 
         xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
 
-        
         # insert graph convolution here...
         xg = self.gcns[0](xg, edge_index, edge_attr)
 
@@ -300,6 +299,8 @@ class Res1dGraphBlock(nn.Module):
             xs.append(torch.cat([xl, xr], dim = 2))
 
             xg = self.gcn_convs[ix](xs[-1])
+            print(xg.shape, xs[-1].shape)
+            
             n_channels = xg.shape[1]
     
             xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
