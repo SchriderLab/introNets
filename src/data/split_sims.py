@@ -49,7 +49,9 @@ def main():
         migTime = P[-1]
         T = P[-4]
         
-        v = migTime / T
+        v = int((migTime / T) * 10)
+        
+        print(v)
         
         if v in ret.keys():
             ret[v].append(idir)
