@@ -49,6 +49,8 @@ def main():
         migTime = P[-1]
         T = P[-4]
         
+        print(migTime / T)
+        
         v = int((migTime / T) * 10)
         
         print(v)
