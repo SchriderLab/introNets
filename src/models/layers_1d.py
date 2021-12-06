@@ -299,8 +299,6 @@ class Res1dGraphBlock(nn.Module):
             xs.append(torch.cat([xl, xr], dim = 2))
 
             xg = self.gcn_convs[ix](xs[-1])
-            print(xg.shape, xs[-1].shape)
-            
             n_channels = xg.shape[1]
     
             xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
@@ -329,8 +327,8 @@ class VanillaAttConv(MessagePassing):
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
         
-        _ = [nn.BatchNorm1d(8), nn.Linear(8, 32), nn.LayerNorm((32,)), nn.ELU(), 
-                                     nn.Linear(32, 32), nn.LayerNorm((32,)), nn.ELU(), nn.Linear(32, 1)]
+        _ = [nn.BatchNorm1d(8), nn.Linear(8, 16), nn.LayerNorm((16,)), nn.ReLU(), 
+                                     nn.Linear(16, 32), nn.LayerNorm((32,)), nn.ReLU(), nn.Linear(32, 1)]
         
         if leaky:
             _.append(nn.LeakyReLU(negative_slope = negative_slope))
