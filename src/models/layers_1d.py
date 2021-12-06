@@ -275,20 +275,16 @@ class Res1dGraphBlock(nn.Module):
         
         xs.append(torch.cat([xl, xr], dim = 2))
         
-        n_channels = xs[-1].shape[1]
-        
         # the graph features at this point in the network
         xg = self.gcn_convs[0](xs[-1])
-        print(xg.shape, xs[-1].shape)
-        
+        n_channels = xg.shape[1]
+
         xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
-        print(xg.shape, torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1).shape)
-        print(edge_index.shape, edge_attr.shape)
+
         
         # insert graph convolution here...
         xg = self.gcns[0](xg, edge_index, edge_attr)
-        
-        print(xg.shape, batch.shape)
+
         ##################
         
         xg = to_dense_batch(xg, batch)[0]
@@ -302,9 +298,9 @@ class Res1dGraphBlock(nn.Module):
             xr = self.convs_r[ix](xs[-1][:,:,n_ind // 2:,:])
             
             xs.append(torch.cat([xl, xr], dim = 2))
-        
-            n_channels = xs[-1].shape[1]
+
             xg = self.gcn_convs[ix](xs[-1])
+            n_channels = xg.shape[1]
     
             xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
             
