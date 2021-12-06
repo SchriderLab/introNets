@@ -228,7 +228,7 @@ class Res1dGraphBlockUp(nn.Module):
         return x
 
 class Res1dGraphBlock(nn.Module):
-    def __init__(self, in_shape, out_channels, n_layers, 
+    def __init__(self, in_shape, out_channels, n_layers, gcn_channels = 4,
                              k = 3, pooling = 'max', up = False):
         super(Res1dGraphBlock, self).__init__()
         
@@ -238,6 +238,8 @@ class Res1dGraphBlock(nn.Module):
         self.convs_l = nn.ModuleList()
         self.convs_r = nn.ModuleList()
         
+        self.gcn_convs = nn.ModuleList()
+        
         self.norms = nn.ModuleList()
         self.gcns = nn.ModuleList()
         
@@ -246,6 +248,9 @@ class Res1dGraphBlock(nn.Module):
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            
+            # for down sampling the dimensionality of the features for the gcn part
+            self.gcn_convs.append(nn.Conv2d(in_shape[0], gcn_channels, 1, 1))
             
             self.gcns.append(VanillaAttConv())
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
@@ -263,6 +268,7 @@ class Res1dGraphBlock(nn.Module):
         batch_size, n_channels, n_ind, n_sites = x.shape
         
         xs = []
+        xgs = []
         
         xl = self.convs_l[0](x[:,:,:n_ind // 2,:])
         xr = self.convs_r[0](x[:,:,n_ind // 2:,:])
@@ -270,15 +276,21 @@ class Res1dGraphBlock(nn.Module):
         xs.append(torch.cat([xl, xr], dim = 2))
         
         n_channels = xs[-1].shape[1]
-        xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+        
+        # the graph features at this point in the network
+        xg = self.gcn_convs[0](xs[-1])
+    
+        xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
         
         # insert graph convolution here...
-        xs[-1] = self.gcns[0](xs[-1], edge_index, edge_attr)     
+        xg = self.gcns[0](xg, edge_index, edge_attr)     
         ##################
         
-        xs[-1] = to_dense_batch(xs[-1], batch)[0]
-        xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
-        xs[-1] = self.norms[0](xs[-1])
+        xg = to_dense_batch(xg, batch)[0]
+        xg = xg.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+        
+        # this will have out_channels + graph channels
+        xs[-1] = self.norms[0](torch.cat([xg, xs[-1]]))
         
         for ix in range(1, len(self.norms)):
             xl = self.convs_l[ix](xs[-1][:,:,:n_ind // 2,:])
@@ -287,16 +299,21 @@ class Res1dGraphBlock(nn.Module):
             xs.append(torch.cat([xl, xr], dim = 2))
         
             n_channels = xs[-1].shape[1]
-            xs[-1] = torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1)   
+            xg = self.gcn_convs[0](xs[-1])
+    
+            xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
-            xs[-1] = self.gcns[ix](xs[-1], edge_index, edge_attr)     
+            xg = self.gcns[0](xg, edge_index, edge_attr)     
             ##################
             
-            xs[-1] = to_dense_batch(xs[-1], batch)[0]
-            xs[-1] = xs[-1].reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
-            xs[-1] = self.norms[ix](xs[-1] + xs[-2])
+            xg = to_dense_batch(xg, batch)[0]
+            xg = xg.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
             
+            # this will have out_channels + graph channels
+            # concatenate the graph features and add the previous for a residual connection
+            xs[-1] = self.norms[0](torch.cat([xg, xs[-1]]) + xs[-2])
+                
         x = self.activation(torch.cat(xs, dim = 1))
         
         if self.pool is not None:
@@ -573,6 +590,7 @@ class GATRelateCNetV2(nn.Module):
         n_res_layers = 3
         
         stem_channels = 2
+        graph_channels = 8
         
         res_channels = [8, 16, 32]
         up_channels = [32, 16, 8]
@@ -598,7 +616,7 @@ class GATRelateCNetV2(nn.Module):
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
-            self.down.append(Res1dGraphBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers))
+            self.down.append(Res1dGraphBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers, gcn_channels = graph_channels))
             self.norms_down.append(nn.Dropout(0.1))
             channels = res_channels[ix] * (n_res_layers)
             
