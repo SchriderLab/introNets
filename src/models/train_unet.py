@@ -53,7 +53,6 @@ def parse_args():
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
-    parser.
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
