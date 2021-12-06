@@ -317,7 +317,7 @@ class Res1dGraphBlock(nn.Module):
             
             # this will have out_channels + graph channels
             # concatenate the graph features and add the previous for a residual connection
-            xs[-1] = self.norms[ix](torch.cat([xg, xs[-1]]) + xs[-2])
+            xs[-1] = self.norms[ix](torch.cat([xg, xs[-1]], dim = 1) + xs[-2])
                 
         x = self.activation(torch.cat(xs, dim = 1))
         
