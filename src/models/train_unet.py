@@ -53,6 +53,10 @@ def parse_args():
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
+    
+    # for AO to BF we had: 6.66666 # hail satan
+    parser.add_argument("--pos_weight", default = "9.108325464834794")
+    
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -99,7 +103,7 @@ def main():
     l = generator.length
     vl = generator.val_length
 
-    criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([6.66666]).to(device))
+    criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([float(args.pos_weight)]).to(device))
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
