@@ -532,6 +532,7 @@ class GATRelateCNetV2(nn.Module):
         
         self.up_l = nn.ModuleList()
         self.up_r = nn.ModuleList()
+        self.gcns_up = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
         self.norms_down = nn.ModuleList()
