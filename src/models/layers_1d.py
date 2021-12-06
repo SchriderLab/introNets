@@ -250,12 +250,12 @@ class Res1dGraphBlock(nn.Module):
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             
             # for down sampling the dimensionality of the features for the gcn part
-            self.gcn_convs.append(nn.Conv2d(in_shape[0], gcn_channels, 1, 1))
+            self.gcn_convs.append(nn.Conv2d(out_channels, gcn_channels, 1, 1))
             
             self.gcns.append(VanillaAttConv())
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
             
-            in_shape[0] = out_channels + gcn_channels
+            in_shape[0] = out_channels
         
         if pooling == 'max':
             self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
