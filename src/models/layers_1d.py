@@ -255,7 +255,7 @@ class Res1dGraphBlock(nn.Module):
             self.gcns.append(VanillaAttConv())
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
             
-            in_shape[0] = out_channels
+            in_shape[0] = out_channels + gcn_channels
         
         if pooling == 'max':
             self.pool = nn.MaxPool2d((1, 2), stride = (1, 2))
