@@ -279,6 +279,7 @@ class Res1dGraphBlock(nn.Module):
         
         # the graph features at this point in the network
         xg = self.gcn_convs[0](xs[-1])
+        print(xg.shape, xs[-1].shape)
     
         xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
         
