@@ -280,8 +280,11 @@ class Res1dGraphBlock(nn.Module):
         # the graph features at this point in the network
         xg = self.gcn_convs[0](xs[-1])
         print(xg.shape, xs[-1].shape)
+        
     
         xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
+        print(xg.shape, torch.flatten(xs[-1].transpose(1, 2), 2, 3).flatten(0, 1).shape)
+        print(edge_index.shape, edge_attr.shape)
         
         # insert graph convolution here...
         xg = self.gcns[0](xg, edge_index, edge_attr)     
@@ -300,12 +303,12 @@ class Res1dGraphBlock(nn.Module):
             xs.append(torch.cat([xl, xr], dim = 2))
         
             n_channels = xs[-1].shape[1]
-            xg = self.gcn_convs[0](xs[-1])
+            xg = self.gcn_convs[ix](xs[-1])
     
             xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)   
             
             # insert graph convolution here...
-            xg = self.gcns[0](xg, edge_index, edge_attr)     
+            xg = self.gcns[ix](xg, edge_index, edge_attr)     
             ##################
             
             xg = to_dense_batch(xg, batch)[0]
@@ -313,7 +316,7 @@ class Res1dGraphBlock(nn.Module):
             
             # this will have out_channels + graph channels
             # concatenate the graph features and add the previous for a residual connection
-            xs[-1] = self.norms[0](torch.cat([xg, xs[-1]]) + xs[-2])
+            xs[-1] = self.norms[ix](torch.cat([xg, xs[-1]]) + xs[-2])
                 
         x = self.activation(torch.cat(xs, dim = 1))
         
