@@ -558,7 +558,9 @@ class GCNDataGenerator(object):
         return self.length
 
 class H5UDataGenerator(object):
-    def __init__(self, ifile, keys = None, val_prop = 0.05, batch_size = 16, chunk_size = 4):
+    def __init__(self, ifile, keys = None, 
+                 val_prop = 0.05, batch_size = 16, 
+                 chunk_size = 4, pred_pop = 1):
         if keys is None:
             self.keys = list(ifile.keys())
             
@@ -575,6 +577,8 @@ class H5UDataGenerator(object):
         
         self.n_per = batch_size // chunk_size
         
+        self.pred_pop = pred_pop
+        
         self.ix = 0
         self.ix_val = 0
             
@@ -585,6 +589,9 @@ class H5UDataGenerator(object):
         for key in self.keys[self.ix : self.ix + self.n_per]:
             x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
+            
+            if (self.pred_pop == 0) or (self.pred_pop == 1):
+                y = np.expand_dims(y[:,self.pred_pop,:,:], 1)
             
             X.append(x)
             Y.append(y)

@@ -53,6 +53,7 @@ def parse_args():
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
+    parser.
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -81,7 +82,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = NestedUNet(1, 2)
+    model = NestedUNet(2, 1)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
