@@ -329,8 +329,8 @@ class VanillaAttConv(MessagePassing):
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
         
-        _ = [nn.BatchNorm1d(8), nn.Linear(8, 128), nn.LayerNorm((128,)), nn.ELU(), 
-                                     nn.Linear(128, 128), nn.LayerNorm((128,)), nn.ELU(), nn.Linear(128, 1)]
+        _ = [nn.BatchNorm1d(8), nn.Linear(8, 32), nn.LayerNorm((32,)), nn.ELU(), 
+                                     nn.Linear(32, 32), nn.LayerNorm((32,)), nn.ELU(), nn.Linear(32, 1)]
         
         if leaky:
             _.append(nn.LeakyReLU(negative_slope = negative_slope))
@@ -502,7 +502,7 @@ class GATRelateCNet(nn.Module):
         x0 = x0.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
         
         x0 = self.stem_norm(x0).relu_()      
-        x0 = torch.cat([x, x0], dim = 1)
+        x = torch.cat([x, x0], dim = 1)
     
         #print('after_stem: {}'.format(x.shape))
         
