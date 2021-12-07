@@ -233,7 +233,7 @@ def main():
                     x_ = np.array([x[u] for u in ix_], dtype = np.float32)
                     y_ = np.array([y[u] for u in ix_], dtype = np.uint8)
                     edge_index_ = np.array([edge_index[u] for u in ix_], dtype = np.int32)
-                    edge_attr_ = np.array([edge_attr_[u] for u in ix_], dtype = np.float32)
+                    edge_attr_ = np.array([edge_attr[u] for u in ix_], dtype = np.float32)
                     
                     ofile.create_dataset('train/{0}/x_0'.format(train_counter), data = x_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/y'.format(train_counter), data = y_, compression = 'lzf')
@@ -273,7 +273,7 @@ def main():
                     x_ = np.array([x[u] for u in ix_], dtype = np.float32)
                     y_ = np.array([y[u] for u in ix_], dtype = np.uint8)
                     edge_index_ = np.array([edge_index[u] for u in ix_], dtype = np.int32)
-                    edge_attr_ = np.array([edge_attr_[u] for u in ix_], dtype = np.float32)
+                    edge_attr_ = np.array([edge_attr[u] for u in ix_], dtype = np.float32)
                     
                     ofile.create_dataset('val/{0}/x_0'.format(val_counter), data = x_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/y'.format(val_counter), data = y_, compression = 'lzf')
