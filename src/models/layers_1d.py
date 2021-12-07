@@ -658,7 +658,7 @@ class GATRelateCNetV2(nn.Module):
         self.xl_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
         self.xr_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
         
-        self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels) + 8
+        self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels)
         self.final_out = Res1dBlock((self.out_channels, pop_size, n_sites), 64, 2, pooling = None)
     
         self.final_conv = nn.Conv2d(128, 1, 1)
@@ -702,31 +702,12 @@ class GATRelateCNetV2(nn.Module):
         # gc
         del x0
         
-        x_global = torch.cat([self.xl_final_down(x[:,:,:n_ind // 2,:]),
-                              self.xr_final_down(x[:,:,n_ind // 2:,:])], dim = 2)
-
-        x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
-
-        
-        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
-        x_global_mean = scatter_mean(x_global, batch, dim = 0)[0]
-        
-        
-        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,n_ind // 2:,:]
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:n_ind // 2,:]
-            
-        x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-        
-        x = torch.cat([x, 
-                       torch.topk(x_global_max[batch], batch.shape[0] // 2, dim = 0)[0]], dim = 1)
-        
-        x = to_dense_batch(x, batch)[0]
-        x = x.reshape(batch_size, n_ind, self.out_channels, n_sites).transpose(1, 2)
         
         # downsample through double conv
         x = self.final_down(x)
