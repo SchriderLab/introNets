@@ -710,8 +710,6 @@ class GATRelateCNetV2(nn.Module):
         
         x_global = scatter_max(x_global, batch, dim = 0)[0]
         
-        x_global = x_global.reshape(batch_size, n_ind, 32, n_sites).transpose(1, 2)
-        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,n_ind // 2:,:]
