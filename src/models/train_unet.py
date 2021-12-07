@@ -17,6 +17,7 @@ import torch.utils.data.distributed
 import torch.nn.functional as F
 import torch.distributed as dist
 import copy
+from scipy.special import expit
 
 from layers import NestedUNet
 from data_loaders import H5UDataGenerator
@@ -141,8 +142,8 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(np.exp(y_pred.detach().cpu().numpy()))
-            y = y.detach().cpu().numpy()
+            y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
+            y = np.round(y.detach().cpu().numpy().flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y.flatten(), y_pred.flatten()))
@@ -167,8 +168,8 @@ def main():
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
-                y_pred = np.round(np.exp(y_pred.detach().cpu().numpy()))
-                y = y.detach().cpu().numpy()
+                y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
+                y = np.round(y.detach().cpu().numpy().flatten())
 
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y.flatten(), y_pred.flatten()))
