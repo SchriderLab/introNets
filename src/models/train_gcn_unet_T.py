@@ -180,8 +180,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    decayRate = 0.99
-    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, max_lr = 0.1, total_steps = 1000)
     
     history = dict()
     history['loss'] = []
@@ -227,8 +226,10 @@ def main():
 
             if (ij + 1) % 5 == 0:
                 logging.info(
-                    'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}'.format(ix, np.mean(losses),
-                                                                                  np.mean(accuracies), ij + 1))
+                    'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}, lr: {4}'.format(ix, np.mean(losses),
+                                                                                  np.mean(accuracies), ij + 1, lr_scheduler.get_lr()))
+                
+            lr_scheduler.step()
 
         model.eval()
         
@@ -298,7 +299,6 @@ def main():
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
         
-        lr_scheduler.step()
 
 if __name__ == '__main__':
     main()
