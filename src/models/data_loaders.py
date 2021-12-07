@@ -163,7 +163,7 @@ class GCNDataGeneratorTv2(object):
         self.val_length = len(self.val) // self.batch_size
         
         # 1 dilation
-        self.nn_samp = list(range(k)) + list(range(k, 3*k, 2))
+        self.nn_samp = list(range(k))
         
         """
         # knn + fibonacci spaced sampling w.r. to topological distance
