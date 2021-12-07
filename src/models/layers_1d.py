@@ -708,8 +708,8 @@ class GATRelateCNetV2(nn.Module):
         x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
 
         
-        x_global = scatter_max(x_global, batch, dim = 0)[0]
-        x_global_ = scatter_mean(x_global, batch, dim = 0)[0]
+        x_global_max = scatter_max(x_global, batch, dim = 0)[0]
+        x_global_mean = scatter_mean(x_global, batch, dim = 0)[0]
         
         # we only want the second pop
         if self.pred_pop == 1:
