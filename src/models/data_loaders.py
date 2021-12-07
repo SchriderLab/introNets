@@ -176,6 +176,7 @@ class GCNDataGeneratorTv2(object):
             f = F(ii) * f_factor + k - 1
         """
         self.on_epoch_end()
+        self.label_smoothing_factor = 0.1
         
     def on_epoch_end(self):
         random.shuffle(self.training)
@@ -199,6 +200,11 @@ class GCNDataGeneratorTv2(object):
             
         x = np.array(self.ifiles[ix][key]['x'])
         y = np.array(self.ifiles[ix][key]['y'])
+        
+        # label smooth
+        y_e = np.random.uniform(0., self.label_smoothing_factor, y.shape)
+        y = y * (1 - y_e) + y_e
+        
         bp = np.array(self.ifiles[ix][key]['break_points'])
         
         if len(bp) == 0:
