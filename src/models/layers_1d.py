@@ -720,7 +720,7 @@ class GATRelateCNetV2(nn.Module):
             
         x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
         
-        print(x.shape, x_global.shape)
+        print(x.shape, x_global_max.shape)
         
         x = torch.cat([x, 
                        x_global[batch]], dim = 1)
