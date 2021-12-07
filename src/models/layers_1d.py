@@ -707,6 +707,8 @@ class GATRelateCNetV2(nn.Module):
         x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
         x_global = scatter_max(x_global, batch, dim = 0)[0]
         
+        print(x_global.shape)
+        
         
         x_global = to_dense_batch(x_global, batch)[0]
         x_global = x_global.reshape(batch_size, n_ind, 32, n_sites).transpose(1, 2)
@@ -721,7 +723,7 @@ class GATRelateCNetV2(nn.Module):
         x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
         
         x = torch.cat([x, 
-                       x_global_max[batch]], dim = 1)
+                       x_global[batch]], dim = 1)
         
         x = to_dense_batch(x, batch)[0]
         x = x.reshape(batch_size, n_ind, self.out_channels, n_sites).transpose(1, 2)
