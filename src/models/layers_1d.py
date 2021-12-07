@@ -655,10 +655,10 @@ class GATRelateCNetV2(nn.Module):
                 channels = res_channels[ix] * (n_res_layers) + graph_channels * n_res_layers + channels + up_channels[ix]
     
         # we're going to concatenate global features to the pred pop and do one more residual 1d conv
-        self.xl_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 32, 1, 1)
-        self.xr_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 32, 1, 1)
+        self.xl_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
+        self.xr_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
         
-        self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels) + 32
+        self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels) + 8
         self.final_out = Res1dBlock((self.out_channels, pop_size, n_sites), 64, 2, pooling = None)
     
         self.final_conv = nn.Conv2d(128, 1, 1)
@@ -704,17 +704,12 @@ class GATRelateCNetV2(nn.Module):
         
         x_global = torch.cat([self.xl_final_down(x[:,:,:n_ind // 2,:]),
                               self.xr_final_down(x[:,:,n_ind // 2:,:])], dim = 2)
-        
-        print(x_global.shape)
+
         x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
-        print(x_global.shape)
+
         
         x_global = scatter_max(x_global, batch, dim = 0)[0]
         
-        print(x_global.shape)
-        
-        
-        x_global = to_dense_batch(x_global, batch)[0]
         x_global = x_global.reshape(batch_size, n_ind, 32, n_sites).transpose(1, 2)
         
         # we only want the second pop
