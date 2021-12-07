@@ -169,7 +169,7 @@ def parse_args():
     parser.add_argument("--n_samples", default = "10")
     parser.add_argument("--n_sites", default = "128")
     
-    parser.add_argument("--val_prop", 0.05)
+    parser.add_argument("--val_prop", default = 0.05)
 
     parser.add_argument("--ofile", default = "None")
     args = parser.parse_args()
