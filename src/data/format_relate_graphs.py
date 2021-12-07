@@ -208,7 +208,7 @@ def main():
     
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(ifiles), comm.size - 1):
-            logging.info('on file {}...'.format(ifiles[ix]))
+            logging.info('{0}: on file {1}...'.format(comm.rank, ifiles[ix]))
             
             ifile = h5py.File(ifiles[ix], 'r')
             keys = list(ifile.keys())
@@ -231,6 +231,7 @@ def main():
                 comm.send([x, y, edge_index, edge_attr, True], dest = 0)
                 
         comm.send([None, None, None, None, None], dest = 0)
+    
     else:
         x = []
         y = []
@@ -283,8 +284,8 @@ def main():
                     ofile.create_dataset('train/{0}/edge_index'.format(train_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/edge_attr'.format(train_counter), data = edge_attr_, compression = 'lzf')
                     
-                    if (train_counter + 1) % 100 == 0: 
-                        logging.info('wrote chunk {}...'.format(train_counter))
+                    if (train_counter + 1) % 25 == 0: 
+                        logging.info('0: wrote chunk {}...'.format(train_counter))
                     train_counter += 1
                     
                     ofile.flush()
@@ -312,8 +313,8 @@ def main():
                     ofile.create_dataset('val/{0}/edge_index'.format(val_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_attr'.format(val_counter), data = edge_attr_, compression = 'lzf')
                     
-                    if (val_counter + 1) % 100 == 0: 
-                        logging.info('wrote val chunk {}...'.format(val_counter))
+                    if (val_counter + 1) % 25 == 0: 
+                        logging.info('0: wrote val chunk {}...'.format(val_counter))
                     val_counter += 1
                     
                     ofile.flush()
