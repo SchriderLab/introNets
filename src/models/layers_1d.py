@@ -704,7 +704,11 @@ class GATRelateCNetV2(nn.Module):
         
         x_global = torch.cat([self.xl_final_down(x[:,:,:n_ind // 2,:]),
                               self.xr_final_down(x[:,:,n_ind // 2:,:])], dim = 2)
+        
+        print(x_global.shape)
         x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
+        print(x_global.shape)
+        
         x_global = scatter_max(x_global, batch, dim = 0)[0]
         
         print(x_global.shape)
