@@ -26,6 +26,8 @@ EDGE_MEAN = np.array([
       dtype=np.float32)
 EDGE_STD = np.array([5.2765501e-01, 8.9487451e-01, 1.1330474e+03, 2.4047951e+01])
 
+from mpi4py import MPI
+
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -187,42 +189,87 @@ def parse_args():
 def main():
     args = parse_args()
     
+    # configure MPI
+    comm = MPI.COMM_WORLD
+    
+    if comm.rank == 0:
+        ofile = h5py.File(args.ofile, 'w')
+    
     ifiles = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
     chunk_size = 4
     
     nn_samp = range(int(args.k))
     n_sites = int(args.n_sites)
     
-    ofile = h5py.File(args.ofile, 'w')
-    
     train_counter = 0
     val_counter = 0
     
-    for ifile in ifiles:
-        logging.info('on file {}...'.format(ifile))
-        
-        ifile = h5py.File(ifile, 'r')
-        keys = list(ifile.keys())
-        
-        random.shuffle(keys)
-        n_val = int(np.round(len(keys) * float(args.val_prop)))
-        
-        val_keys = keys[:n_val]
-        del keys[:n_val]
-        
+    comm.Barrier()
+    
+    if comm.rank != 0:
+        for ix in range(comm.rank - 1, len(ifiles), comm.size - 1):
+            logging.info('on file {}...'.format(ifiles[ix]))
+            
+            ifile = h5py.File(ifiles[ix], 'r')
+            keys = list(ifile.keys())
+            
+            random.shuffle(keys)
+            n_val = int(np.round(len(keys) * float(args.val_prop)))
+            
+            val_keys = keys[:n_val]
+            del keys[:n_val]
+            
+            x = []
+            y = []
+            edge_attr = []
+            edge_index = []
+            
+            for key in keys:
+                x, y, edge_index, edge_attr = format_example(ifile, key, nn_samp, n_sites)
+                
+                comm.send([x, y, edge_attr, edge_index, False], dest = 0)
+                
+            for key in val_keys:
+                x_, y_, edge_index_, edge_attr_ = format_example(ifile, key, nn_samp, n_sites)
+                
+                comm.send([x, y, edge_attr, edge_index, True], dest = 0)
+                
+        comm.send([None, None, None, None, None], dest = 0)
+    else:
         x = []
         y = []
         edge_attr = []
         edge_index = []
         
-        for key in keys:
-            x_, y_, edge_index_, edge_attr_ = format_example(ifile, key, nn_samp, n_sites)
+        x_val = []
+        y_val = []
+        edge_attr_val = []
+        edge_index_val = []
+        
+        n_done = 0
+        train_counter = 0
+        val_counter = 0
+        
+        while n_done < comm.size - 1:
+            x_, y_, edge_index_, edge_attr_, val = comm.recv(source = MPI.ANY_SOURCE)
             
-            x.extend(x_)
-            y.extend(y_)
-            edge_attr.extend(edge_attr_)
-            edge_index.extend(edge_index_)
+            if x_ is None:
+                n_done += 1
+                continue
             
+            if not val:
+                x.extend(x_)
+                y.extend(y_)
+                edge_attr.extend(edge_attr_)
+                edge_index.extend(edge_index_)
+            # it's validation data
+            else:
+                x_val.extend(x_)
+                y_val.extend(y_)
+                edge_attr_val.extend(edge_attr_)
+                edge_index_val.extend(edge_index_)
+                
+            # maybe write some data
             if (len(x) % chunk_size) == 0 and len(x) > 0:
                 ix = list(range(len(x)))
                 random.shuffle(ix)
@@ -240,56 +287,49 @@ def main():
                     ofile.create_dataset('train/{0}/edge_index'.format(train_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/edge_attr'.format(train_counter), data = edge_attr_, compression = 'lzf')
                     
-                    logging.info('wrote chunk {}...'.format(train_counter))
+                    if (train_counter + 1) % 100 == 0: 
+                        logging.info('wrote chunk {}...'.format(train_counter))
                     train_counter += 1
                     
                     ofile.flush()
-            
-            x = []
-            y = []
-            edge_attr = []
-            edge_index = []
-            
-        x = []
-        y = []
-        edge_attr = []
-        edge_index = []   
-           
-        for key in val_keys:
-            x_, y_, edge_index_, edge_attr_ = format_example(ifile, key, nn_samp, n_sites)
-            
-            x.extend(x_)
-            y.extend(y_)
-            edge_attr.extend(edge_attr_)
-            edge_index.extend(edge_index_)
-            
-            if (len(x) % chunk_size) == 0 and len(x) > 0:
-                ix = list(range(len(x)))
+                    
+                x = []
+                y = []
+                edge_attr = []
+                edge_index = []
+                
+            # maybe write some data
+            if (len(x_val) % chunk_size) == 0 and len(x_val) > 0:
+                ix = list(range(len(x_val)))
                 random.shuffle(ix)
                 
                 ix = list(chunks(ix, chunk_size))
             
                 for ix_ in ix:
-                    x_ = np.array([x[u] for u in ix_], dtype = np.float32)
-                    y_ = np.array([y[u] for u in ix_], dtype = np.uint8)
-                    edge_index_ = np.array([edge_index[u] for u in ix_], dtype = np.int32)
-                    edge_attr_ = np.array([edge_attr[u] for u in ix_], dtype = np.float32)
+                    x_ = np.array([x_val[u] for u in ix_], dtype = np.float32)
+                    y_ = np.array([y_val[u] for u in ix_], dtype = np.uint8)
+                    edge_index_ = np.array([edge_index_val[u] for u in ix_], dtype = np.int32)
+                    edge_attr_ = np.array([edge_attr_val[u] for u in ix_], dtype = np.float32)
                     
                     ofile.create_dataset('val/{0}/x_0'.format(val_counter), data = x_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/y'.format(val_counter), data = y_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_index'.format(val_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_attr'.format(val_counter), data = edge_attr_, compression = 'lzf')
                     
-                    logging.info('wrote val chunk {}...'.format(val_counter))
+                    if (val_counter + 1) % 100 == 0: 
+                        logging.info('wrote val chunk {}...'.format(val_counter))
                     val_counter += 1
                     
                     ofile.flush()
+                    
+                x_val = []
+                y_val = []
+                edge_attr_val = []
+                edge_index_val = []
+    
+    if comm.rank == 0:
+        ofile.close()
             
-                x = []
-                y = []
-                edge_attr = []
-                edge_index = []
-                
 if __name__ == '__main__':
     main()
                 
