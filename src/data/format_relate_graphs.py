@@ -219,20 +219,16 @@ def main():
             val_keys = keys[:n_val]
             del keys[:n_val]
             
-            x = []
-            y = []
-            edge_attr = []
-            edge_index = []
-            
+
             for key in keys:
                 x, y, edge_index, edge_attr = format_example(ifile, key, nn_samp, n_sites)
                 
-                comm.send([x, y, edge_attr, edge_index, False], dest = 0)
+                comm.send([x, y, edge_index, edge_attr, False], dest = 0)
                 
             for key in val_keys:
-                x_, y_, edge_index_, edge_attr_ = format_example(ifile, key, nn_samp, n_sites)
+                x, y, edge_index, edge_attr = format_example(ifile, key, nn_samp, n_sites)
                 
-                comm.send([x, y, edge_attr, edge_index, True], dest = 0)
+                comm.send([x, y, edge_index, edge_attr, True], dest = 0)
                 
         comm.send([None, None, None, None, None], dest = 0)
     else:
