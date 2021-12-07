@@ -78,7 +78,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         y_ = y_[150:,s]
         
         bp_ = [u for u in bp if u in s]        
-        bp_ = list(np.array(bp) - int(np.min(bp)))
+        bp_ = list(np.array(bp_) - int(np.min(bp)))
         
         edge_index_ = []
         edge_attr_ = []
