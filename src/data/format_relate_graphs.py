@@ -77,8 +77,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         x_ = x_[:,s]
         y_ = y_[150:,s]
         
-        bp = [u for u in bp if u in s]        
-        bp = list(np.array(bp) - int(np.min(bp)))
+        bp_ = [u for u in bp if u in s]        
+        bp_ = list(np.array(bp) - int(np.min(bp)))
         
         edge_index_ = []
         edge_attr_ = []
@@ -139,7 +139,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         #np.savez('edge_attrs/edge_attr_{0:04d}.npz'.format(self.ix), edge_attr = edge_attr)
         
         bp_x = np.zeros(x_.shape)
-        bp_x[:, bp] = 1.
+        bp_x[:, bp_] = 1.
         
         # smooth the break points (give some error)
         bp_x = gaussian_filter(bp_x, 5)
