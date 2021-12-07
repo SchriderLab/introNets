@@ -711,6 +711,8 @@ class GATRelateCNetV2(nn.Module):
         x_global_max = scatter_max(x_global, batch, dim = 0)[0]
         x_global_mean = scatter_mean(x_global, batch, dim = 0)[0]
         
+        
+        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,n_ind // 2:,:]
@@ -720,10 +722,8 @@ class GATRelateCNetV2(nn.Module):
             
         x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
         
-        print(x.shape, x_global_max.shape)
-        
         x = torch.cat([x, 
-                       x_global[batch]], dim = 1)
+                       torch.topk(x_global_max[batch], batch.shape[0] // 2, dim = 0)], dim = 1)
         
         x = to_dense_batch(x, batch)[0]
         x = x.reshape(batch_size, n_ind, self.out_channels, n_sites).transpose(1, 2)
