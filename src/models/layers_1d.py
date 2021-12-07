@@ -660,7 +660,7 @@ class GATRelateCNetV2(nn.Module):
         self.final_down = nn.Res1dBlock()
         
         self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels) + 32
-        self.final_out = nn.Res1dBlock((self.out_channels, pop_size, n_sites), 128, 2, pooling = None)
+        self.final_out = Res1dBlock((self.out_channels, pop_size, n_sites), 128, 2, pooling = None)
     
         self.final_conv = nn.Conv2d(128, 1, 1)
         self.act = nn.ELU()
