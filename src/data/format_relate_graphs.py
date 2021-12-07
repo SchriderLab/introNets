@@ -138,7 +138,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         
         #np.savez('edge_attrs/edge_attr_{0:04d}.npz'.format(self.ix), edge_attr = edge_attr)
         
-        bp_x = np.zeros(x_.shape)
+        
+        bp_x = np.zeros(x_e.shape)
         bp_x[:, bp_] = 1.
         
         # smooth the break points (give some error)
