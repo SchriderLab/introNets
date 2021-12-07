@@ -41,13 +41,12 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     
     bp = np.array(ifile[key]['break_points'])
     
-    ix = range(bp[0], bp[-1])
-    
+    indices = range(bp[0], bp[-1])
     for j in range(n_samples):
         D = np.zeros((4, 300, 300))
         count = 0
         
-        s = np.random.choice(range(ix[0], ix[-1] - n_sites))
+        s = np.random.choice(range(indices[0], indices[-1] - n_sites))
         s = list(range(s, s + n_sites))
         
         gix = list(np.where((bp >= s[0]) & (bp < s[-1]))[0])
