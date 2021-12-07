@@ -581,8 +581,6 @@ class GATRelateCNet(nn.Module):
         elif self.pred_pop == 0:
             x = x[:,:,:n_ind // 2,:]
             
-        x = 
-        
         # go back to one channel
         x = torch.squeeze(self.final_conv(x))
 
