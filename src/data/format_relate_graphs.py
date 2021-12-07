@@ -38,8 +38,6 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     
     x_ = np.array(ifile[key]['x'])
     y_ = np.array(ifile[key]['y'])
-    print(x_.shape)
-    print(y_.shape)
     
     bp = np.array(ifile[key]['break_points'])
     
@@ -76,15 +74,12 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         # preserve n_mutations as the un-scaled one
         D[1,:,:] *= count
         
-        x_ = x_[:,s]
-        y_ = y_[150:,s]
+        x_e = x_[:,s]
+        y_e = y_[150:,s]
         
         bp_ = [u for u in bp if u in s]
-        print(bp_)
-        
         bp_ = list(np.array(bp_) - int(np.min(bp_)))
-        print(bp_)
-        
+
         edge_index_ = []
         edge_attr_ = []
         
@@ -149,10 +144,10 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         # smooth the break points (give some error)
         bp_x = gaussian_filter(bp_x, 5)
         
-        x_ = np.array((x_, bp_x), dtype = np.float32)
+        x_e = np.array((x_e, bp_x), dtype = np.float32)
         
-        x.append(x_)
-        y.append(y_)
+        x.append(x_e)
+        y.append(y_e)
         edge_index.append(edge_index_)
         edge_attr.append(edge_attr_)
         
