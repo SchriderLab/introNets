@@ -655,11 +655,11 @@ class GATRelateCNetV2(nn.Module):
                 channels = res_channels[ix] * (n_res_layers) + graph_channels * n_res_layers + channels + up_channels[ix]
     
         # we're going to concatenate global features to the pred pop and do one more residual 1d conv
-        self.xl_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
-        self.xr_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
+        #self.xl_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
+        #self.xr_final_down = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 4, 1, 1)
         
         self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels)
-        self.final_out = Res1dBlock((self.out_channels, pop_size, n_sites), 64, 2, pooling = None)
+        self.final_down = Res1dBlock((self.out_channels, pop_size, n_sites), 64, 2, pooling = None)
     
         self.final_conv = nn.Conv2d(128, 1, 1)
         self.act = nn.ELU()
