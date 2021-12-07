@@ -18,6 +18,7 @@ import warnings
 from torch import Tensor
 
 from torch_geometric.utils import to_dense_batch
+from torch_scatter import scatter_max, scatter, scatter_mean, scatter_std
 
 from sparsenn.models.gcn.layers import DynamicGraphResBlock, GraphCyclicGRUBlock, GraphInceptionBlock
 from torch_geometric.nn import global_mean_pool, MessageNorm
