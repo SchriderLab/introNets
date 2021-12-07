@@ -152,6 +152,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         edge_index.append(edge_index_)
         edge_attr.append(edge_attr_)
         
+    return x, y, edge_index, edge_attr
+        
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
