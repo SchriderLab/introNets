@@ -123,7 +123,7 @@ class Res1dBlockUp(nn.Module):
             self.convs_r.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             
-            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout2d(0.1)))
             
             in_shape[0] = out_channels
         
@@ -254,7 +254,7 @@ class Res1dGraphBlock(nn.Module):
             self.gcn_convs.append(nn.Conv2d(out_channels, gcn_channels, 1, 1))
             
             self.gcns.append(VanillaAttConv())
-            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout(0.1)))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout2d(0.1)))
             
             in_shape[0] = out_channels + gcn_channels
         
@@ -376,7 +376,7 @@ class Res1dBlock(nn.Module):
         for ix in range(n_layers):
             self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
-            self.norms.append(nn.InstanceNorm2d(out_channels))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout2d(0.1)))
             
             in_shape[0] = out_channels
         
