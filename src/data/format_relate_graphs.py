@@ -42,6 +42,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     y_ = np.array(ifile[key]['y'])
     
     bp = np.array(ifile[key]['break_points'])
+    if len(bp) == 0:
+        return None, None, None, None
     
     indices = range(bp[0], bp[-1])
     for j in range(n_samples):
@@ -221,11 +223,15 @@ def main():
             
             for key in keys:
                 x, y, edge_index, edge_attr = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
+                if x is None:
+                    continue
                 
                 comm.send([x, y, edge_index, edge_attr, False], dest = 0)
                 
             for key in val_keys:
                 x, y, edge_index, edge_attr = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
+                if x is None:
+                    continue
                 
                 comm.send([x, y, edge_index, edge_attr, True], dest = 0)
                 
