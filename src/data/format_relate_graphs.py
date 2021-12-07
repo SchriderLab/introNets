@@ -38,6 +38,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     
     x_ = np.array(ifile[key]['x'])
     y_ = np.array(ifile[key]['y'])
+    print(x_.shape)
+    print(y_.shape)
     
     bp = np.array(ifile[key]['break_points'])
     
