@@ -57,7 +57,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         
         # currently a weighted average of the distance matrices in the region
         for k in gix:
-            D_ = np.array(ifile['graph']['{}'.format(k)]['D'])
+            D_ = np.array(ifile[key]['graph']['{}'.format(k)]['D'])
             
             D_ = np.array([squareform(u) for u in D_], dtype = np.float32)
             
