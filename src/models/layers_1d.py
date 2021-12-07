@@ -375,7 +375,7 @@ class Res1dBlock(nn.Module):
         for ix in range(n_layers):
             self.convs.append(nn.Conv2d(in_shape[0], out_channels, (1, 3), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1)))
-            self.norms.append(nn.LayerNorm(in_shape[1:]))
+            self.norms.append(nn.InstanceNorm2d(out_channels))
             
             in_shape[0] = out_channels
         
@@ -424,8 +424,8 @@ class GATRelateCNet(nn.Module):
         
         stem_channels = 2
         
-        res_channels = [32, 16, 8]
-        up_channels = [16, 16, 16]
+        res_channels = [64, 128, 256]
+        up_channels = [256, 128, 64]
         
         self.pred_pop = pred_pop
         
@@ -480,6 +480,10 @@ class GATRelateCNet(nn.Module):
             
             channels = res_channels[ix] * n_res_layers + up_channels[ix]
     
+        # we're going to concatenate global features to the pred pop and do one more residual 1d conv
+        self.xl_final_down = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 32, 1, 1)
+        self.xr_final_down = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 32, 1, 1)
+        
         self.final_conv = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 1, 1)
                         
     def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
@@ -559,12 +563,25 @@ class GATRelateCNet(nn.Module):
         del xl
         del xr
         
+        xl = self.xl_final_down(x[:,:,:n_ind // 2,:])
+        xl = torch.flatten(xl.transpose(1, 2), 2, 3).flatten(0, 1)
+        xl = torch.squeeze(self.activation(xl))
+        
+        xr = self.xr_final_down(x[:,:,n_ind // 2:,:])
+        xr = torch.flatten(xr.transpose(1, 2), 2, 3).flatten(0, 1)
+        xr = torch.squeeze(self.activation(xr))
+        
+        xr = to_dense_batch(xr, batch)[0]
+        xr = xr.reshape(batch_size, n_ind, n_channels, n_sites).transpose(1, 2)
+        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,n_ind // 2:,:]
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:n_ind // 2,:]
+            
+        x = 
         
         # go back to one channel
         x = torch.squeeze(self.final_conv(x))
@@ -638,7 +655,16 @@ class GATRelateCNetV2(nn.Module):
             if ix != len(res_channels) - 1:
                 channels = res_channels[ix] * (n_res_layers) + graph_channels * n_res_layers + channels + up_channels[ix]
     
-        self.final_conv = nn.Conv2d(up_channels[-1] + channels + (in_channels + stem_channels), 1, 1)
+        # we're going to concatenate global features to the pred pop and do one more residual 1d conv
+        self.xl_final_down = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 32, 1, 1)
+        self.xr_final_down = nn.Conv2d(up_channels[-1] + (in_channels + stem_channels), 32, 1, 1)
+        
+        self.final_down = nn.Res1dBlock()
+        
+        self.out_channels = up_channels[-1] + channels + (in_channels + stem_channels) + 32
+        self.final_out = nn.Res1dBlock((self.out_channels, pop_size, n_sites), 128, 2, pooling = None)
+    
+        self.final_conv = nn.Conv2d(128, 1, 1)
         self.act = nn.ELU()
                         
     def forward(self, x, edge_index, edge_attr, batch, save_steps = False):
@@ -679,12 +705,32 @@ class GATRelateCNetV2(nn.Module):
         # gc
         del x0
         
+        x_global = torch.cat([self.xl_final_down(x[:,:,:n_ind // 2,:]),
+                              self.xr_final_down(x[:,:,n_ind // 2:,:])], dim = 2)
+        x_global = torch.flatten(x_global.transpose(1, 2), 2, 3).flatten(0, 1)
+        x_global = scatter_max(x_global, batch, dim = 0)[0]
+        
+        
+        x_global = to_dense_batch(x_global, batch)[0]
+        x_global = x_global.reshape(batch_size, n_ind, 32, n_sites).transpose(1, 2)
+        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,n_ind // 2:,:]
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:n_ind // 2,:]
+            
+        x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+        
+        x = torch.cat([x, 
+                       x_global_max[batch]], dim = 1)
+        
+        x = to_dense_batch(x, batch)[0]
+        x = x.reshape(batch_size, n_ind, self.out_channels, n_sites).transpose(1, 2)
+        
+        # downsample through double conv
+        x = self.final_down(x)
         
         # go back to one channel
         x = torch.squeeze(self.final_conv(x))
