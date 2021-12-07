@@ -203,7 +203,7 @@ class GCNDataGeneratorTv2(object):
         
         # label smooth
         y_e = np.random.uniform(0., self.label_smoothing_factor, y.shape)
-        y = y * (1 - y_e) + y_e
+        y = y * (1 - y_e) + 0.5 * y_e
         
         bp = np.array(self.ifiles[ix][key]['break_points'])
         
