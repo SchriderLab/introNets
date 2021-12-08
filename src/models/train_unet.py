@@ -174,20 +174,6 @@ def main():
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y.flatten(), y_pred.flatten()))
                 val_losses.append(loss.detach().item())
-
-        x = x.detach().cpu().numpy()
-        for k in range(y_pred.shape[0]):
-            fig, axes = plt.subplots(nrows = 3, ncols = 2, sharex = True)
-            
-            axes[0,0].imshow(x[k,0,:,:], cmap = 'gray')
-            axes[0,1].imshow(x[k,1,:,:], cmap = 'gray')
-            
-            axes[1,0].imshow(y[k,0,:,:], cmap = 'gray')
-            
-            axes[2,0].imshow(y_pred[k,0,:,:], cmap = 'gray')
-            
-            plt.savefig(os.path.join(os.path.join(args.odir, '{}_plots'.format(args.tag)), '{0:03d}.png'.format(k)), dpi = 100)
-            plt.close()
             
         val_loss = np.mean(val_losses)
 
