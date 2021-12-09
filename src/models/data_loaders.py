@@ -407,7 +407,7 @@ class GCNDataGeneratorH5(object):
                 start_node += x.shape[2]
                 
                 edge_index.append(e_)
-                batch.extend(np.ones(x.shape[0], dtype = np.int32) * counter)
+                batch.extend(np.ones(x.shape[2], dtype = np.int32) * counter)
                 counter += 1
                 
             edge_attr.extend(list(edge_attr_))
