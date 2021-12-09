@@ -180,7 +180,7 @@ def main():
     early_count = 0
     
     lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, 
-                                                       max_lr = 0.02, epochs = int(args.epochs), 
+                                                       max_lr = 0.02, epochs = int(args.n_epochs), 
                                                        steps_per_epoch = int(args.n_steps))
     
     history = dict()
