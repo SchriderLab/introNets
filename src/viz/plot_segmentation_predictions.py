@@ -80,7 +80,7 @@ def main():
             y_pred = y_pred.detach().cpu().numpy()
             
             for k in range(x.shape[0]):
-                fig, axes = plt.subplots(nrows = 5)
+                fig, axes = plt.subplots(ncols = 5)
                 axes[0].imshow(x[k,0,:,:], cmap = 'gray')
                 axes[0].set_title('pop A')
                 
