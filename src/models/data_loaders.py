@@ -396,21 +396,21 @@ class GCNDataGeneratorH5(object):
         for key in keys:
             x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
-            edge_index = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
-            edge_attr = np.array(self.ifile[key]['edge_attr'])
+            edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
+            edge_attr_ = np.array(self.ifile[key]['edge_attr'])
             
             X.append(x)
             Y.append(y)
             
             for k in range(x.shape[0]):
-                e_ = edge_index[k] + start_node
+                e_ = edge_index_[k] + start_node
                 start_node += x.shape[2]
                 
                 edge_index.append(e_)
                 batch.extend(np.ones(x.shape[0], dtype = np.int32) * counter)
                 counter += 1
                 
-            edge_attr.extend(list(edge_attr))
+            edge_attr.extend(list(edge_attr_))
             
         return torch.FloatTensor(np.concatentate(X)), torch.FloatTensor(np.concatenate(Y)), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
 class GCNDataGeneratorT(object):
