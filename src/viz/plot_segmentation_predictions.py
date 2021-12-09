@@ -86,24 +86,24 @@ def main():
             for k in range(x.shape[0]):
                 
                 fig = plt.figure(figsize=(16, 6))
-                ax0 = fig.subplot(151)
+                ax0 = fig.add_subplot(151)
                 
                 ax0.imshow(x[k,0,:,:], cmap = 'gray')
                 ax0.set_title('pop A')
                 
-                ax1 = fig.subplot(152)
+                ax1 = fig.add_subplot(152)
                 ax1.imshow(x[k,1,:,:], cmap = 'gray')
                 ax1.set_title('pop B')
                 
-                ax2 = fig.subplot(153)
+                ax2 = fig.add_subplot(153)
                 ax2.imshow(y[k,0,:,:], cmap = 'gray')
                 ax2.set_title('pop B (y)')
                 
-                ax3 = fig.subplot(154)
+                ax3 = fig.add_subplot(154)
                 ax3.imshow(np.round(expit(y_pred[k,0,:,:])), cmap = 'gray')
                 ax3.set_title('pop B (pred)')
                 
-                ax4 = fig.subplot(155)
+                ax4 = fig.add_subplot(155)
                 im = ax4.imshow(expit(y_pred[k,0,:,:]))
                 fig.colorbar(im, ax = ax4)
                 
