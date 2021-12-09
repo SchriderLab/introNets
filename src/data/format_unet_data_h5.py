@@ -88,7 +88,7 @@ class Formatter(object):
             y1 = y[x1_indices, :]
             y2 = y[x2_indices, :]
             
-            indices = list(set(range(range(x1.shape[1] - self.n_sites))).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
+            indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
             if len(indices) == 0:
                 continue
             
