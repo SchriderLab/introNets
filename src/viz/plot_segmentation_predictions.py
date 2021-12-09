@@ -109,6 +109,7 @@ def main():
                 
                 plt.savefig(os.path.join(args.odir, '{0:04d}_pred.png'.format(counter)), dpi = 100)
                 counter += 1
+                plt.close()
 
     
 if __name__ == '__main__':
