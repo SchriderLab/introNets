@@ -261,7 +261,7 @@ def main():
                 val_accs.append(accuracy_score(np.round(y), np.round(y_pred)))
                 
                 if step < 50:
-                    Y.extend(y)
+                    Y.extend(np.round(y))
                     Y_pred.extend(np.round(y_pred))
                 
         
