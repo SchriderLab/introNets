@@ -197,11 +197,8 @@ def main():
         for ij in range(int(args.n_steps)):
             optimizer.zero_grad()
             
-            try:
-                x, y, edges, edge_attr, batch = generator.get_batch()
-            except:
-                break
-            
+            x, y, edges, edge_attr, batch = generator.get_batch()
+
             x = x.to(device)
             y = y.to(device)
             
@@ -242,10 +239,9 @@ def main():
         Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
-                try:
-                    x, y, edges, edge_attr, batch = generator.get_batch(val = True)
-                except:
-                    break
+
+                x, y, edges, edge_attr, batch = generator.get_batch(val = True)
+
 
                 x = x.to(device)
                 y = y.to(device)
