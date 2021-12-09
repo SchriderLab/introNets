@@ -88,7 +88,11 @@ class Formatter(object):
             y1 = y[x1_indices, :]
             y2 = y[x2_indices, :]
             
-            six = np.random.choice(range(x1.shape[1] - self.n_sites))
+            indices = list(set(range(range(x1.shape[1] - self.n_sites))).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
+            if len(indices) == 0:
+                continue
+            
+            six = np.random.choice(indices)
             
             x1 = x1[:,six:six + self.n_sites]
             x2 = x2[:,six:six + self.n_sites]
