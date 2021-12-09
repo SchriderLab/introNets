@@ -58,7 +58,9 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
 
+    model = model.to(device)
     model.eval()
+    
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4)
     
     for ix in range(int(args.n_samples)):
