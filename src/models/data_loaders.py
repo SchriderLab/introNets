@@ -412,7 +412,7 @@ class GCNDataGeneratorH5(object):
                 
             edge_attr.extend(list(edge_attr_))
             
-        return torch.FloatTensor(np.concatentate(X)), torch.FloatTensor(np.concatenate(Y)), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y)), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
 class GCNDataGeneratorT(object):
     def __init__(self, idir, indices, batch_size = 8, 
                      val_prop = 0.05, k = 12, 
