@@ -102,21 +102,10 @@ def parse_args():
     parser.add_argument("--n_early", default = "10")
     parser.add_argument("--indices", default = "None")
     
-    parser.add_argument("--n_heads", default = "2")
-
     parser.add_argument("--batch_size", default = "16")
     
-    parser.add_argument("--seg", action = "store_true")
-    parser.add_argument("--loss", default = "bce")
-    parser.add_argument("--layer_type", default = "gat")
-    
-    parser.add_argument("--n_features", default = "128")
-    parser.add_argument("--n_global", default = "1024")
     parser.add_argument("--n_sites", default = "128")
     parser.add_argument("--n_steps", default = "4000")
-    
-    parser.add_argument("--n_layers", default = "11")
-    # ${args}
 
     parser.add_argument("--odir", default = "training_output")
     parser.add_argument("--ofile", default = "None")
