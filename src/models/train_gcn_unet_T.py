@@ -179,7 +179,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, max_lr = 0.05, total_steps = int(args.n_steps))
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, max_lr = 0.02, total_steps = int(args.n_steps))
     
     history = dict()
     history['loss'] = []
