@@ -66,6 +66,8 @@ def main():
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4)
     counter = 0
     
+    
+    
     for ix in range(int(args.n_samples)):
         with torch.no_grad():
             x, y = generator.get_batch()
@@ -79,25 +81,32 @@ def main():
             y = y.detach().cpu().numpy()
             y_pred = y_pred.detach().cpu().numpy()
             
+            
+            
             for k in range(x.shape[0]):
-                fig, axes = plt.subplots(ncols = 5)
-                axes[0].imshow(x[k,0,:,:], cmap = 'gray')
-                axes[0].set_title('pop A')
                 
-                axes[1].imshow(x[k,1,:,:], cmap = 'gray')
-                axes[1].set_title('pop B')
+                fig = plt.figure(figsize=(16, 6))
+                ax0 = fig.subplot(151)
                 
-                axes[2].imshow(y[k,0,:,:], cmap = 'gray')
-                axes[2].set_title('pop B (y)')
+                ax0.imshow(x[k,0,:,:], cmap = 'gray')
+                ax0.set_title('pop A')
                 
-                axes[3].imshow(np.round(expit(y_pred[k,0,:,:])), cmap = 'gray')
-                axes[3].set_title('pop B (pred)')
+                ax1 = fig.subplot(152)
+                ax1.imshow(x[k,1,:,:], cmap = 'gray')
+                ax1.set_title('pop B')
                 
-                im = axes[4].imshow(expit(y_pred[k,0,:,:]))
-                axes[4].set_title('pop B (pred prob)')
-                fig.colorbar(im, ax = axes[4])
+                ax2 = fig.subplot(153)
+                ax2.imshow(y[k,0,:,:], cmap = 'gray')
+                ax2.set_title('pop B (y)')
                 
-                plt.tight_layout()
+                ax3 = fig.subplot(154)
+                ax3.imshow(np.round(expit(y_pred[k,0,:,:])), cmap = 'gray')
+                ax3.set_title('pop B (pred)')
+                
+                ax4 = fig.subplot(155)
+                im = ax4.imshow(expit(y_pred[k,0,:,:]))
+                fig.colorbar(im, ax = ax4)
+                
                 plt.savefig(os.path.join(args.odir, '{0:04d}_pred.png'.format(counter)), dpi = 100)
                 counter += 1
 
