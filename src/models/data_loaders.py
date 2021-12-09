@@ -353,7 +353,66 @@ class GCNDataGeneratorTv2(object):
         
         return x, y, edges, edge_attr, torch.LongTensor(batch)
         
-    
+class GCNDataGeneratorH5(object):
+    def __init__(self, ifile, batch_size = 16, chunk_size = 4):
+        self.ifile = h5py.File(ifile, 'r')
+        
+        self.reset_keys()
+        self.reset_keys(True)
+        
+        self.n_per = batch_size // chunk_size
+        
+        self.val_length = len(self.val_keys) // self.n_per
+        
+    def reset_keys(self, val = False):
+        if not val:
+            self.train_keys = list(self.ifile['train'].keys())
+            random.shuffle(self.train_keys)
+        else:
+            self.val_keys = list(self.ifile['val'].keys())
+        
+
+    def get_batch(self, val = False):
+        if not val:
+            if len(self.train_keys) < self.n_per:
+                self.reset_keys()
+                
+            keys = ['train/{}'.format(u) for u in self.train_keys[:self.n_per]]
+            
+            del self.train_keys[:self.n_per]
+        else:
+            keys = ['val/{}'.format(u) for u in self.val_keys[:self.n_per]]
+
+            del self.val_keys[:self.n_per]
+            
+        X = []
+        Y = []
+        edge_index = []
+        edge_attr = []
+        batch = []
+        
+        start_node = 0
+        counter = 0
+        for key in keys:
+            x = np.array(self.ifile[key]['x_0'])
+            y = np.array(self.ifile[key]['y'])
+            edge_index = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
+            edge_attr = np.array(self.ifile[key]['edge_attr'])
+            
+            X.append(x)
+            Y.append(y)
+            
+            for k in range(x.shape[0]):
+                e_ = edge_index[k] + start_node
+                start_node += x.shape[2]
+                
+                edge_index.append(e_)
+                batch.extend(np.ones(x.shape[0], dtype = np.int32) * counter)
+                counter += 1
+                
+            edge_attr.extend(list(edge_attr))
+            
+        return torch.FloatTensor(np.concatentate(X)), torch.FloatTensor(np.concatenate(Y)), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
 class GCNDataGeneratorT(object):
     def __init__(self, idir, indices, batch_size = 8, 
                      val_prop = 0.05, k = 12, 

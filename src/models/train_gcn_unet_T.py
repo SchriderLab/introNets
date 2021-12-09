@@ -34,7 +34,7 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2
-from data_loaders import GCNDataGeneratorTv2
+from data_loaders import GCNDataGeneratorH5
 import glob
 from scipy.special import expit
 from torch_geometric.utils import to_dense_batch
@@ -113,6 +113,7 @@ def parse_args():
     parser.add_argument("--n_features", default = "128")
     parser.add_argument("--n_global", default = "1024")
     parser.add_argument("--n_sites", default = "128")
+    parser.add_argument("--n_steps", default = "4000")
     
     parser.add_argument("--n_layers", default = "11")
     # ${args}
@@ -171,8 +172,8 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = GCNDataGeneratorTv2(args.idir,
-                                 batch_size = int(args.batch_size), n_sites = int(args.n_sites))
+    generator = GCNDataGeneratorH5(args.ifile,
+                                 batch_size = int(args.batch_size))
    
     print(generator.length)
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737]).to(device))
@@ -180,7 +181,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, max_lr = 0.1, total_steps = 1000)
+    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, max_lr = 0.1, total_steps = int(args.n_steps))
     
     history = dict()
     history['loss'] = []
@@ -195,7 +196,7 @@ def main():
         losses = []
         accuracies = []
 
-        for ij in range(generator.length):
+        for ij in range(int(args.n_steps)):
             optimizer.zero_grad()
             
             try:
@@ -227,7 +228,7 @@ def main():
             if (ij + 1) % 5 == 0:
                 logging.info(
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}, lr: {4}'.format(ix, np.mean(losses),
-                                                                                  np.mean(accuracies), ij + 1, lr_scheduler.get_lr()))
+                                                                                  np.mean(accuracies), ij + 1, lr_scheduler.get_last_lr()))
                 
             lr_scheduler.step()
 
@@ -294,7 +295,7 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        generator.on_epoch_end()
+        generator.reset_keys(True)
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
