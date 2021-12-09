@@ -97,6 +97,7 @@ def main():
                 axes[4].set_title('pop B (pred prob)')
                 fig.colorbar(im, ax = axes[4])
                 
+                plt.tight_layout()
                 plt.savefig(os.path.join(args.odir, '{0:04d}_pred.png'.format(counter)), dpi = 100)
                 counter += 1
 
