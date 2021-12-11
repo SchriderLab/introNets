@@ -112,6 +112,8 @@ class TreeLSTMCell(nn.Module):
         iou = nodes.data['iou'] + self.b_iou
         i, o, u = torch.chunk(iou, 3, 1)
         i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
+        print(i.shape, o.shape, u.shape)
+        
         # equation (5)
         c = i * u + nodes.data['c']
         # equation (6)
