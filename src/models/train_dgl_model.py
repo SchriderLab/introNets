@@ -96,6 +96,9 @@ def main():
     device = torch.device(device_strings[0])
     
     model = TreeLSTM()
+    print(model)
+    
+    
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -106,7 +109,7 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = GCNDataGenerator(args.idir,
+    generator = DGLDataGenerator(args.idir,
                                  batch_size = int(args.batch_size))
     
 
