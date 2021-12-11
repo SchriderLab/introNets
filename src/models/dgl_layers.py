@@ -169,12 +169,17 @@ class TreeLSTM(nn.Module):
 
         g.ndata['h'] = h
         g.ndata['c'] = c
-        reverse = False
         
         dgl.prop_nodes_topo(g,
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
-                            apply_node_func=self.cell.apply_node_func, reverse = reverse)
+                            apply_node_func=self.cell.apply_node_func, reverse = False)
+        g.ndata['iou'] = g.ndata['iou'].relu_()
+        
+        dgl.prop_nodes_topo(g,
+                            message_func=self.cell.message_func,
+                            reduce_func=self.cell.reduce_func,
+                            apply_node_func=self.cell.apply_node_func, reverse = True)
         g.ndata['iou'] = g.ndata['iou'].relu_()
 
         # compute logits
