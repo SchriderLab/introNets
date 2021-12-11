@@ -159,8 +159,8 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask == 1)]).flatten())
-            y = np.round(y.detach().cpu().numpy()[np.where(y_mask == 1)].flatten())
+            y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)]).flatten())
+            y = np.round(y.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)].flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
