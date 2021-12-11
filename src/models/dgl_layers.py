@@ -176,6 +176,8 @@ class TreeLSTM(nn.Module):
         g.ndata['h'] = h
         g.ndata['c'] = c
         
+        print(g.ndata['h'].shape, g.ndata['c'].shape)
+        
         dgl.prop_nodes_topo(g,
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
