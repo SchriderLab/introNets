@@ -53,13 +53,13 @@ class DGLDataGenerator(object):
     def get_element(self, val = False):
         if val:
             if self.val_ix >= len(self.val):
-                return None, None, None
+                return None, None, None, None, None
             
             ix, key = self.val[self.val_ix]
             self.val_ix += 1
         else:
             if self.ix >= len(self.training):
-                return None, None, None
+                return None, None, None, None, None
             
             ix, key = self.training[self.ix]
             self.ix += 1
@@ -73,8 +73,13 @@ class DGLDataGenerator(object):
         bp0 = bp[bp_ix]
         bp1 = bp[bp_ix + 1]
         
-        x = np.array(self.ifiles[ix][key]['x'])[:,bp0:bp1]
-        y = np.array(self.ifiles[ix][key]['y'])[:,bp0:bp1]
+        if bp1 - bp0 < self.n_sites:
+        
+            x = np.array(self.ifiles[ix][key]['x'])[:,bp0:bp1]
+            y = np.array(self.ifiles[ix][key]['y'])[:,bp0:bp1]
+        else:
+            x = np.array(self.ifiles[ix][key]['x'])[:,bp0:bp0 + self.n_sites]
+            y = np.array(self.ifiles[ix][key]['y'])[:,bp0:bp0 + self.n_sites]
         
         x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
         x = np.pad(x, ((0, 299), (0, 0)), constant_values = 0)
