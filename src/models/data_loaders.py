@@ -81,9 +81,9 @@ class DGLDataGenerator(object):
         
         y = np.pad(y, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
         
-        edges = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
-        xg = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
-        n_mutations = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['n_mutations'])[:-1]
+        edges = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
+        xg = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
+        n_mutations = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['n_mutations'])[:-1]
         n_mutations = n_mutations.reshape(n_mutations.shape[0], 1)
         
         edge_attr = np.concatenate([xg[edges[1,:]] - xg[edges[0,:]], n_mutations], axis = 1)
