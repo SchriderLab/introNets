@@ -64,7 +64,7 @@ class DGLDataGenerator(object):
             ix, key = self.training[self.ix]
             self.ix += 1
             
-        bp = np.array(self.ifile[ix][key]['break_points'])
+        bp = np.array(self.ifiles[ix][key]['break_points'])
         if len(bp) <= 1:
             return self.get_element(val)
         
