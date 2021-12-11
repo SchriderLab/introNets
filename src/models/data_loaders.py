@@ -130,6 +130,7 @@ class DGLDataGenerator(object):
             
         x = torch.cat(xs)
         y = torch.cat(ys)
+        masks = np.array(masks)
 
         return x, y, edges, torch.FloatTensor(masks)
         
