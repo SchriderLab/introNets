@@ -130,6 +130,6 @@ class TreeLSTM(nn.Module):
         # 3 * (n_convs + 1) channels
         xs = torch.cat(xs + [h.view(ind, 1, 1, s)], dim = 1)
 
-        xs = self.out(xs)
+        xs = torch.squeeze(self.out(xs))
         return xs
 
