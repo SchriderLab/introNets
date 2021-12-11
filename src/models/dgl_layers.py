@@ -138,7 +138,7 @@ class TreeLSTM(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Conv2d(3, 1, 1, 1)
         
-        self.cell = TreeLSTMCell(256)
+        self.cell = TreeLSTMCell(384)
 
     def forward(self, g, h, c):
         """Compute tree-lstm prediction given a batch.
