@@ -157,13 +157,13 @@ def main():
             y_pred = model(batch, h, c)
             #print(y.shape, y_pred.shape)
 
-            loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
+            loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
+
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)]).flatten())
             y = np.round(y.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)].flatten())
 
             # append metrics for this epoch
@@ -203,7 +203,7 @@ def main():
                 y_pred = model(batch, h, c)
                 #print(y.shape, y_pred.shape)
     
-                loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
+                loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
                 val_losses.append(loss.detach().item())
                 
                 # compute accuracy in CPU with sklearn
