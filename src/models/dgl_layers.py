@@ -165,7 +165,11 @@ class TreeLSTM(nn.Module):
         
         # transform all the nodes via 1d convolution
         g.ndata['iou'] = self.encoder(g.ndata['x'])
+        print(g.ndata['x'].shape)        
+        
         g.ndata['iou'] = g.ndata['iou'].view(ind, -1)
+        
+        print(g.ndata['iou'].shape)
 
         g.ndata['h'] = h
         g.ndata['c'] = c
