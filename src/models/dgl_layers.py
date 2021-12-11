@@ -90,7 +90,7 @@ class TreeLSTM(nn.Module):
         ind, s = g.ndata['x'].shape
         
         # 1d image
-        g.ndata['x'] = (g.ndata['x']).view(g.ndata['x'].shape[0], 1, 1, g.ndata['x'].shape[0])
+        g.ndata['x'] = (g.ndata['x']).view(ind, 1, 1, s)
         
         # transform all the nodes via 1d convolution
         g.ndata['iou'] = self.init_norm(self.init_conv(g.ndata['x'])).view(ind, 3 * s)
