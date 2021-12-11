@@ -35,6 +35,8 @@ from layers import GCNUNet_i2, GCNUNet_i3
 from data_loaders import GCNDataGenerator, DGLDataGenerator
 import glob
 
+from scipy.special import expit
+
 from dgl_layers import TreeLSTM
 import dgl
 
@@ -151,14 +153,14 @@ def main():
             y_pred = model(batch, h, c)
             #print(y.shape, y_pred.shape)
 
-            loss = criterion(y_pred * y_mask, y * y_mask) / torch.sum(y_mask) # ${loss_change}
+            loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y_pred = np.round(y_pred.detach().cpu().numpy().flatten())
-            y = np.round(y.detach().cpu().numpy().flatten())
+            y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask == 1)]).flatten())
+            y = np.round(y.detach().cpu().numpy()[np.where(y_mask == 1)].flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
