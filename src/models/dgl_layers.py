@@ -66,9 +66,9 @@ class Res1dBlockUp(nn.Module):
     
 class Res1dDecoder(nn.Module):
     def __init__(self, in_channels = 1, n_res_layers = 4):
-        super(Res1dEncoder, self).__init__()
+        super(Res1dDecoder, self).__init__()
         
-        channels = [288, 96, 48, 24, 1]
+        channels = [288, 96, 48, 24, 3]
         
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
