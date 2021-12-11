@@ -137,7 +137,7 @@ def main():
         for ij in range(generator.length):
             optimizer.zero_grad()
             
-            x, y, edges, _, _ = generator.get_batch()
+            x, y, edges, y_mask = generator.get_batch()
             batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
             batch.ndata['x'] = x.to(device)
             
@@ -145,12 +145,12 @@ def main():
             
             h = torch.zeros((n, 128)).to(device)
             c = torch.zeros((n, 128)).to(device)
-            y = y.to(device)[150:300,:]
+            y = y.to(device)
 
-            y_pred = model(batch, h, c)[150:300,:]
+            y_pred = model(batch, h, c)
             #print(y.shape, y_pred.shape)
 
-            loss = criterion(y_pred, y) # ${loss_change}
+            loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
             loss.backward()
             optimizer.step()
             losses.append(loss.item())

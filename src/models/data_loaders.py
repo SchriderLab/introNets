@@ -84,7 +84,15 @@ class DGLDataGenerator(object):
         x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[1])), constant_values = -1)
         x = np.pad(x, ((0, 299), (0, 0)), constant_values = 0)
         
+        y_mask = np.ones(y.shape)
+        dpad =  self.n_sites - y.shape[1]
+        
         y = np.pad(y, ((0, 0), (0, self.n_sites - y.shape[1])), constant_values = -1)
+        y = np.pad(y, ((0, 299), (0, 0)), constant_values = 0)
+        
+        y_mask = np.pad(y_mask, ((0, 0), (0, dpad)), constant_values = 0)
+        y_mask = np.pad(y_mask, ((299, 0), (0, 0)), constant_values = 0)
+        y_mask[:150,:] = 0
         
         edges = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
         xg = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
@@ -93,19 +101,19 @@ class DGLDataGenerator(object):
         
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
-        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(edge_attr)
+        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(y_mask)
                                        
     
     def get_batch(self, val = False):
         xs = []
         ys = []
         edges = []
-        edge_attr = []
+        masks = []
         batch = []
         
         current_node = 0
         for ix in range(self.batch_size):
-            x, y, e, ex = self.get_element(val)
+            x, y, e, ym = self.get_element(val)
             
             n = x.shape[0]
             
@@ -118,12 +126,12 @@ class DGLDataGenerator(object):
             
             current_node += n
             
-            edge_attr.append(ex)
+            masks.append(ym)
             
         x = torch.cat(xs)
         y = torch.cat(ys)
 
-        return x, y, edges, edge_attr, torch.LongTensor(batch)
+        return x, y, edges, torch.FloatTensor(masks)
         
     def on_epoch_end(self):
         random.shuffle(self.training)
