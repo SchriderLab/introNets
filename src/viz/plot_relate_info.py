@@ -78,6 +78,7 @@ def main():
     n_samples_per = int(args.n_samples) // len(ifiles)
     
     for ifile in ifiles:
+        print(ifile)
         ifile = h5py.File(ifile, 'r')
         keys = list(ifile.keys())
         
