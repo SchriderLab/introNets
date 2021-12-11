@@ -115,7 +115,7 @@ def main():
                                  batch_size = int(args.batch_size))
     
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6713357505900737])).to(device)
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
@@ -140,6 +140,9 @@ def main():
             optimizer.zero_grad()
             
             x, y, edges, y_mask = generator.get_batch()
+            if x is None:
+                break
+            
             batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
             batch.ndata['x'] = x.to(device)
             
@@ -182,32 +185,32 @@ def main():
         Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
-                try:
-                    x, y, edges, batch = generator.get_batch(val = True)
-                    
-                    if x.shape[0] != y.shape[0]:
-                        continue
-                except:
+                x, y, edges, y_mask = generator.get_batch()
+                if x is None:
                     break
-
-                x = x.to(device)
+                
+                batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
+                batch.ndata['x'] = x.to(device)
+                
+                n = x.shape[0]
+                
+                h = torch.zeros((n, 128)).to(device)
+                c = torch.zeros((n, 128)).to(device)
                 y = y.to(device)
-                edges = [u.to(device) for u in edges]
-                batch = batch.to(device)
+                y_mask = y_mask.to(device)
     
-                y_pred = model(x, edges, batch)
-
-                loss = criterion(y_pred, y)
+                y_pred = model(batch, h, c)
+                #print(y.shape, y_pred.shape)
+    
+                loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
                 val_losses.append(loss.detach().item())
                 
                 # compute accuracy in CPU with sklearn
-                y_pred = y_pred.detach().cpu().numpy().flatten()
-                y = y.detach().cpu().numpy().flatten()
+                y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)]).flatten())
+                y = np.round(y.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)].flatten())
                 
                 val_accs.append(accuracy_score(np.round(y), np.round(y_pred)))
-                
-                Y.extend(y)
-                Y_pred.extend(y_pred)
+
         
         val_loss = np.mean(val_losses)
         history['val_loss'].append(val_loss)
@@ -222,20 +225,6 @@ def main():
             min_val_loss = val_loss
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
-            
-            Y = np.array(Y)
-            Y_pred = np.array(Y_pred)
-            
-            ix_ = list(np.random.choice(range(len(Y)), 1000, replace = False))
-            
-            fig, axes = plt.subplots(ncols = 2)
-            axes[0].scatter(Y[ix_], Y_pred[ix_], alpha = 0.1)
-            axes[0].plot([0, 1], [0, 1], color = 'k')
-            
-            axes[1].hist(Y_pred[ix_] - Y[ix_], bins = 35)
-            
-            plt.savefig(os.path.join(args.odir, '{}_best.png'.format(args.tag)))
-            plt.close()
 
             early_count = 0
         else:
