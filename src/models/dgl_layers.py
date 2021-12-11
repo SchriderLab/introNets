@@ -69,7 +69,7 @@ class TreeLSTM(nn.Module):
         self.out = nn.Conv2d(n_convs * 3 + 1, 1, 1)
         self.cell = TreeLSTMCell(h_size)
 
-    def forward(self, batch, h, c):
+    def forward(self, g, h, c):
         """Compute tree-lstm prediction given a batch.
 
         Parameters
@@ -86,9 +86,6 @@ class TreeLSTM(nn.Module):
         logits : Tensor
             The prediction of each node.
         """
-        g = batch.graph
-        # to heterogenous graph
-        g = dgl.graph(g.edges())
         
         ind, s = g.ndata['x'].shape
         

@@ -139,7 +139,7 @@ def main():
             
             x, y, edges, _, _ = generator.get_batch()
             batch = dgl.batch([dgl.graph((u[0,:].to(device), u[1,:].to(device))) for u in edges])
-            batch.graph.ndata['x'] = x.to(device)
+            batch.ndata['x'] = x.to(device)
             
             n = x.shape[0]
             
