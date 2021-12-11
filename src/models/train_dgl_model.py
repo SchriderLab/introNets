@@ -146,6 +146,7 @@ def main():
             h = torch.zeros((n, 128)).to(device)
             c = torch.zeros((n, 128)).to(device)
             y = y.to(device)
+            y_mask = y_mask.to(device)
 
             y_pred = model(batch, h, c)
             #print(y.shape, y_pred.shape)
