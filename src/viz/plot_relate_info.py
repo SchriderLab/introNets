@@ -50,7 +50,7 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None")
 
-    parser.add_argument("--n_samples", default = "1000")
+    parser.add_argument("--n_samples", default = "200")
 
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
