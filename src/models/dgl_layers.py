@@ -15,6 +15,7 @@ class TreeLSTMCell(nn.Module):
 
     def reduce_func(self, nodes):
         # concatenate h_jl for equation (1), (2), (3), (4)
+        print(nodes.mailbox['h'].shape)
         h_cat = nodes.mailbox['h'].view(nodes.mailbox['h'].size(0), -1)
         print(h_cat.shape)
         
