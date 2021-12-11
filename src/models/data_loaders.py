@@ -91,7 +91,7 @@ class DGLDataGenerator(object):
         y = np.pad(y, ((0, 299), (0, 0)), constant_values = 0)
         
         y_mask = np.pad(y_mask, ((0, 0), (0, dpad)), constant_values = 0)
-        y_mask = np.pad(y_mask, ((299, 0), (0, 0)), constant_values = 0)
+        y_mask = np.pad(y_mask, ((0, 299), (0, 0)), constant_values = 0)
         y_mask[:150,:] = 0
         
         edges = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
@@ -101,7 +101,7 @@ class DGLDataGenerator(object):
         
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
-        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(y_mask)
+        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), y_mask
                                        
     
     def get_batch(self, val = False):
