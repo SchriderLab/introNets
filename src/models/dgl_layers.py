@@ -185,7 +185,7 @@ class TreeLSTM(nn.Module):
         g.ndata['iou'] = g.ndata['iou'].relu_()
 
         # compute logits
-        h = self.dropout(g.ndata.pop('h')).view(ind, 144, 1, 16)
+        h = self.dropout(g.ndata.pop('h')).view(ind, 144, 1, 8)
         h = self.decoder(h)
         # take the hidden state, all the ious that we're convolved and concatenate
         
