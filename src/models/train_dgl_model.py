@@ -18,8 +18,6 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import NestedUNet
-from data_loaders import H5UDataGenerator
 import h5py
 
 import numpy as np
@@ -144,9 +142,9 @@ def main():
             
             h = torch.zeros((n, 128)).to(device)
             c = torch.zeros((n, 128)).to(device)
-            y = y.to(device)
+            y = y.to(device)[150:300,:]
 
-            y_pred = model(x, edges, batch)[:300,:]
+            y_pred = model(batch, h, c)[150:300,:]
             #print(y.shape, y_pred.shape)
 
             loss = criterion(y_pred, y) # ${loss_change}

@@ -23,7 +23,7 @@ from sklearn.neighbors import kneighbors_graph
 import networkx as nx
 import dgl
 
-class DGLDataGenerator(nn.Module):
+class DGLDataGenerator(object):
     def __init__(self, idir, n_sites = 128, 
                  batch_size = 4, val_prop = 0.05, k = 3, pop_size = 300, f_factor = 2):
         self.ifiles = [h5py.File(os.path.join(idir, u), 'r') for u in os.listdir(idir)]
