@@ -68,7 +68,7 @@ class Res1dDecoder(nn.Module):
     def __init__(self, in_channels = 1, n_res_layers = 4):
         super(Res1dDecoder, self).__init__()
         
-        channels = [288, 96, 48, 24, 3]
+        channels = [144, 96, 48, 24, 3]
         
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
@@ -136,6 +136,8 @@ class TreeLSTM(nn.Module):
         # at each iteration of topological message passing, convolve the node features across
             
         self.dropout = nn.Dropout(dropout)
+        self.out = nn.Conv2d(3, 1, 1, 1)
+        
         self.cell = TreeLSTMCell(256)
 
     def forward(self, g, h, c):
@@ -163,7 +165,7 @@ class TreeLSTM(nn.Module):
         
         # transform all the nodes via 1d convolution
         g.ndata['iou'] = self.encoder(g.ndata['x'])
-        print(g.ndata['iou'].shape)
+        g.ndata['iou'] = g.ndata['iou'].view(ind, -1)
 
         g.ndata['h'] = h
         g.ndata['c'] = c
@@ -175,32 +177,11 @@ class TreeLSTM(nn.Module):
                             apply_node_func=self.cell.apply_node_func, reverse = reverse)
         g.ndata['iou'] = g.ndata['iou'].relu_()
 
-        
-                          
-        for ix in range(1, len(self.convs)):
-            reverse = (not reverse)
-            
-            g.ndata['iou'] = self.down_convs[ix](self.norms[ix](self.convs[ix](g.ndata['iou'].view(ind, 3, 1, s)))).view(ind, 3 * s)
-            dgl.prop_nodes_topo(g,
-                            message_func=self.cell.message_func,
-                            reduce_func=self.cell.reduce_func,
-                            apply_node_func=self.cell.apply_node_func, reverse = reverse)
-            
-            g.ndata['iou'] = g.ndata['iou'].relu_()
-            xs.append(g.ndata['iou'].view(ind, 3, 1, s))
-            
-        # propagate
-        dgl.prop_nodes_topo(g,
-                            message_func=self.cell.message_func,
-                            reduce_func=self.cell.reduce_func,
-                            apply_node_func=self.cell.apply_node_func)
         # compute logits
-        h = self.dropout(g.ndata.pop('h'))
+        h = self.dropout(g.ndata.pop('h')).view(ind, 144, 1, 16)
+        h = self.decoder(h)
         # take the hidden state, all the ious that we're convolved and concatenate
         
-        # 3 * (n_convs + 1) channels
-        xs = torch.cat(xs + [h.view(ind, 1, 1, s)], dim = 1)
-
-        xs = torch.squeeze(self.out(xs))
-        return xs
+        h = torch.squeeze(self.out(h))
+        return h
 
