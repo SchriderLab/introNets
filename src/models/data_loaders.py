@@ -46,6 +46,8 @@ class DGLDataGenerator(object):
         
         self.length = len(self.training) // self.batch_size
         self.val_length = len(self.val) // self.batch_size
+        
+        self.on_epoch_end()
     
         
     def get_element(self, val = False):
