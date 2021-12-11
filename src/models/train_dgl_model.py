@@ -138,7 +138,7 @@ def main():
             optimizer.zero_grad()
             
             x, y, edges, _, _ = generator.get_batch()
-            batch = dgl.batch([dgl.graph((u[0,:].to(device), u[1,:].to(device))) for u in edges])
+            batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
             batch.ndata['x'] = x.to(device)
             
             n = x.shape[0]

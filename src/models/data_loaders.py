@@ -91,7 +91,7 @@ class DGLDataGenerator(object):
         n_mutations = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['n_mutations'])[:-1]
         n_mutations = n_mutations.reshape(n_mutations.shape[0], 1)
         
-        edge_attr = np.concatenate([xg[edges[1,:]] - xg[edges[0,:]], n_mutations], axis = 1)
+        edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
         return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(edge_attr)
                                        
