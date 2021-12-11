@@ -81,7 +81,7 @@ class DGLDataGenerator(object):
             x = np.array(self.ifiles[ix][key]['x'])[:,bp0:bp0 + self.n_sites]
             y = np.array(self.ifiles[ix][key]['y'])[:,bp0:bp0 + self.n_sites]
         
-        x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
+        x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[1])), constant_values = -1)
         x = np.pad(x, ((0, 299), (0, 0)), constant_values = 0)
         
         y = np.pad(y, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
