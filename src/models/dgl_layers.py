@@ -166,17 +166,11 @@ class TreeLSTM(nn.Module):
         g.ndata['x'] = (g.ndata['x']).view(ind, 1, 1, s)
         
         # transform all the nodes via 1d convolution
-        g.ndata['iou'] = self.encoder(g.ndata['x'])
-        print(g.ndata['iou'].shape)        
-        
+        g.ndata['iou'] = self.encoder(g.ndata['x'])              
         g.ndata['iou'] = g.ndata['iou'].view(ind, -1)
         
-        print(g.ndata['iou'].shape)
-
         g.ndata['h'] = h
         g.ndata['c'] = c
-        
-        print(g.ndata['h'].shape, g.ndata['c'].shape)
         
         dgl.prop_nodes_topo(g,
                             message_func=self.cell.message_func,
