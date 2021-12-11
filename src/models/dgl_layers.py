@@ -68,13 +68,13 @@ class Res1dDecoder(nn.Module):
     def __init__(self, in_channels = 1, n_res_layers = 4):
         super(Res1dDecoder, self).__init__()
         
-        channels = [48, 48, 48, 24, 3]
+        channels = [48, 48, 48, 24, 4]
         
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
         for ix in range(n_res_layers):
-            self.convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
+            self.convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 4, 2))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(channels[ix + 1]), nn.Dropout2d(0.05)))
             
     def forward(self, x):
