@@ -111,12 +111,12 @@ class TreeLSTM(nn.Module):
         for ix in range(1, len(self.convs)):
             reverse = (not reverse)
             
-            g.ndata['iou'] = self.down_convs[ix](self.norms[ix](self.convs[ix](g.ndata['iou'].view(ind, 3, 1, s))).relu_()).relu_().view(ind, 3 * s)
+            g.ndata['iou'] = self.down_convs[ix](self.norms[ix](self.convs[ix](g.ndata['iou'].view(ind, 3, 1, s)))).view(ind, 3 * s)
             dgl.prop_nodes_topo(g,
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
                             apply_node_func=self.cell.apply_node_func, reverse = reverse)
-            xs.append(g.ndata['iou'].view(ind, 3, 1, s))
+            xs.append(g.ndata['iou'].view(ind, 3, 1, s)).relu_()
             
         # propagate
         dgl.prop_nodes_topo(g,

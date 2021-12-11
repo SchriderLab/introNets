@@ -115,7 +115,7 @@ def main():
                                  batch_size = int(args.batch_size))
     
 
-    criterion = nn.BCEWithLogitsLoss(reduction = 'sum')
+    criterion = nn.BCEWithLogitsLoss()
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
