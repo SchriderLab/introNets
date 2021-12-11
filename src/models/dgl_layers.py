@@ -106,6 +106,7 @@ class TreeLSTM(nn.Module):
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
                             apply_node_func=self.cell.apply_node_func, reverse = reverse)
+        g.ndata['iou'] = g.ndata['iou'].relu_()
         xs = [g.ndata['iou'].view(ind, 3, 1, s)]
                           
         for ix in range(1, len(self.convs)):
@@ -116,7 +117,9 @@ class TreeLSTM(nn.Module):
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
                             apply_node_func=self.cell.apply_node_func, reverse = reverse)
-            xs.append(g.ndata['iou'].view(ind, 3, 1, s)).relu_()
+            
+            g.ndata['iou'] = g.ndata['iou'].relu_()
+            xs.append(g.ndata['iou'].view(ind, 3, 1, s))
             
         # propagate
         dgl.prop_nodes_topo(g,
