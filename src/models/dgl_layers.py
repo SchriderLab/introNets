@@ -3,12 +3,16 @@ import dgl
 import torch.nn as nn
 import torch
 
+from torch_geometric.nn import MessageNorm
+
 class TreeLSTMCell(nn.Module):
     def __init__(self, h_size):
         super(TreeLSTMCell, self).__init__()
         self.U_iou = nn.Linear(2 * h_size, 3 * h_size, bias=False)
         self.b_iou = nn.Parameter(torch.zeros(1, 3 * h_size))
         self.U_f = nn.Linear(2 * h_size, 2 * h_size)
+        self.norm_iou = MessageNorm(True)
+        self.norm_c = MessageNorm(True)
 
     def message_func(self, edges):
         return {'h': edges.src['h'], 'c': edges.src['c']}
@@ -23,7 +27,7 @@ class TreeLSTMCell(nn.Module):
         f = torch.sigmoid(self.U_f(h_cat)).view(*nodes.mailbox['h'].size())
         # second term of equation (5)
         c = torch.sum(f * nodes.mailbox['c'], 1)
-        return {'iou': self.U_iou(h_cat), 'c': c}
+        return {'iou': self.U_iou(self.norm_iou(nodes.data['iou'], h_cat)), 'c': self.norm_c(nodes.mailbox['c'][:,0,:], c)}
 
     def apply_node_func(self, nodes):
         # equation (1), (3), (4)
