@@ -47,7 +47,7 @@ class TreeLSTM(nn.Module):
         
         n_convs = n_cycles * 2
         
-        self.init_conv = Res1dBlock(1, 1, 3)
+        self.init_conv = Res1dBlock((1,), 1, 3)
         self.init_norm = nn.InstanceNorm2d(3)
         
         self.convs = nn.ModuleList()
@@ -59,9 +59,11 @@ class TreeLSTM(nn.Module):
         # at each iteration of topological message passing, convolve the node features across
         # the chromosome.
         for ix in range(n_convs):
-            self.convs.append(Res1dBlock(in_channels, conv_channels // 3, n_layers = 3))
+            self.convs.append(Res1dBlock((channels,), conv_channels // 3, n_layers = 3))
             self.down_convs.append(nn.Conv2d(conv_channels, 3, 1, bias = False))
             self.norms.append(nn.InstanceNorm2d(conv_channels))
+            
+            channels = conv_channels
             
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Conv2d(n_convs * 3 + 1, 1, 1)
