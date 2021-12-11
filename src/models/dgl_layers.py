@@ -112,7 +112,6 @@ class TreeLSTMCell(nn.Module):
         iou = nodes.data['iou'] + self.b_iou
         i, o, u = torch.chunk(iou, 3, 1)
         i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
-        print(i.shape, o.shape, u.shape)
         
         # equation (5)
         c = i * u + nodes.data['c']
@@ -176,13 +175,11 @@ class TreeLSTM(nn.Module):
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
                             apply_node_func=self.cell.apply_node_func, reverse = False)
-        g.ndata['iou'] = g.ndata['iou'].relu_()
         
         dgl.prop_nodes_topo(g,
                             message_func=self.cell.message_func,
                             reduce_func=self.cell.reduce_func,
                             apply_node_func=self.cell.apply_node_func, reverse = True)
-        g.ndata['iou'] = g.ndata['iou'].relu_()
 
         # compute logits
         h = self.dropout(g.ndata.pop('h')).view(ind, 48, 1, 8)
