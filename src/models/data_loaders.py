@@ -133,9 +133,9 @@ class DGLDataGenerator(object):
         x = torch.cat(xs)
         y = torch.cat(ys)
         masks = torch.cat(masks)
-        xg = torch.cat(xg)
+        xgs = torch.cat(xgs)
 
-        return x, y, edges, xg, masks
+        return x, y, edges, xgs, masks
         
     def on_epoch_end(self):
         random.shuffle(self.training)
