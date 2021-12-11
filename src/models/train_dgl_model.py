@@ -150,7 +150,7 @@ def main():
             n = x.shape[0]
             
             # include the pop and time of the node in the hidden state
-            h = torch.cat([xg, torch.zeros((n, 380))]).to(device)
+            h = torch.cat([xg, torch.zeros((n, 380))], dim = 1).to(device)
             c = torch.zeros((n, 384)).to(device)
             y = y.to(device)
             y_mask = y_mask.to(device)
@@ -197,7 +197,8 @@ def main():
                 
                 n = x.shape[0]
                 
-                h = torch.zeros((n, 384)).to(device)
+                # include the pop and time of the node in the hidden state
+                h = torch.cat([xg, torch.zeros((n, 380))], dim = 1).to(device)
                 c = torch.zeros((n, 384)).to(device)
                 y = y.to(device)
                 y_mask = y_mask.to(device)
