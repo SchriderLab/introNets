@@ -34,6 +34,7 @@ class DGLDataGenerator(object):
             
             self.training.extend([(ix, u) for u in keys_])
             
+        print(len(self.training))
         n_val = int(len(self.training) * val_prop)
         random.shuffle(self.training)
         
