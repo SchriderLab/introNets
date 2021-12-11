@@ -16,6 +16,8 @@ class TreeLSTMCell(nn.Module):
     def reduce_func(self, nodes):
         # concatenate h_jl for equation (1), (2), (3), (4)
         h_cat = nodes.mailbox['h'].view(nodes.mailbox['h'].size(0), -1)
+        print(h_cat.shape)
+        
         # equation (2)
         f = torch.sigmoid(self.U_f(h_cat)).view(*nodes.mailbox['h'].size())
         # second term of equation (5)
