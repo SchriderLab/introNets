@@ -49,7 +49,7 @@ class Res1dBlockUp(nn.Module):
         
         self.activation = nn.ReLU()
         
-    def forward(self, x, edge_index, edge_attr, batch):
+    def forward(self, x):
         x = self.up(x)
         
         batch_size, n_channels, n_ind, n_sites = x.shape
