@@ -148,8 +148,8 @@ def main():
             
             n = x.shape[0]
             
-            h = torch.zeros((n, 128)).to(device)
-            c = torch.zeros((n, 128)).to(device)
+            h = torch.zeros((n, 384)).to(device)
+            c = torch.zeros((n, 384)).to(device)
             y = y.to(device)
             y_mask = y_mask.to(device)
 
