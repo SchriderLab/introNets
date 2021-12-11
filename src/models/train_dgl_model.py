@@ -164,7 +164,8 @@ def main():
             losses.append(loss.item())
 
             # compute accuracy in CPU with sklearn
-            y = np.round(y.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)].flatten())
+            y_pred = np.round(expit(y_pred.detach().cpu().numpy()[y_mask.detach().cpu().numpy()]).flatten())
+            y = np.round(y.detach().cpu().numpy()[y_mask.detach().cpu().numpy()].flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))
@@ -207,8 +208,8 @@ def main():
                 val_losses.append(loss.detach().item())
                 
                 # compute accuracy in CPU with sklearn
-                y_pred = np.round(expit(y_pred.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)]).flatten())
-                y = np.round(y.detach().cpu().numpy()[np.where(y_mask.detach().cpu().numpy() == 1)].flatten())
+                y_pred = np.round(expit(y_pred.detach().cpu().numpy()[y_mask.detach().cpu().numpy()]).flatten())
+                y = np.round(y.detach().cpu().numpy()[y_mask.detach().cpu().numpy()].flatten())
                 
                 val_accs.append(accuracy_score(np.round(y), np.round(y_pred)))
 
