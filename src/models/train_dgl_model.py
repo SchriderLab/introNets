@@ -7,6 +7,7 @@ import logging
 import torch
 from torch.nn import CrossEntropyLoss, KLDivLoss, NLLLoss, SmoothL1Loss, BCELoss, BCEWithLogitsLoss
 import torch
+torch.autograd.set_detect_anomaly(True)
 
 from torch import nn
 
