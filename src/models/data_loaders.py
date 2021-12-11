@@ -84,9 +84,7 @@ class DGLDataGenerator(object):
         x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[1])), constant_values = -1)
         x = np.pad(x, ((0, 299), (0, 0)), constant_values = 0)
         
-        y = np.pad(y, ((0, 0), (0, self.n_sites - x.shape[1])), constant_values = -1)
-        
-        print(x.shape, y.shape)
+        y = np.pad(y, ((0, 0), (0, self.n_sites - y.shape[1])), constant_values = -1)
         
         edges = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
         xg = np.array(self.ifiles[ix][key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
