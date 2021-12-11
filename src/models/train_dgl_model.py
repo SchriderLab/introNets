@@ -113,7 +113,7 @@ def main():
                                  batch_size = int(args.batch_size))
     
 
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.BCEWithLogitsLoss(reduction = 'sum')
     
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
@@ -151,7 +151,7 @@ def main():
             y_pred = model(batch, h, c)
             #print(y.shape, y_pred.shape)
 
-            loss = criterion(y_pred * y_mask, y * y_mask) # ${loss_change}
+            loss = criterion(y_pred * y_mask, y * y_mask) / torch.sum(y_mask) # ${loss_change}
             loss.backward()
             optimizer.step()
             losses.append(loss.item())
