@@ -68,7 +68,7 @@ class Res1dDecoder(nn.Module):
     def __init__(self, in_channels = 1, n_res_layers = 4):
         super(Res1dDecoder, self).__init__()
         
-        channels = [144, 96, 48, 24, 3]
+        channels = [48, 48, 48, 24, 3]
         
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
@@ -185,7 +185,7 @@ class TreeLSTM(nn.Module):
         g.ndata['iou'] = g.ndata['iou'].relu_()
 
         # compute logits
-        h = self.dropout(g.ndata.pop('h')).view(ind, 144, 1, 8)
+        h = self.dropout(g.ndata.pop('h')).view(ind, 48, 1, 8)
         h = self.decoder(h)
         # take the hidden state, all the ious that we're convolved and concatenate
         
