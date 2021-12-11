@@ -21,7 +21,108 @@ import pickle
 from sklearn.neighbors import kneighbors_graph
 
 import networkx as nx
+import dgl
 
+class DGLDataGenerator(nn.Module):
+    def __init__(self, idir, n_sites = 128, 
+                 batch_size = 4, val_prop = 0.05, k = 3, pop_size = 300, f_factor = 2):
+        self.ifiles = [h5py.File(os.path.join(idir, u), 'r') for u in os.listdir(idir)]
+        
+        self.training = []
+        for ix in range(len(self.ifiles)):
+            keys_ = list(self.ifiles[ix])
+            
+            self.training.extend([(ix, u) for u in keys_])
+            
+        n_val = int(len(self.training) * val_prop)
+        random.shuffle(self.training)
+        
+        self.val = self.training[:n_val]
+        del self.training[:n_val]
+        
+        self.n_sites = n_sites
+        self.batch_size = batch_size
+        
+        self.length = len(self.training) // self.batch_size
+        self.val_length = len(self.val) // self.batch_size
+    
+        
+    def get_element(self, val = False):
+        if val:
+            if self.val_ix >= len(self.val):
+                return None, None, None
+            
+            ix, key = self.val[self.val_ix]
+            self.val_ix += 1
+        else:
+            if self.ix >= len(self.training):
+                return None, None, None
+            
+            ix, key = self.training[self.ix]
+            self.ix += 1
+            
+        bp = np.array(self.ifile[ix][key]['break_points'])
+        if len(bp) <= 1:
+            return self.get_element(val)
+        
+        bp_ix = np.random.choice(range(len(bp) - 1))
+        
+        bp0 = bp[bp_ix]
+        bp1 = bp[bp_ix + 1]
+        
+        x = np.array(self.ifiles[ix][key]['x'])[:,bp0:bp1]
+        y = np.array(self.ifiles[ix][key]['y'])[:,bp0:bp1]
+        
+        x = np.pad(x, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
+        x = np.pad(x, ((0, 299), (0, 0)), constant_values = 0)
+        
+        y = np.pad(y, ((0, 0), (0, self.n_sites - x.shape[0])), constant_values = -1)
+        
+        edges = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
+        xg = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
+        n_mutations = np.array(self.ifile[ix][key]['graph']['{}'.format(bp_ix)]['n_mutations'])[:-1]
+        n_mutations = n_mutations.reshape(n_mutations.shape[0], 1)
+        
+        edge_attr = np.concatenate([xg[edges[1,:]] - xg[edges[0,:]], n_mutations], axis = 1)
+        
+        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(edge_attr)
+                                       
+    
+    def get_batch(self, val = False):
+        xs = []
+        ys = []
+        edges = []
+        edge_attr = []
+        batch = []
+        
+        current_node = 0
+        for ix in range(self.batch_size):
+            x, y, e, ex = self.get_element(val)
+            
+            n = x.shape[0]
+            
+            edges.append(e)
+                
+            batch.extend(np.repeat(ix, n))
+    
+            xs.append(x)
+            ys.append(y)
+            
+            current_node += n
+            
+            edge_attr.append(ex)
+            
+        x = torch.cat(xs)
+        y = torch.cat(ys)
+
+        return x, y, edges, edge_attr, torch.LongTensor(batch)
+        
+        
+        
+        
+        
+        
+        
 
 
 def load_npz(ifile):
