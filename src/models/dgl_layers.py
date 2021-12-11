@@ -47,7 +47,7 @@ class TreeLSTM(nn.Module):
         
         n_convs = n_cycles * 2
         
-        self.init_conv = nn.Res1dBlock(1, 1, 3)
+        self.init_conv = Res1dBlock(1, 1, 3)
         self.init_norm = nn.InstanceNorm2d(3)
         
         self.convs = nn.ModuleList()
