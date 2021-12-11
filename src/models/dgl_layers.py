@@ -15,9 +15,9 @@ class TreeLSTMCell(nn.Module):
 
     def reduce_func(self, nodes):
         # concatenate h_jl for equation (1), (2), (3), (4)
-        print(nodes.mailbox['h'].shape)
+        #print(nodes.mailbox['h'].shape)
         h_cat = nodes.mailbox['h'].view(nodes.mailbox['h'].size(0), -1)
-        print(h_cat.shape)
+        #print(h_cat.shape)
         
         # equation (2)
         f = torch.sigmoid(self.U_f(h_cat)).view(*nodes.mailbox['h'].size())
@@ -66,7 +66,7 @@ class TreeLSTM(nn.Module):
             self.down_convs.append(nn.Conv2d(conv_channels, 3, 1, bias = False))
             self.norms.append(nn.InstanceNorm2d(conv_channels))
             
-            channels = conv_channels
+            channels = 3
             
         self.dropout = nn.Dropout(dropout)
         self.out = nn.Conv2d(n_convs * 3 + 1, 1, 1)
