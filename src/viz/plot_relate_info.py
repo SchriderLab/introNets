@@ -82,7 +82,7 @@ def main():
         keys = list(ifile.keys())
         
         for k in range(n_samples_per):
-            key = np.random.choice(keys)
+            key = keys[k]
             bp = np.array(ifile[key]['break_points'])
             
             if len(bp) > 0:
