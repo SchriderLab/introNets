@@ -79,7 +79,7 @@ def main():
     
     for ifile in ifiles:
         ifile = h5py.File(ifile, 'r')
-        keys = list(ifiles.keys())
+        keys = list(ifile.keys())
         
         for k in range(n_samples_per):
             key = np.random.choice(keys)
