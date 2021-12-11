@@ -30,7 +30,7 @@ class DGLDataGenerator(object):
         
         self.training = []
         for ix in range(len(self.ifiles)):
-            keys_ = list(self.ifiles[ix])
+            keys_ = list(self.ifiles[ix].keys())
             
             self.training.extend([(ix, u) for u in keys_])
             
@@ -117,7 +117,11 @@ class DGLDataGenerator(object):
 
         return x, y, edges, edge_attr, torch.LongTensor(batch)
         
+    def on_epoch_end(self):
+        random.shuffle(self.training)
         
+        self.ix = 0
+        self.val_ix = 0
         
         
         
