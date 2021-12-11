@@ -140,7 +140,7 @@ def main():
         for ij in range(generator.length):
             optimizer.zero_grad()
             
-            x, y, edges, y_mask = generator.get_batch()
+            x, y, edges, xg, y_mask = generator.get_batch()
             if x is None:
                 break
             
@@ -149,7 +149,8 @@ def main():
             
             n = x.shape[0]
             
-            h = torch.zeros((n, 384)).to(device)
+            # include the pop and time of the node in the hidden state
+            h = torch.cat([xg, torch.zeros((n, 380))]).to(device)
             c = torch.zeros((n, 384)).to(device)
             y = y.to(device)
             y_mask = y_mask.to(device)
@@ -187,7 +188,7 @@ def main():
         Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
-                x, y, edges, y_mask = generator.get_batch(val = True)
+                x, y, edges, xg, y_mask = generator.get_batch(val = True)
                 if x is None:
                     break
                 
