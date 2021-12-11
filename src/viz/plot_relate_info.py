@@ -82,6 +82,8 @@ def main():
         ifile = h5py.File(ifile, 'r')
         keys = list(ifile.keys())
         
+        random.shuffle(keys)
+        
         for k in range(n_samples_per):
             key = keys[k]
             bp = np.array(ifile[key]['break_points'])
@@ -94,6 +96,9 @@ def main():
     
     ax = fig.add_subplot(111)
     ax.hist(segment_lengths, bins = 35)
+    
+    print(np.max(segment_lengths))
+    print(np.min(segment_length))
     
     plt.savefig(os.path.join(args.odir, 'segl_hist.png'), dpi = 100)
     plt.close()
