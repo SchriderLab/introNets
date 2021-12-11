@@ -101,7 +101,7 @@ class DGLDataGenerator(object):
         
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
-        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), y_mask
+        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(y_mask)
                                        
     
     def get_batch(self, val = False):
@@ -130,9 +130,9 @@ class DGLDataGenerator(object):
             
         x = torch.cat(xs)
         y = torch.cat(ys)
-        masks = np.array(masks)
+        masks = torch.cat(masks)
 
-        return x, y, edges, torch.FloatTensor(masks)
+        return x, y, edges, masks
         
     def on_epoch_end(self):
         random.shuffle(self.training)
