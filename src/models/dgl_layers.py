@@ -15,7 +15,7 @@ class Res1dEncoder(nn.Module):
         self.norms = nn.ModuleList()
         
         for ix in range(n_res_layers):
-            self.convs.append(Res1dBlock(channels[ix], channels[ix + 1] // 3, 3))
+            self.convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(channels[ix + 1]), nn.Dropout2d(0.05)))
             
         self.out = nn.Conv2d(channels[-1], channels[-1] // 2, 1, 1)
