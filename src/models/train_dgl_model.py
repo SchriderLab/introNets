@@ -112,7 +112,7 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = DGLH5DataGenerator(args.idir,
+    generator = DGLH5DataGenerator(args.ifile,
                                  batch_size = int(args.batch_size))
     
 
