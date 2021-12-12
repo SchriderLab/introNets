@@ -131,7 +131,9 @@ class TreeResUNet(nn.Module):
         g.ndata['h'] = self.h_mlp(h)
         g.ndata['c'] = c
         
-        g.ndata['iou'] = self.down_transforms[0](x.view(-1, ind))
+        print(x.view(ind, -1).shape)
+        
+        g.ndata['iou'] = self.down_transforms[0](x.view(ind, -1))
         
         dgl.prop_nodes_topo(g,
                             message_func=self.down_lstms[0].message_func,
