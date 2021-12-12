@@ -31,6 +31,7 @@ class DGLH5DataGenerator(object):
         self.reset_keys(True)
         
         self.n_per = batch_size // chunk_size
+        self.batch_size = batch_size
         
         self.val_length = len(self.val_keys) // self.n_per
         
@@ -89,7 +90,7 @@ class DGLH5DataGenerator(object):
         
         Y = Y * (1 - ey) + 0.5 * ey
             
-        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y), edge_index, torch.FloatTensor(np.concatenate(xg)), torch.BoolTensor(np.concatenate(masks) == 1)
+        return torch.FloatTensor(np.concatenate(X)).view(X[-1].shape[1] * self.batch_size, -1), torch.FloatTensor(Y).view(X[-1].shape[1] * self.batch_size, -1), edge_index, torch.FloatTensor(np.concatenate(xg)).view(X[-1].shape[1] * self.batch_size, -1), torch.BoolTensor(np.concatenate(masks) == 1).view(X[-1].shape[1] * self.batch_size, -1)
 
 class DGLDataGenerator(object):
     def __init__(self, idir, n_sites = 128, 
