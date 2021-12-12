@@ -112,7 +112,7 @@ class TreeResUNet(nn.Module):
         self.up_norms = nn.ModuleList()
         
         for ix in range(len(channels) - 1):
-            self.down_convs.append(Res1dBlockUp((channels[ix],), channels[ix + 1] // 3, 3))
+            self.down_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
 
