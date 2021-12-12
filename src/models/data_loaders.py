@@ -66,8 +66,13 @@ class DGLH5DataGenerator(object):
         start_node = 0
         counter = 0
         for key in keys:
-            x = np.array(self.ifile[key]['x_0'])
-            y = np.array(self.ifile[key]['y'])
+            x = np.array(self.ifile[key]['x_0']).astype(np.float32)
+            y = np.array(self.ifile[key]['y']).astype(np.float32)
+            
+            x = (x - np.min(x)) / (np.max(x) - np.min(x))
+            y = (y - np.min(y)) / (np.max(y) - np.min(y))
+            
+            
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             xg_ = np.array(self.ifile[key]['xg'])
             
