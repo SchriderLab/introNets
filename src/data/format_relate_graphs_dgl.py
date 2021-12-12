@@ -129,7 +129,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
     
-    ifiles = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
+    ifiles = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if u.split('.')[-1] == 'hdf5']
     chunk_size = 4
     
     nn_samp = range(int(args.k))
