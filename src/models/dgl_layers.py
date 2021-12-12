@@ -145,11 +145,11 @@ class TreeResUNet(nn.Module):
             self.up_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
             self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2))
 
-        self.up1_0_lstm = Res1dBlock(12, 1, 2, pooling = None)
-        self.up2_1_lstm = Res1dBlock(12, 1, 2)
+        self.up1_0_lstm = Res1dBlock((12,), 1, 2, pooling = None)
+        self.up2_1_lstm = Res1dBlock((12,), 1, 2)
 
-        self.up3_2_lstm = nn.Sequential(Res1dBlock(12, 1, 2), Res1dBlock(2, 1, 2))        
-        self.up4_3_lstm = nn.Sequential(Res1dBlock(12, 1, 2), Res1dBlock(2, 1, 2), Res1dBlock(2, 1, 2))
+        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2))        
+        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2), Res1dBlock((2,), 1, 2))
         
     def forward(self, g, h):
         ind, s = g.ndata['x'].shape
