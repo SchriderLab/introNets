@@ -167,7 +167,13 @@ def main():
 
             # compute accuracy in CPU with sklearn
             y_pred = np.round(expit(y_pred.detach().cpu().numpy()[y_mask.detach().cpu().numpy()]).flatten())
-            y = np.round(y.detach().cpu().numpy()[y_mask.detach().cpu().numpy()].flatten())
+            y = y.detach().cpu().numpy()
+            fig, axes = plt.subplots(nrows = 2)
+            
+            plt.imshow(y)
+            plt.show()
+            
+            y = np.round(y[y_mask.detach().cpu().numpy()].flatten())
 
             # append metrics for this epoch
             accuracies.append(accuracy_score(y, y_pred))

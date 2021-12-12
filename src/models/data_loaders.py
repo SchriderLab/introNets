@@ -69,9 +69,8 @@ class DGLH5DataGenerator(object):
             x = np.array(self.ifile[key]['x_0']).astype(np.float32)
             y = np.array(self.ifile[key]['y']).astype(np.float32)
             
-            x = (x - np.min(x)) / (np.max(x) - np.min(x))
-            y = (y - np.min(y)) / (np.max(y) - np.min(y))
-            
+            x[x == 255] = -1.
+            y[y == 255] = -1.
             
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             xg_ = np.array(self.ifile[key]['xg'])
