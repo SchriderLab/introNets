@@ -158,7 +158,7 @@ class TreeResUNet(nn.Module):
             g.ndata['h'] = self.h_mlp(h)
             g.ndata['c'] = torch.zeros((ind, self.h_sizes[ix])).to(torch.device('cuda'))
             
-            g.ndata['iou'] = self.down_transforms[ix](x.view(-1, ind))
+            g.ndata['iou'] = self.down_transforms[ix](x.view(ind, -1))
             
             dgl.prop_nodes_topo(g,
                                 message_func=self.down_lstms[ix].message_func,
