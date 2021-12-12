@@ -204,7 +204,7 @@ class TreeResUNet(nn.Module):
             vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
             
         # go back up for the lstm
-        vs[-1] = self.up4_3(vs[-1].view(ind, 12, 1, 64))
+        vs[-1] = self.up4_3_lstm(vs[-1].view(ind, 12, 1, 64))
         print(vs[-1].shape)
         xs[-1] = self.up_norms[0](self.up_convs[0](xs[-1]))
         print(xs[-1].shape)
