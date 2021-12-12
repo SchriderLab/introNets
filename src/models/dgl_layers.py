@@ -169,10 +169,11 @@ class TreeResUNet(nn.Module):
         vs = []
         
         # go down
-        x = self.down_norms[0](self.down_convs[0](xs[-1]))
+        x, x_ = self.down_convs[0](xs[-1], return_unpooled = True)
+        x = self.norms_down[0](x)
         xs.append(x)
         
-        xs[0] = torch.cat(xs, dim = 1)
+        xs[0] = torch.cat([x_, xs[0]] dim = 1)
         
         g.ndata['h'] = self.h_mlp(h)
         g.ndata['c'] = torch.zeros((ind, self.h_sizes[0])).to(torch.device('cuda'))
