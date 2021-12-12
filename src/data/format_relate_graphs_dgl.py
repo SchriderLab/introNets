@@ -76,7 +76,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         y_mask = np.pad(y_mask, ((0, 299), (0, 0)), constant_values = 0)
         y_mask[:150,:] = 0
         
-        edges = np.array(ifile[key][key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
+        edges = np.array(ifile[key]['graph']['{}'.format(bp_ix)]['edge_index'])[:,:-1]
         xg = np.array(ifile[key]['graph']['{}'.format(bp_ix)]['xg'])[:-1,:]
         n_mutations = np.array(ifile[key]['graph']['{}'.format(bp_ix)]['n_mutations'])[:-1]
         n_mutations = n_mutations.reshape(n_mutations.shape[0], 1)
