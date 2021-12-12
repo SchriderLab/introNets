@@ -144,13 +144,15 @@ def main():
             if x is None:
                 break
             
+            print(x.shape, xg.shape, y.shape)
+            
             batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
             batch.ndata['x'] = x.to(device)
             
             n = x.shape[0]
             
             # include the pop and time of the node in the hidden state
-            h = torch.cat([xg, torch.zeros((n, 380))], dim = 1).to(device)
+            h = xg.to(device)
             c = torch.zeros((n, 384)).to(device)
             y = y.to(device)
             y_mask = y_mask.to(device)
