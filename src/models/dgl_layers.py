@@ -143,22 +143,22 @@ class TreeResUNet(nn.Module):
         self.up_norms = nn.ModuleList()
             
         # left side of the u
-        channels = [96, 48, 27, 9, 3]
+        channels = [96, 48, 27, 9, 9]
         for ix in range(len(channels) - 1):
             self.up_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
-            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2 + 2))
+            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2 + 8))
             
-            channels[ix + 1] = channels[ix + 1] * 2 + 2
+            channels[ix + 1] = channels[ix + 1] * 2 + 8
 
-        self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 1, 2, pooling = None), nn.Dropout2d(0.1))
-        self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1))
+        self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 8, 2, pooling = None), nn.Dropout2d(0.1))
+        self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1))
 
-        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1), Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1))        
-        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1), 
-                                        Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1), 
-                                        Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1))
+        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1), Res1dBlock((8,), 8, 2), nn.Dropout2d(0.1))        
+        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1), 
+                                        Res1dBlock((8,), 8, 2), nn.Dropout2d(0.1), 
+                                        Res1dBlock((8,), 8, 2), nn.Dropout2d(0.1))
         
-        self.out = nn.Conv2d(6, 1, 1)
+        self.out = nn.Conv2d(26, 1, 1)
         
     def forward(self, g, h):
         ind, s = g.ndata['x'].shape
