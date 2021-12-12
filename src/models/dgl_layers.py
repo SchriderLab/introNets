@@ -135,7 +135,7 @@ class TreeResUNet(nn.Module):
             self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.LayerNorm(self.h_sizes[ix] * 3)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
-            self.down_ls_norms.append(nn.LayerNorm(784))
+            self.down_ls_norms.append(nn.LayerNorm(768))
             
             self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
             
