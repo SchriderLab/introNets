@@ -215,17 +215,14 @@ class TreeResUNet(nn.Module):
             vs.append(self.down_ls_norms[ix](torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1)))
             
         # go back up for the lstm
-        vs[-1] = self.up4_3_lstm(vs[-1].view(ind, 12, 1, 64))
-        xs[-2] = self.up_norms[0](torch.cat([xs[-2], vs[-1], self.up_convs[0](xs[-1])], dim = 1))
 
-        vs[-2] = self.up3_2_lstm(vs[-2].view(ind, 12, 1, 64))
-        xs[-3] = self.up_norms[1](torch.cat([xs[-3], vs[-2], self.up_convs[1](xs[-2])], dim = 1))
+        xs[-2] = self.up_norms[0](torch.cat([xs[-2], self.up4_3_lstm(vs[-1].view(ind, 12, 1, 64)), self.up_convs[0](xs[-1])], dim = 1))
+
+        xs[-3] = self.up_norms[1](torch.cat([xs[-3], self.up3_2_lstm((vs[-2] + vs[-1]).view(ind, 12, 1, 64)), self.up_convs[1](xs[-2])], dim = 1))
         
-        vs[-3] = self.up2_1_lstm(vs[-3].view(ind, 12, 1, 64))
-        xs[-4] = self.up_norms[2](torch.cat([xs[-4], vs[-3], self.up_convs[2](xs[-3])], dim = 1))
-        
-        vs[-4] = self.up1_0_lstm(vs[-4].view(ind, 12, 1, 64))
-        xs[-5] = self.up_norms[3](torch.cat([xs[-5], vs[-4], self.up_convs[3](xs[-4])], dim = 1))
+        xs[-4] = self.up_norms[2](torch.cat([xs[-4], self.up2_1_lstm((vs[-3] + vs[-2] + vs[-1]).view(ind, 12, 1, 64)), self.up_convs[2](xs[-3])], dim = 1))
+    
+        xs[-5] = self.up_norms[3](torch.cat([xs[-5],  self.up1_0_lstm((vs[-4] + vs[-3] + vs[-2] + vs[-1]).view(ind, 12, 1, 64)), self.up_convs[3](xs[-4])], dim = 1))
         
         del vs
         
