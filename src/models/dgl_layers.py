@@ -153,8 +153,8 @@ class TreeResUNet(nn.Module):
         self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 12, 2, pooling = None), nn.Dropout2d(0.1))
         self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1))
 
-        self.up3_2_lstm = nn.ModuleList(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1))        
-        self.up4_3_lstm = nn.ModuleList(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), 
+        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1))        
+        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), 
                                         Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1), 
                                         Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1))
         
