@@ -126,12 +126,15 @@ class TreeResUNet(nn.Module):
         self.down_convs = nn.ModuleList()
         self.down_norms = nn.ModuleList()
         
+        self.c0 = Res1dBlock((1,), 3, 3)
+        
         self.down_transforms = nn.ModuleList()
         self.down_lstms = nn.ModuleList()
         self.down_ls_norms = nn.ModuleList()
         
         for ix in range(len(channels) - 1):
-            self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
+            if ix != 0:
+                self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
             self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.LayerNorm(self.h_sizes[ix] * 3)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
@@ -169,7 +172,7 @@ class TreeResUNet(nn.Module):
         vs = []
         
         # go down
-        x, x_ = self.down_convs[0](xs[-1], return_unpooled = True)
+        x, x_ = self.c0(xs[-1], return_unpooled = True)
         x = self.norms_down[0](x)
         xs.append(x)
         
