@@ -157,7 +157,7 @@ def main():
             y_pred = model(batch, h)
             #print(y.shape, y_pred.shape)
             
-            print(torch.masked_select(y, y_mask))
+            print(torch.masked_select(y, y_mask).max(), torch.masked_select(y, y_mask).min())
 
             loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
 
