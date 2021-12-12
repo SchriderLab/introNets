@@ -247,6 +247,8 @@ def main():
                     
                 x = []
                 y = []
+                xg = []
+                mask = []
                 edge_attr = []
                 edge_index = []
                 
@@ -280,6 +282,8 @@ def main():
                     
                 x_val = []
                 y_val = []
+                xg_val = []
+                mask_val = []
                 edge_attr_val = []
                 edge_index_val = []
     
