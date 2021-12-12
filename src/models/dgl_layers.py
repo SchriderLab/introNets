@@ -83,6 +83,35 @@ class Res1dDecoder(nn.Module):
             
         return x
     
+class Attention_block(nn.Module):
+    def __init__(self,F_g,F_l,F_int):
+        super(Attention_block,self).__init__()
+        self.W_g = nn.Sequential(
+            nn.Conv2d(F_g, F_int, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(F_int)
+            )
+        
+        self.W_x = nn.Sequential(
+            nn.Conv2d(F_l, F_int, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(F_int)
+        )
+
+        self.psi = nn.Sequential(
+            nn.Conv2d(F_int, 1, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+        
+        self.relu = nn.ReLU(inplace=True)
+        
+    def forward(self,g,x):
+        g1 = self.W_g(g)
+        x1 = self.W_x(x)
+        psi = self.relu(g1+x1)
+        psi = self.psi(psi)
+
+        return x*psi
+    
 class TreeResUNet(nn.Module):
     def __init__(self, n_layers = 4):
         super(TreeResUNet, self).__init__()
@@ -107,16 +136,21 @@ class TreeResUNet(nn.Module):
             
             self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
             
-        channels = [96, 48, 27, 9, 3]
-        
         self.up_convs = nn.ModuleList()
         self.up_norms = nn.ModuleList()
-        
+            
+        # left side of the u
+        channels = [96, 48, 27, 9, 3]
         for ix in range(len(channels) - 1):
             self.up_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
-            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
-            
+            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2))
 
+        self.up1_0_lstm = Res1dBlock(12, 1, 2, pooling = None)
+        self.up2_1_lstm = Res1dBlock(12, 1, 2)
+
+        self.up3_2_lstm = nn.Sequential(Res1dBlock(12, 1, 2), Res1dBlock(2, 1, 2))        
+        self.up4_3_lstm = nn.Sequential(Res1dBlock(12, 1, 2), Res1dBlock(2, 1, 2), Res1dBlock(2, 1, 2))
+        
     def forward(self, g, h):
         ind, s = g.ndata['x'].shape
         
@@ -148,19 +182,13 @@ class TreeResUNet(nn.Module):
         vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
         
         for ix in range(1, len(self.down_convs)):
-            print(ix, x.shape)
-            
             # go down
             x = self.down_norms[ix](self.down_convs[ix](xs[-1]))
-            
-            print(x.shape)
             
             g.ndata['h'] = self.h_mlp(h)
             g.ndata['c'] = torch.zeros((ind, self.h_sizes[ix])).to(torch.device('cuda'))
             
             g.ndata['iou'] = self.down_transforms[ix](x.view(ind, -1))
-            
-            print(g.ndata['h'].shape, g.ndata['iou'].shape, g.ndata['c'].shape)
             
             dgl.prop_nodes_topo(g,
                                 message_func=self.down_lstms[ix].message_func,
@@ -175,8 +203,18 @@ class TreeResUNet(nn.Module):
             xs.append(x)
             vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
             
-        print([u.shape for u in xs])
-        print([u.shape for u in vs])
+        # go back up for the lstm
+        vs[-1] = self.up4_3(vs[-1].view(ind, 12, 1, 64))
+        print(vs[-1].shape)
+        xs[-1] = self.up_norms[0](self.up_convs[0](xs[-1]))
+        print(xs[-1].shape)
+        
+        xs[-2] = torch.cat([xs[-2], self.up_norms[0](self.up_convs[0](xs[-1])), vs[-1]], dim = 1)
+        
+        vs[-2] = self.up3_2(vs[-2].view(ind, 12, 1, 64))
+        xs[-3] = torch.cat([xs[-3], self.up_norms[1](self.upconvs[1](xs[-2])), vs[-2]], dim = 2)
+        
+            
             
         
         
