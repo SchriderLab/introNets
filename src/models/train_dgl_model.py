@@ -33,12 +33,12 @@ matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 from layers import GCNUNet_i2, GCNUNet_i3
-from data_loaders import GCNDataGenerator, DGLDataGenerator
+from data_loaders import GCNDataGenerator, DGLDataGenerator, DGLH5DataGenerator
 import glob
 
 from scipy.special import expit
 
-from dgl_layers import TreeLSTM
+from dgl_layers import TreeLSTM, TreeResUNet
 import dgl
 
 def parse_args():
@@ -98,7 +98,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = TreeLSTM()
+    model = TreeResUNet()
     print(model)
     
     
@@ -112,7 +112,7 @@ def main():
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
         
-    generator = DGLDataGenerator(args.idir,
+    generator = DGLH5DataGenerator(args.idir,
                                  batch_size = int(args.batch_size))
     
 

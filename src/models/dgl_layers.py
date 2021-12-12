@@ -9,7 +9,7 @@ class Res1dEncoder(nn.Module):
     def __init__(self, in_channels = 1, n_res_layers = 4):
         super(Res1dEncoder, self).__init__()
         
-        channels = [1, 24, 48, 96, 288]
+        channels = [1, 12, 24, 48, 96]
         
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
@@ -82,6 +82,94 @@ class Res1dDecoder(nn.Module):
             x = norm(conv(x))
             
         return x
+    
+class TreeResUNet(nn.Module):
+    def __init__(self, n_layers = 4):
+        super(TreeResUNet, self).__init__()
+        channels = [1, 9, 27, 48, 96]
+        h_sizes = [192, 256, 512, 1024]
+        
+        self.h_mlp = nn.Sequential(nn.Linear(4, 16), nn.LayerNorm(16),
+                                   nn.ReLU(), nn.Linear(16, 64), nn.LayerNorm(64), nn.ReLU(), 
+                                   nn.Linear(64, 192))
+        
+        self.down_convs = nn.ModuleList()
+        self.down_norms = nn.ModuleList()
+        
+        self.down_lstms = nn.ModuleList()
+        
+        for ix in range(len(channels) - 1):
+            self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
+            self.down_transform.append(nn.Sequential(nn.Linear(h_sizes[ix], h_sizes[ix] * 3), nn.InstanceNorm1d(h_sizes[ix] * 3)))
+            self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
+            
+            self.down_lstms.append(TreeLSTMCell(h_sizes[ix]))
+            
+        channels = [96, 48, 27, 9, 1]
+        
+        self.up_convs = nn.ModuleList()
+        self.up_norms = nn.ModuleList()
+        
+        for ix in range(len(channels) - 1):
+            self.down_convs.append(Res1dBlockUp((channels[ix],), channels[ix + 1] // 3, 3))
+            self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
+            
+
+    def forward(self, g, h, c):
+        ind, s = g.ndata['x'].shape
+        
+        # 1d image
+        g.ndata['x'] = (g.ndata['x']).view(ind, 1, 1, s)
+        xs = [g.ndata['x']]
+        vs = []
+        
+        # go down
+        x = self.down_norms[0](self.down_convs[0](xs[-1]))
+        xs.append(x)
+        
+        g.ndata['h'] = self.h_mlp(h)
+        g.ndata['c'] = c
+        
+        g.ndata['iou'] = self.down_transforms[0](x.view(-1, ind))
+        
+        dgl.prop_nodes_topo(g,
+                            message_func=self.down_lstms[0].message_func,
+                            reduce_func=self.down_lstms[0].reduce_func,
+                            apply_node_func=self.down_lstms[0].apply_node_func, reverse = False)
+        
+        dgl.prop_nodes_topo(g,
+                            message_func=self.down_lstms[0].message_func,
+                            reduce_func=self.down_lstms[0].reduce_func,
+                            apply_node_func=self.down_lstms[0].apply_node_func, reverse = True)
+        vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
+        
+        for ix in range(len(1, self.down_convs)):
+            # go down
+            x = self.down_norms[ix](self.down_convs[ix](xs[-1]))
+            
+            g.ndata['h'] = self.h_mlp(h)
+            g.ndata['c'] = c
+            
+            g.ndata['iou'] = self.down_transforms[0](x.view(-1, ind))
+            
+            dgl.prop_nodes_topo(g,
+                                message_func=self.down_lstms[0].message_func,
+                                reduce_func=self.down_lstms[0].reduce_func,
+                                apply_node_func=self.down_lstms[0].apply_node_func, reverse = False)
+            
+            dgl.prop_nodes_topo(g,
+                                message_func=self.down_lstms[0].message_func,
+                                reduce_func=self.down_lstms[0].reduce_func,
+                                apply_node_func=self.down_lstms[0].apply_node_func, reverse = True)
+            
+            xs.append(x)
+            vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
+            
+        print([u.shape for u in xs])
+        print([u.shape for u in vs])
+            
+        
+        
 
 class TreeLSTMCell(nn.Module):
     def __init__(self, h_size):
