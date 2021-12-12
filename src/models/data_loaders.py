@@ -169,7 +169,7 @@ class DGLDataGenerator(object):
         
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
-        return torch.FloatTensor(x), torch.FloatTensor(y), torch.LongTensor(edges), torch.FloatTensor(xg), torch.BoolTensor(y_mask == 1)
+        return torch.FloatTensor(x), torch.FloatTensor(y), edges.reshape(2, edges.shape[0] * edges.shape[2]), torch.FloatTensor(xg), torch.BoolTensor(y_mask == 1)
                                        
     
     def get_batch(self, val = False):
