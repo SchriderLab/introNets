@@ -35,6 +35,7 @@ from mpi4py import MPI
 
 def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     X = []
+    XG = []
     Y = []
     edge_attrs = []
     edge_indexes = []
@@ -82,12 +83,13 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
         X.append(x)
+        XG.append(xg)
         Y.append(y)
         edge_indexes.append(edges)
         edge_attrs.append(edge_attr)
         masks.append(y_mask)
         
-    return X, Y, edge_indexes, edge_attrs, masks
+    return X, Y, edge_indexes, edge_attrs, XG, masks
         
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -157,30 +159,32 @@ def main():
                 if _ is None:
                     continue
                 
-                x, y, edge_index, edge_attr, masks = _
+                x, y, edge_index, edge_attr, xg, masks = _
 
                 
-                comm.send([x, y, edge_index, edge_attr, masks, False], dest = 0)
+                comm.send([x, y, edge_index, edge_attr, xg, masks, False], dest = 0)
                 
             for key in val_keys:
                 _ = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
                 if _ is None:
                     continue
                 
-                x, y, edge_index, edge_attr, masks = _
+                x, y, edge_index, edge_attr, xg, masks = _
                 
-                comm.send([x, y, edge_index, edge_attr, masks, True], dest = 0)
+                comm.send([x, y, edge_index, edge_attr, xg, masks, True], dest = 0)
                 
-        comm.send([None, None, None, None, None, None], dest = 0)
+        comm.send([None, None, None, None, None, None, None], dest = 0)
     
     else:
         x = []
+        xg = []
         y = []
         edge_attr = []
         edge_index = []
         mask = []
         
         x_val = []
+        xg_val = []
         y_val = []
         edge_attr_val = []
         edge_index_val = []
@@ -191,7 +195,7 @@ def main():
         val_counter = 0
         
         while n_done < comm.size - 1:
-            x_, y_, edge_index_, edge_attr_, mask_, val = comm.recv(source = MPI.ANY_SOURCE)
+            x_, y_, edge_index_, edge_attr_, xg_, mask_, val = comm.recv(source = MPI.ANY_SOURCE)
             
             if x_ is None:
                 n_done += 1
@@ -199,6 +203,7 @@ def main():
             
             if not val:
                 x.extend(x_)
+                xg.extend(xg_)
                 y.extend(y_)
                 edge_attr.extend(edge_attr_)
                 edge_index.extend(edge_index_)
@@ -206,6 +211,7 @@ def main():
             # it's validation data
             else:
                 x_val.extend(x_)
+                xg_val.extend(xg_)
                 y_val.extend(y_)
                 edge_attr_val.extend(edge_attr_)
                 edge_index_val.extend(edge_index_)
@@ -223,12 +229,14 @@ def main():
                     y_ = np.array([y[u] for u in ix_], dtype = np.uint8)
                     edge_index_ = np.array([edge_index[u] for u in ix_], dtype = np.int32)
                     edge_attr_ = np.array([edge_attr[u] for u in ix_], dtype = np.float32)
+                    xg_ = np.array([xg[u] for u in ix_], dtype = np.float32)
                     mask_ = np.array([mask[u] for u in ix_], dtype = np.uint8)
                     
                     ofile.create_dataset('train/{0}/x_0'.format(train_counter), data = x_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/y'.format(train_counter), data = y_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/edge_index'.format(train_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/edge_attr'.format(train_counter), data = edge_attr_, compression = 'lzf')
+                    ofile.create_dataset('train/{0}/xg'.format(train_counter), data = xg_, compression = 'lzf')
                     ofile.create_dataset('train/{0}/mask'.format(train_counter), data = mask_, compression = 'lzf')
                     
                     if (train_counter + 1) % 25 == 0: 
@@ -254,12 +262,14 @@ def main():
                     y_ = np.array([y_val[u] for u in ix_], dtype = np.uint8)
                     edge_index_ = np.array([edge_index_val[u] for u in ix_], dtype = np.int32)
                     edge_attr_ = np.array([edge_attr_val[u] for u in ix_], dtype = np.float32)
+                    xg_ = np.array([xg_val[u] for u in ix_], dtype = np.float32)
                     mask_ = np.array([mask_val[u] for u in ix_], dtype = np.uint8)
                     
                     ofile.create_dataset('val/{0}/x_0'.format(val_counter), data = x_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/y'.format(val_counter), data = y_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_index'.format(val_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_attr'.format(val_counter), data = edge_attr_, compression = 'lzf')
+                    ofile.create_dataset('val/{0}/xg'.format(val_counter), data = xg_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/mask'.format(val_counter), data = mask_, compression = 'lzf')
 
                     if (val_counter + 1) % 25 == 0: 
