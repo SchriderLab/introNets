@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument("--k", default = "3")
     parser.add_argument("--chunk_size", default = "4")
     parser.add_argument("--n_samples", default = "10")
-    parser.add_argument("--n_sites", default = "128")
+    parser.add_argument("--n_sites", default = "64")
     
     parser.add_argument("--val_prop", default = 0.05)
 
