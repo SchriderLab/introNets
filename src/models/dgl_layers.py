@@ -131,7 +131,7 @@ class TreeResUNet(nn.Module):
         
         for ix in range(len(channels) - 1):
             self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
-            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.Dropout(0.1)))
+            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.LayerNorm(self.h_sizes[ix] * 3)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
             self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
@@ -147,11 +147,13 @@ class TreeResUNet(nn.Module):
             
             channels[ix + 1] = channels[ix + 1] * 2 + 2
 
-        self.up1_0_lstm = Res1dBlock((12,), 1, 2, pooling = None)
-        self.up2_1_lstm = Res1dBlock((12,), 1, 2)
+        self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 1, 2, pooling = None), nn.Dropout2d(0.1))
+        self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1))
 
-        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2))        
-        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2), Res1dBlock((2,), 1, 2))
+        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1), Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1))        
+        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), nn.Dropout2d(0.1), 
+                                        Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1), 
+                                        Res1dBlock((2,), 1, 2), nn.Dropout2d(0.1))
         
         self.out = nn.Conv2d(6, 1, 1)
         
@@ -254,7 +256,7 @@ class TreeLSTMCell(nn.Module):
         # equation (1), (3), (4)
         iou = nodes.data['iou'] + self.b_iou
         i, o, u = torch.chunk(iou, 3, 1)
-        i, o, u = torch.sigmoid(i), torch.sigmoid(o), torch.tanh(u)
+        i, o, u = torch.relu(i), torch.sigmoid(o), torch.tanh(u)
         
         # equation (5)
         c = i * u + nodes.data['c']
