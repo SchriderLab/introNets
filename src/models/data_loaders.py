@@ -85,7 +85,7 @@ class DGLH5DataGenerator(object):
                 counter += 1
             
         # label smooth
-        #Y = np.concatenate(Y)
+        Y = np.concatenate(Y)
         #ey = np.random.uniform(0., 0.1, Y.shape)
         
         #Y = Y * (1 - ey) + 0.5 * ey
