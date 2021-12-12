@@ -87,7 +87,8 @@ class TreeResUNet(nn.Module):
     def __init__(self, n_layers = 4):
         super(TreeResUNet, self).__init__()
         channels = [1, 9, 27, 48, 96]
-        h_sizes = [192, 256, 512, 1024]
+        h_sizes = [192, 256, 512, 512]
+        in_sizes = [288, 432, 384, 384]
         
         self.h_mlp = nn.Sequential(nn.Linear(4, 16), nn.LayerNorm(16),
                                    nn.ReLU(), nn.Linear(16, 64), nn.LayerNorm(64), nn.ReLU(), 
@@ -101,7 +102,7 @@ class TreeResUNet(nn.Module):
         
         for ix in range(len(channels) - 1):
             self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
-            self.down_transforms.append(nn.Sequential(nn.Linear(h_sizes[ix], h_sizes[ix] * 3), nn.InstanceNorm1d(h_sizes[ix] * 3)))
+            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], h_sizes[ix] * 3), nn.InstanceNorm1d(h_sizes[ix] * 3)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
             self.down_lstms.append(TreeLSTMCell(h_sizes[ix]))
