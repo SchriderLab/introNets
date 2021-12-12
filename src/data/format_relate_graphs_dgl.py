@@ -44,12 +44,10 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     y_ = np.array(ifile[key]['y'])
     
     bp = np.array(ifile[key]['break_points'])
+    if len(bp) <= 1:
+        return None
     
     for j in range(n_samples):
-        bp = np.array(ifile[key]['break_points'])
-        if len(bp) <= 1:
-            continue
-        
         bp_ix = np.random.choice(range(len(bp) - 1))
         
         bp0 = bp[bp_ix]
@@ -154,16 +152,21 @@ def main():
             del keys[:n_val]
             
             for key in keys:
-                x, y, edge_index, edge_attr, masks = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
-                if x is None:
+                _ = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
+                if _ is None:
                     continue
+                
+                x, y, edge_index, edge_attr, masks = _
+
                 
                 comm.send([x, y, edge_index, edge_attr, masks, False], dest = 0)
                 
             for key in val_keys:
-                x, y, edge_index, edge_attr, masks = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
-                if x is None:
+                _ = format_example(ifile, key, nn_samp, int(args.n_samples), n_sites)
+                if _ is None:
                     continue
+                
+                x, y, edge_index, edge_attr, masks = _
                 
                 comm.send([x, y, edge_index, edge_attr, masks, True], dest = 0)
                 
