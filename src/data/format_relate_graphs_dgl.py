@@ -260,7 +260,7 @@ def main():
                     ofile.create_dataset('val/{0}/y'.format(val_counter), data = y_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_index'.format(val_counter), data = edge_index_, compression = 'lzf')
                     ofile.create_dataset('val/{0}/edge_attr'.format(val_counter), data = edge_attr_, compression = 'lzf')
-                    ofile.create_dataset('train/{0}/mask'.format(train_counter), data = mask_, compression = 'lzf')
+                    ofile.create_dataset('val/{0}/mask'.format(val_counter), data = mask_, compression = 'lzf')
 
                     if (val_counter + 1) % 25 == 0: 
                         logging.info('0: wrote val chunk {}...'.format(val_counter))
