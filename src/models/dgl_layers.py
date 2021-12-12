@@ -153,6 +153,8 @@ class TreeResUNet(nn.Module):
         self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2))        
         self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 1, 2), Res1dBlock((2,), 1, 2), Res1dBlock((2,), 1, 2))
         
+        self.out = nn.Conv2d(6, 1, 1)
+        
     def forward(self, g, h):
         ind, s = g.ndata['x'].shape
         
@@ -167,8 +169,6 @@ class TreeResUNet(nn.Module):
         
         g.ndata['h'] = self.h_mlp(h)
         g.ndata['c'] = torch.zeros((ind, self.h_sizes[0])).to(torch.device('cuda'))
-        
-        print(x.view(ind, -1).shape)
         
         g.ndata['iou'] = self.down_transforms[0](x.view(ind, -1))
         
@@ -218,8 +218,9 @@ class TreeResUNet(nn.Module):
         vs[-4] = self.up1_0_lstm(vs[-4].view(ind, 12, 1, 64))
         xs[-5] = self.up_norms[3](torch.cat([xs[-5], vs[-4], self.up_convs[3](xs[-4])], dim = 1))
         
-        print(xs[-5].shape)
+        del vs
         
+        return torch.squeeze(self.out(xs[-1]))
             
             
         
