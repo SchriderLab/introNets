@@ -157,7 +157,7 @@ def main():
             y_pred = model(batch, h)
             #print(y.shape, y_pred.shape)
             
-            print(torch.masked_select(y, y_mask).max(), torch.masked_select(y, y_mask).min())
+            #print(torch.masked_select(y, y_mask).max(), torch.masked_select(y, y_mask).min())
 
             loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
 
@@ -168,10 +168,6 @@ def main():
             # compute accuracy in CPU with sklearn
             y_pred = np.round(expit(y_pred.detach().cpu().numpy()[y_mask.detach().cpu().numpy()]).flatten())
             y = y.detach().cpu().numpy()
-            fig, axes = plt.subplots(nrows = 2)
-            
-            plt.imshow(y)
-            plt.show()
             
             y = np.round(y[y_mask.detach().cpu().numpy()].flatten())
 
