@@ -143,7 +143,9 @@ class TreeResUNet(nn.Module):
         channels = [96, 48, 27, 9, 3]
         for ix in range(len(channels) - 1):
             self.up_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1] // 3, 3))
-            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2))
+            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2 + 2))
+            
+            channels[ix + 1] = channels[ix + 1] * 2 + 2
 
         self.up1_0_lstm = Res1dBlock((12,), 1, 2, pooling = None)
         self.up2_1_lstm = Res1dBlock((12,), 1, 2)
@@ -205,14 +207,18 @@ class TreeResUNet(nn.Module):
             
         # go back up for the lstm
         vs[-1] = self.up4_3_lstm(vs[-1].view(ind, 12, 1, 64))
-        print(vs[-1].shape)
-        xs[-1] = self.up_norms[0](self.up_convs[0](xs[-1]))
-        print(xs[-1].shape)
+        xs[-2] = self.up_norms[0](torch.cat([xs[-2], vs[-1], self.up_convs[0](xs[-1])], dim = 1))
+
+        vs[-2] = self.up3_2_lstm(vs[-2].view(ind, 12, 1, 64))
+        xs[-3] = self.up_norms[1](torch.cat([xs[-3], vs[-2], self.up_convs[1](xs[-2])], dim = 1))
         
-        xs[-2] = torch.cat([xs[-2], self.up_norms[0](self.up_convs[0](xs[-1])), vs[-1]], dim = 1)
+        vs[-3] = self.up2_1_lstm(vs[-3].view(ind, 12, 1, 64))
+        xs[-4] = self.up_norms[2](torch.cat([xs[-4], vs[-3], self.up_convs[1](xs[-3])], dim = 1))
         
-        vs[-2] = self.up3_2(vs[-2].view(ind, 12, 1, 64))
-        xs[-3] = torch.cat([xs[-3], self.up_norms[1](self.upconvs[1](xs[-2])), vs[-2]], dim = 2)
+        vs[-2] = self.up3_2_lstm(vs[-1].view(ind, 12, 1, 64))
+        xs[-5] = self.up_norms[3](torch.cat([xs[-5], vs[-4], self.up_convs[3](xs[-4])], dim = 1))
+        
+        print(xs[-5].shape)
         
             
             
