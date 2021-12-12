@@ -220,7 +220,7 @@ class TreeResUNet(nn.Module):
         
         del vs
         
-        return torch.squeeze(self.out(xs[-1]))
+        return torch.squeeze(self.out(xs[-5]))
             
             
         
