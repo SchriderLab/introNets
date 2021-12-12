@@ -87,7 +87,7 @@ class TreeResUNet(nn.Module):
     def __init__(self, n_layers = 4):
         super(TreeResUNet, self).__init__()
         channels = [1, 9, 27, 48, 96]
-        h_sizes = [192, 256, 512, 512]
+        self.h_sizes = [192, 256, 512, 512]
         in_sizes = [288, 432, 384, 384]
         
         self.h_mlp = nn.Sequential(nn.Linear(4, 16), nn.LayerNorm(16),
@@ -102,10 +102,10 @@ class TreeResUNet(nn.Module):
         
         for ix in range(len(channels) - 1):
             self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
-            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], h_sizes[ix] * 3), nn.Dropout(0.1)))
+            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.Dropout(0.1)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
-            self.down_lstms.append(TreeLSTMCell(h_sizes[ix]))
+            self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
             
         channels = [96, 48, 27, 9, 3]
         
@@ -117,7 +117,7 @@ class TreeResUNet(nn.Module):
             self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
 
-    def forward(self, g, h, c):
+    def forward(self, g, h):
         ind, s = g.ndata['x'].shape
         
         # 1d image
@@ -130,7 +130,7 @@ class TreeResUNet(nn.Module):
         xs.append(x)
         
         g.ndata['h'] = self.h_mlp(h)
-        g.ndata['c'] = c
+        g.ndata['c'] = torch.zeros((ind, self.h_sizes[0])).to(torch.device('cuda'))
         
         print(x.view(ind, -1).shape)
         
@@ -152,7 +152,7 @@ class TreeResUNet(nn.Module):
             x = self.down_norms[ix](self.down_convs[ix](xs[-1]))
             
             g.ndata['h'] = self.h_mlp(h)
-            g.ndata['c'] = c
+            g.ndata['c'] = torch.zeros((ind, self.h_sizes[ix])).to(torch.device('cuda'))
             
             g.ndata['iou'] = self.down_transforms[ix](x.view(-1, ind))
             
