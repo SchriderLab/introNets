@@ -87,7 +87,7 @@ class TreeResUNet(nn.Module):
     def __init__(self, n_layers = 4):
         super(TreeResUNet, self).__init__()
         channels = [1, 9, 27, 48, 96]
-        self.h_sizes = [192, 256, 512, 512]
+        self.h_sizes = [192, 192, 192, 192]
         in_sizes = [288, 432, 384, 384]
         
         self.h_mlp = nn.Sequential(nn.Linear(4, 16), nn.LayerNorm(16),
