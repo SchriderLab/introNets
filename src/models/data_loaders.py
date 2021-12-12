@@ -75,10 +75,10 @@ class DGLH5DataGenerator(object):
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             xg_ = np.array(self.ifile[key]['xg'])
             
-            masks.append(np.array(self.ifile[key]['mask']))
-            X.append(x)
-            Y.append(y)
-            xg.append(xg_)
+            masks.extend(list(np.array(self.ifile[key]['mask'])))
+            X.append(list(x))
+            Y.append(list(y))
+            xg.append(list(xg_))
             
             for k in range(x.shape[0]):
                 e_ = edge_index_[k]
@@ -90,11 +90,11 @@ class DGLH5DataGenerator(object):
             
         # label smooth
         Y = np.concatenate(Y)
-        #ey = np.random.uniform(0., 0.1, Y.shape)
+        ey = np.random.uniform(0., 0.1, Y.shape)
         
-        #Y = Y * (1 - ey) + 0.5 * ey
+        Y = Y * (1 - ey) + 0.5 * ey
         
-        return torch.FloatTensor(np.concatenate(X)).flatten(0, 1), torch.FloatTensor(Y).flatten(0, 1), edge_index, torch.FloatTensor(np.concatenate(xg)).flatten(0, 1), torch.BoolTensor(np.concatenate(masks) == 1).flatten(0, 1)
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y), edge_index, torch.FloatTensor(np.concatenate(xg)), torch.BoolTensor(np.concatenate(masks) == 1)
 
 class DGLDataGenerator(object):
     def __init__(self, idir, n_sites = 128, 
