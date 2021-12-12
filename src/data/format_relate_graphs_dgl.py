@@ -212,7 +212,7 @@ def main():
                 mask_val.extend(mask_)
                 
             # maybe write some data
-            if (len(x) % chunk_size) == 0 and len(x) > 0:
+            while len(x) > chunk_size:
                 ix = list(range(len(x)))
                 random.shuffle(ix)
                 
@@ -243,7 +243,7 @@ def main():
                 edge_index = []
                 
             # maybe write some data
-            if (len(x_val) % chunk_size) == 0 and len(x_val) > 0:
+            while len(x_val) > chunk_size:
                 ix = list(range(len(x_val)))
                 random.shuffle(ix)
                 
