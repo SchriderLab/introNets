@@ -153,17 +153,17 @@ class TreeResUNet(nn.Module):
             g.ndata['h'] = self.h_mlp(h)
             g.ndata['c'] = c
             
-            g.ndata['iou'] = self.down_transforms[0](x.view(-1, ind))
+            g.ndata['iou'] = self.down_transforms[ix](x.view(-1, ind))
             
             dgl.prop_nodes_topo(g,
-                                message_func=self.down_lstms[0].message_func,
-                                reduce_func=self.down_lstms[0].reduce_func,
-                                apply_node_func=self.down_lstms[0].apply_node_func, reverse = False)
+                                message_func=self.down_lstms[ix].message_func,
+                                reduce_func=self.down_lstms[ix].reduce_func,
+                                apply_node_func=self.down_lstms[ix].apply_node_func, reverse = False)
             
             dgl.prop_nodes_topo(g,
-                                message_func=self.down_lstms[0].message_func,
-                                reduce_func=self.down_lstms[0].reduce_func,
-                                apply_node_func=self.down_lstms[0].apply_node_func, reverse = True)
+                                message_func=self.down_lstms[ix].message_func,
+                                reduce_func=self.down_lstms[ix].reduce_func,
+                                apply_node_func=self.down_lstms[ix].apply_node_func, reverse = True)
             
             xs.append(x)
             vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
