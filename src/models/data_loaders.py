@@ -77,7 +77,7 @@ class DGLH5DataGenerator(object):
             xg.append(xg_)
             
             for k in range(x.shape[0]):
-                e_ = edge_index_[k] + start_node
+                e_ = edge_index_[k]
                 start_node += x.shape[2]
                 
                 edge_index.append(torch.LongTensor(e_))
