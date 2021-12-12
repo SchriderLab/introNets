@@ -146,19 +146,19 @@ class TreeResUNet(nn.Module):
         channels = [96, 48, 27, 9, 9]
         for ix in range(len(channels) - 1):
             self.up_convs.append(Res1dBlockUp(channels[ix], channels[ix + 1], 1))
-            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2 + 16))
+            self.up_norms.append(nn.InstanceNorm2d(channels[ix + 1] * 2 + 24))
             
-            channels[ix + 1] = channels[ix + 1] * 2 + 16
+            channels[ix + 1] = channels[ix + 1] * 2 + 24
 
-        self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 8, 2, pooling = None), nn.Dropout2d(0.1))
-        self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1))
+        self.up1_0_lstm = nn.Sequential(Res1dBlock((12,), 12, 2, pooling = None), nn.Dropout2d(0.1))
+        self.up2_1_lstm = nn.Sequential(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1))
 
-        self.up3_2_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1), Res1dBlock((16,), 8, 2), nn.Dropout2d(0.1))        
-        self.up4_3_lstm = nn.Sequential(Res1dBlock((12,), 8, 2), nn.Dropout2d(0.1), 
-                                        Res1dBlock((16,), 8, 2), nn.Dropout2d(0.1), 
-                                        Res1dBlock((16,), 8, 2), nn.Dropout2d(0.1))
+        self.up3_2_lstm = nn.ModuleList(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1))        
+        self.up4_3_lstm = nn.ModuleList(Res1dBlock((12,), 12, 2), nn.Dropout2d(0.1), 
+                                        Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1), 
+                                        Res1dBlock((24,), 24, 1), nn.Dropout2d(0.1))
         
-        self.out = nn.Conv2d(26, 1, 1)
+        self.out = nn.Conv2d(43, 1, 1)
         
     def forward(self, g, h):
         ind, s = g.ndata['x'].shape
@@ -171,6 +171,8 @@ class TreeResUNet(nn.Module):
         # go down
         x = self.down_norms[0](self.down_convs[0](xs[-1]))
         xs.append(x)
+        
+        xs[0] = torch.cat(xs, dim = 1)
         
         g.ndata['h'] = self.h_mlp(h)
         g.ndata['c'] = torch.zeros((ind, self.h_sizes[0])).to(torch.device('cuda'))
