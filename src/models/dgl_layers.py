@@ -106,7 +106,7 @@ class TreeResUNet(nn.Module):
             
             self.down_lstms.append(TreeLSTMCell(h_sizes[ix]))
             
-        channels = [96, 48, 27, 9, 1]
+        channels = [96, 48, 27, 9, 3]
         
         self.up_convs = nn.ModuleList()
         self.up_norms = nn.ModuleList()
