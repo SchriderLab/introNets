@@ -144,8 +144,6 @@ def main():
             if x is None:
                 break
             
-            print(x.shape, xg.shape, y.shape)
-            
             batch = dgl.batch([dgl.graph((u[1,:].to(device), u[0,:].to(device))) for u in edges])
             batch.ndata['x'] = x.to(device)
             

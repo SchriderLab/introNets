@@ -85,11 +85,11 @@ class DGLH5DataGenerator(object):
                 counter += 1
             
         # label smooth
-        Y = np.concatenate(Y)
-        ey = np.random.uniform(0., 0.1, Y.shape)
+        #Y = np.concatenate(Y)
+        #ey = np.random.uniform(0., 0.1, Y.shape)
         
-        Y = Y * (1 - ey) + 0.5 * ey
-            
+        #Y = Y * (1 - ey) + 0.5 * ey
+        
         return torch.FloatTensor(np.concatenate(X)).flatten(0, 1), torch.FloatTensor(Y).flatten(0, 1), edge_index, torch.FloatTensor(np.concatenate(xg)).flatten(0, 1), torch.BoolTensor(np.concatenate(masks) == 1).flatten(0, 1)
 
 class DGLDataGenerator(object):
