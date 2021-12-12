@@ -82,6 +82,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         edge_attr = np.concatenate([xg[edges[0,:]] - xg[edges[1,:]], n_mutations], axis = 1)
         
         X.append(x)
+        Y.append(y)
         edge_indexes.append(edges)
         edge_attrs.append(edge_attr)
         masks.append(y_mask)
