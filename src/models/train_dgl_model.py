@@ -153,11 +153,10 @@ def main():
             
             # include the pop and time of the node in the hidden state
             h = xg.to(device)
-            c = torch.zeros((n, 384)).to(device)
             y = y.to(device)
             y_mask = y_mask.to(device)
 
-            y_pred = model(batch, h, c)
+            y_pred = model(batch, h)
             #print(y.shape, y_pred.shape)
 
             loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
@@ -200,12 +199,12 @@ def main():
                 n = x.shape[0]
                 
                 # include the pop and time of the node in the hidden state
-                h = torch.cat([xg, torch.zeros((n, 380))], dim = 1).to(device)
-                c = torch.zeros((n, 384)).to(device)
+                h = xg.to(device)
+
                 y = y.to(device)
                 y_mask = y_mask.to(device)
     
-                y_pred = model(batch, h, c)
+                y_pred = model(batch, h)
                 #print(y.shape, y_pred.shape)
     
                 loss = criterion(torch.masked_select(y_pred, y_mask), torch.masked_select(y, y_mask)) # ${loss_change}
