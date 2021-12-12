@@ -173,7 +173,7 @@ class TreeResUNet(nn.Module):
         
         # go down
         x, x_ = self.c0(xs[-1], return_unpooled = True)
-        x = self.norms_down[0](x)
+        x = self.down_norms[0](x)
         xs.append(x)
         
         xs[0] = torch.cat([x_, xs[0]], dim = 1)
