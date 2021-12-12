@@ -148,6 +148,8 @@ class TreeResUNet(nn.Module):
         vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
         
         for ix in range(1, len(self.down_convs)):
+            print(ix, x.shape)
+            
             # go down
             x = self.down_norms[ix](self.down_convs[ix](xs[-1]))
             
