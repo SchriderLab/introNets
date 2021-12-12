@@ -128,11 +128,14 @@ class TreeResUNet(nn.Module):
         
         self.down_transforms = nn.ModuleList()
         self.down_lstms = nn.ModuleList()
+        self.down_ls_norms = nn.ModuleList()
         
         for ix in range(len(channels) - 1):
             self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
             self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.LayerNorm(self.h_sizes[ix] * 3)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
+            
+            self.down_ls_norms.append(nn.LayerNorm(784))
             
             self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
             
@@ -183,7 +186,7 @@ class TreeResUNet(nn.Module):
                             message_func=self.down_lstms[0].message_func,
                             reduce_func=self.down_lstms[0].reduce_func,
                             apply_node_func=self.down_lstms[0].apply_node_func, reverse = True)
-        vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
+        vs.append(self.down_ls_norms[0](torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1)))
         
         for ix in range(1, len(self.down_convs)):
             # go down
@@ -205,7 +208,7 @@ class TreeResUNet(nn.Module):
                                 apply_node_func=self.down_lstms[ix].apply_node_func, reverse = True)
             
             xs.append(x)
-            vs.append(torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1))
+            vs.append(self.down_ls_norms[ix](torch.cat([g.ndata.pop('h'), g.ndata.pop('iou')], dim = 1)))
             
         # go back up for the lstm
         vs[-1] = self.up4_3_lstm(vs[-1].view(ind, 12, 1, 64))
