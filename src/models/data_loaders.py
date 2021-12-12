@@ -76,9 +76,9 @@ class DGLH5DataGenerator(object):
             xg_ = np.array(self.ifile[key]['xg'])
             
             masks.extend(list(np.array(self.ifile[key]['mask'])))
-            X.append(list(x))
-            Y.append(list(y))
-            xg.append(list(xg_))
+            X.extend(list(x))
+            Y.extend(list(y))
+            xg.extend(list(xg_))
             
             for k in range(x.shape[0]):
                 e_ = edge_index_[k]
