@@ -215,7 +215,7 @@ class TreeResUNet(nn.Module):
         vs[-3] = self.up2_1_lstm(vs[-3].view(ind, 12, 1, 64))
         xs[-4] = self.up_norms[2](torch.cat([xs[-4], vs[-3], self.up_convs[2](xs[-3])], dim = 1))
         
-        vs[-4] = self.up3_2_lstm(vs[-4].view(ind, 12, 1, 64))
+        vs[-4] = self.up1_0_lstm(vs[-4].view(ind, 12, 1, 64))
         xs[-5] = self.up_norms[3](torch.cat([xs[-5], vs[-4], self.up_convs[3](xs[-4])], dim = 1))
         
         print(xs[-5].shape)
