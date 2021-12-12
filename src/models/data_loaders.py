@@ -90,7 +90,7 @@ class DGLH5DataGenerator(object):
         
         Y = Y * (1 - ey) + 0.5 * ey
             
-        return torch.FloatTensor(np.concatenate(X)).view(X[-1].shape[1] * self.batch_size, -1), torch.FloatTensor(Y).view(X[-1].shape[1] * self.batch_size, -1), edge_index, torch.FloatTensor(np.concatenate(xg)).view(X[-1].shape[1] * self.batch_size, -1), torch.BoolTensor(np.concatenate(masks) == 1).view(X[-1].shape[1] * self.batch_size, -1)
+        return torch.FloatTensor(np.concatenate(X)).flatten(0, 1), torch.FloatTensor(Y).flatten(0, 1), edge_index, torch.FloatTensor(np.concatenate(xg)).flatten(0, 1), torch.BoolTensor(np.concatenate(masks) == 1).flatten(0, 1)
 
 class DGLDataGenerator(object):
     def __init__(self, idir, n_sites = 128, 
