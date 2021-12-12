@@ -137,7 +137,7 @@ def main():
         losses = []
         accuracies = []
 
-        for ij in range(generator.length):
+        for ij in range(4000):
             optimizer.zero_grad()
             
             x, y, edges, xg, y_mask = generator.get_batch()
@@ -238,7 +238,7 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        generator.on_epoch_end()
+        generator.reset_keys(True)
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
