@@ -102,7 +102,7 @@ class TreeResUNet(nn.Module):
         
         for ix in range(len(channels) - 1):
             self.down_convs.append(Res1dBlock((channels[ix],), channels[ix + 1] // 3, 3))
-            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix - 1], self.h_sizes[ix] * 3), nn.Dropout(0.1)))
+            self.down_transforms.append(nn.Sequential(nn.Linear(in_sizes[ix], self.h_sizes[ix] * 3), nn.Dropout(0.1)))
             self.down_norms.append(nn.InstanceNorm2d(channels[ix + 1]))
             
             self.down_lstms.append(TreeLSTMCell(self.h_sizes[ix]))
@@ -152,6 +152,8 @@ class TreeResUNet(nn.Module):
             
             # go down
             x = self.down_norms[ix](self.down_convs[ix](xs[-1]))
+            
+            print(x.shape)
             
             g.ndata['h'] = self.h_mlp(h)
             g.ndata['c'] = torch.zeros((ind, self.h_sizes[ix])).to(torch.device('cuda'))
