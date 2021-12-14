@@ -864,25 +864,25 @@ class NestedUNetV2(nn.Module):
 
         self.dropout = nn.Dropout2d(0.1)
 
-        self.conv0_0 = ResBlock(input_channels, nb_filter[0])
-        self.conv1_0 = ResBlock(nb_filter[0], nb_filter[1])
-        self.conv2_0 = ResBlock(nb_filter[1], nb_filter[2])
-        self.conv3_0 = ResBlock(nb_filter[2], nb_filter[3])
-        self.conv4_0 = ResBlock(nb_filter[3], nb_filter[4])
+        self.conv0_0 = ResBlock(input_channels, nb_filter[0] // 2)
+        self.conv1_0 = ResBlock(nb_filter[0], nb_filter[1] // 2)
+        self.conv2_0 = ResBlock(nb_filter[1], nb_filter[2] // 2)
+        self.conv3_0 = ResBlock(nb_filter[2], nb_filter[3] // 2)
+        self.conv4_0 = ResBlock(nb_filter[3], nb_filter[4] // 2)
 
-        self.conv0_1 = ResBlock(nb_filter[0]+nb_filter[1], nb_filter[0])
-        self.conv1_1 = ResBlock(nb_filter[1]+nb_filter[2], nb_filter[1])
-        self.conv2_1 = ResBlock(nb_filter[2]+nb_filter[3], nb_filter[2])
-        self.conv3_1 = ResBlock(nb_filter[3]+nb_filter[4], nb_filter[3])
+        self.conv0_1 = ResBlock(nb_filter[0]+nb_filter[1], nb_filter[0] // 2)
+        self.conv1_1 = ResBlock(nb_filter[1]+nb_filter[2], nb_filter[1] // 2)
+        self.conv2_1 = ResBlock(nb_filter[2]+nb_filter[3], nb_filter[2] // 2)
+        self.conv3_1 = ResBlock(nb_filter[3]+nb_filter[4], nb_filter[3] // 2)
 
-        self.conv0_2 = ResBlock(nb_filter[0]*2+nb_filter[1], nb_filter[0])
-        self.conv1_2 = ResBlock(nb_filter[1]*2+nb_filter[2], nb_filter[1])
-        self.conv2_2 = ResBlock(nb_filter[2]*2+nb_filter[3], nb_filter[2])
+        self.conv0_2 = ResBlock(nb_filter[0]*2+nb_filter[1], nb_filter[0] // 2)
+        self.conv1_2 = ResBlock(nb_filter[1]*2+nb_filter[2], nb_filter[1] // 2)
+        self.conv2_2 = ResBlock(nb_filter[2]*2+nb_filter[3], nb_filter[2] // 2)
 
-        self.conv0_3 = ResBlock(nb_filter[0]*3+nb_filter[1], nb_filter[0])
-        self.conv1_3 = ResBlock(nb_filter[1]*3+nb_filter[2], nb_filter[1])
+        self.conv0_3 = ResBlock(nb_filter[0]*3+nb_filter[1], nb_filter[0] // 2)
+        self.conv1_3 = ResBlock(nb_filter[1]*3+nb_filter[2], nb_filter[1] // 2)
 
-        self.conv0_4 = ResBlock(nb_filter[0]*4+nb_filter[1], nb_filter[0])
+        self.conv0_4 = ResBlock(nb_filter[0]*4+nb_filter[1], nb_filter[0] // 2)
 
         if self.deep_supervision:
             self.final1 = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
