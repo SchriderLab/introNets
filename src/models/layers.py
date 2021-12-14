@@ -819,7 +819,7 @@ class NestedUNet(nn.Module):
             return [output1, output2, output3, output4]
 
         else:
-            output = self.final(x0_4)
+            output = torch.squeeze(self.final(x0_4))
             return output
 
 
