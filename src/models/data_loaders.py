@@ -861,9 +861,17 @@ class H5UDataGenerator(object):
             
             if (self.pred_pop == 0) or (self.pred_pop == 1):
                 y = np.expand_dims(y[:,self.pred_pop,:,:], 1)
+                
             
             X.append(x)
             Y.append(y)
+            
+        Y = np.concatenate(Y)
+        
+        # label smooth
+        ey = np.random.uniform(0, 0.1, Y.shape)
+        
+        Y = Y * (1 - ey) + 0.5 * ey
             
         self.ix += self.n_per
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))

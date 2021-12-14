@@ -34,7 +34,10 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-
+# pos weights for the different iterations:
+## 000: 5.146955817634787
+## 001: 5.469970200977819
+## 002: 6.25023282070848
 
 def parse_args():
     # Argument Parser
