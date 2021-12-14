@@ -169,7 +169,7 @@ def main():
         
                 y_pred = model(x)
 
-                loss = criterion(y_pred, y)
+                loss = criterion(y_pred, torch.squeeze(y))
                 # compute accuracy in CPU with sklearn
                 y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
                 y = np.round(y.detach().cpu().numpy().flatten())
