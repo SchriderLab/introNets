@@ -197,7 +197,7 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
     
-    ifiles = [os.path.join(args.idir, u) for u in os.listdir(args.idir)]
+    ifiles = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if u.split('.')[-1] == 'hdf5']
     chunk_size = 4
     
     nn_samp = range(int(args.k))
@@ -300,7 +300,7 @@ def main():
                 edge_attr = []
                 edge_index = []
                 
-            # maybe write some data
+            # maybe write some val data
             if (len(x_val) % chunk_size) == 0 and len(x_val) > 0:
                 ix = list(range(len(x_val)))
                 random.shuffle(ix)
