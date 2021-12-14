@@ -864,7 +864,7 @@ class NestedUNetV2(nn.Module):
 
         self.dropout = nn.Dropout2d(0.1)
 
-        self.conv0_0 = ResBlock(input_channels, nb_filter[0], nb_filter[0])
+        self.conv0_0 = ResBlock(input_channels, nb_filter[0])
         self.conv1_0 = ResBlock(nb_filter[0], nb_filter[1])
         self.conv2_0 = ResBlock(nb_filter[1], nb_filter[2])
         self.conv3_0 = ResBlock(nb_filter[2], nb_filter[3])
