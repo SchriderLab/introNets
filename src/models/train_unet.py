@@ -19,7 +19,7 @@ import torch.distributed as dist
 import copy
 from scipy.special import expit
 
-from layers import NestedUNet
+from layers import NestedUNet, NestedUNetV2
 from data_loaders import H5UDataGenerator
 import h5py
 
@@ -89,7 +89,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = NestedUNet(1, 2)
+    model = NestedUNetV2(1, 2)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
