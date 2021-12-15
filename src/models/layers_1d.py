@@ -323,7 +323,7 @@ class Res1dGraphBlock(nn.Module):
             return x
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, negative_slope = 0.2, leaky = True):
+    def __init__(self, negative_slope = 0.2, activation = 'tanh'):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
@@ -331,9 +331,12 @@ class VanillaAttConv(MessagePassing):
         _ = [nn.BatchNorm1d(8), nn.Linear(8, 16), nn.LayerNorm((16,)), nn.ReLU(), 
                                      nn.Linear(16, 32), nn.LayerNorm((32,)), nn.ReLU(), nn.Linear(32, 1)]
         
-        if leaky:
+        if activation == 'sigmoid':
             _.append(nn.LeakyReLU(negative_slope = negative_slope))
             _.append(nn.Sigmoid())
+        elif activation == 'tanh':
+            _.append(nn.LeakyReLU(negative_slope = negative_slope))
+            _.append(nn.Tanh())
         
         self.att_mlp = nn.Sequential(*_)
         
