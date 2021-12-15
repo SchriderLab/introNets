@@ -41,6 +41,9 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     x_ = np.array(ifile[key]['x'])
     y_ = np.array(ifile[key]['y'])
     
+    if np.sum(y_) == 0:
+        return None, None, None, None
+    
     bp = np.array(ifile[key]['break_points'])
     if len(bp) == 0:
         return None, None, None, None
@@ -80,6 +83,9 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         
         x_e = x_[:,s]
         y_e = y_[150:,s]
+        
+        if np.sum(y_e) == 0:
+            continue
         
         bp_ = [u for u in bp if u in s]
         bp_ = list(np.array(bp_) - int(np.min(bp_)))
@@ -141,15 +147,6 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         edge_attr_ = np.array(edge_attr_, dtype = np.float32)
         
         #np.savez('edge_attrs/edge_attr_{0:04d}.npz'.format(self.ix), edge_attr = edge_attr)
-        
-        
-        bp_x = np.zeros(x_e.shape)
-        bp_x[:, bp_] = 1.
-        
-        # smooth the break points (give some error)
-        bp_x = gaussian_filter(bp_x, 5)
-        
-        x_e = np.array((x_e, bp_x), dtype = np.float32)
         
         x.append(x_e)
         y.append(y_e)
