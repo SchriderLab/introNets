@@ -56,7 +56,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    model = GATRelateCNetV2(n_sites = int(args.n_sites))
+    model = GATRelateCNetV2(n_sites = 128)
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
