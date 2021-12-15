@@ -73,6 +73,8 @@ def main():
     for ix in range(int(args.n_samples)):
         with torch.no_grad():
             x, y, edges, edge_attr, batch = generator.get_batch(True)
+            
+            print(x.shape, y.shape)
 
             x = x.to(device)
             y = y.to(device)
@@ -82,6 +84,8 @@ def main():
             edge_attr = edge_attr.to(device)
             
             y_pred = model(x, edges, edge_attr, batch)
+            
+            print(y_pred.shape)
             
             x = x.detach().cpu().numpy()
             y = y.detach().cpu().numpy()
