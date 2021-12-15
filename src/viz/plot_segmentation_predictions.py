@@ -15,7 +15,7 @@ import h5py
 import sys
 sys.path.insert(0, os.path.join(os.getcwd(), 'src/models'))
 
-from layers import NestedUNet
+from layers import NestedUNet, NestedUNetV2
 from data_loaders import H5UDataGenerator
 
 from scipy.special import expit
@@ -55,7 +55,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    model = NestedUNet(1, 2)
+    model = NestedUNetV2(1, 2)
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
