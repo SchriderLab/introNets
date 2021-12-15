@@ -323,7 +323,7 @@ class Res1dGraphBlock(nn.Module):
             return x
 
 class VanillaAttConv(MessagePassing):
-    def __init__(self, negative_slope = 0.2, activation = 'tanh'):
+    def __init__(self, negative_slope = 0.2, activation = 'sigmoid'):
         super().__init__(aggr='add')  # "Add" aggregation (Step 5).
         self.norm = MessageNorm(True)
         self.negative_slope = negative_slope
