@@ -88,7 +88,7 @@ def main():
                 fig = plt.figure(figsize=(16, 6))
                 ax0 = fig.add_subplot(151)
                 
-                ax0.imshow(x[k,:,:], cmap = 'gray')
+                ax0.imshow(x[k,0,:,:], cmap = 'gray')
                 ax0.set_title('pop A')
                 
                 ax1 = fig.add_subplot(152)
