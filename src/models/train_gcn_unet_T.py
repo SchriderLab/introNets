@@ -168,9 +168,8 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    lr_scheduler = torch.optim.lr_scheduler.OneCycleLR(optimizer = optimizer, 
-                                                       max_lr = 0.02, epochs = int(args.n_epochs), 
-                                                       steps_per_epoch = int(args.n_steps))
+    decayRate = 0.999
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
     
     history = dict()
     history['loss'] = []
@@ -216,7 +215,6 @@ def main():
                     'root: Epoch {0}, step {3}: got loss of {1}, acc: {2}, lr: {4}'.format(ix, np.mean(losses),
                                                                                   np.mean(accuracies), ij + 1, lr_scheduler.get_last_lr()))
                 
-            lr_scheduler.step()
 
         model.eval()
         
@@ -281,6 +279,7 @@ def main():
                 break
 
         generator.reset_keys(True)
+        lr_scheduler.step()
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
