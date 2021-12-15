@@ -88,7 +88,7 @@ def main():
                 fig = plt.figure(figsize=(16, 6))
                 ax0 = fig.add_subplot(151)
                 
-                ax0.imshow(x[k,0,:,:], cmap = 'gray')
+                ax0.imshow(x[k,:,:], cmap = 'gray')
                 ax0.set_title('pop A')
                 
                 ax1 = fig.add_subplot(152)
@@ -96,15 +96,15 @@ def main():
                 ax1.set_title('pop B')
                 
                 ax2 = fig.add_subplot(153)
-                ax2.imshow(y[k,0,:,:], cmap = 'gray')
+                ax2.imshow(y[k,:,:], cmap = 'gray')
                 ax2.set_title('pop B (y)')
                 
                 ax3 = fig.add_subplot(154)
-                ax3.imshow(np.round(expit(y_pred[k,0,:,:])), cmap = 'gray')
+                ax3.imshow(np.round(expit(y_pred[k,:,:])), cmap = 'gray')
                 ax3.set_title('pop B (pred)')
                 
                 ax4 = fig.add_subplot(155)
-                im = ax4.imshow(expit(y_pred[k,0,:,:]))
+                im = ax4.imshow(expit(y_pred[k,:,:]))
                 fig.colorbar(im, ax = ax4)
                 
                 plt.savefig(os.path.join(args.odir, '{0:04d}_pred.png'.format(counter)), dpi = 100)
