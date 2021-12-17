@@ -101,6 +101,7 @@ def parse_args():
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
     parser.add_argument("--indices", default = "None")
+    parser.add_argument("--att_activation", default = "sigmoid")
     
     parser.add_argument("--batch_size", default = "16")
     
@@ -147,7 +148,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GATRelateCNetV2(n_sites = int(args.n_sites))
+    model = GATRelateCNetV2(n_sites = int(args.n_sites), att_activation = args.att_activation)
     print(model)
     d_model = count_parameters(model)
     

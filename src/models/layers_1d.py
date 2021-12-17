@@ -230,7 +230,7 @@ class Res1dGraphBlockUp(nn.Module):
 
 class Res1dGraphBlock(nn.Module):
     def __init__(self, in_shape, out_channels, n_layers, gcn_channels = 4,
-                             k = 3, pooling = 'max', up = False):
+                             k = 3, pooling = 'max', up = False, att_activation = 'sigmoid'):
         super(Res1dGraphBlock, self).__init__()
         
         in_shape = list(in_shape)
@@ -253,7 +253,7 @@ class Res1dGraphBlock(nn.Module):
             # for down sampling the dimensionality of the features for the gcn part
             self.gcn_convs.append(nn.Conv2d(out_channels, gcn_channels, 1, 1))
             
-            self.gcns.append(VanillaAttConv())
+            self.gcns.append(VanillaAttConv(activation = att_activation))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels), nn.Dropout2d(0.1)))
             
             in_shape[0] = out_channels + gcn_channels
@@ -263,7 +263,7 @@ class Res1dGraphBlock(nn.Module):
         else:
             self.pool = None
             
-        self.activation = nn.ELU()
+        self.activation = nn.ReLU()
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, n_channels, n_ind, n_sites = x.shape
@@ -609,7 +609,7 @@ class GATRelateCNetV2(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
                          n_layers = 4, in_channels = 1, 
                          n_cycles = 1, hidden_channels = 16, 
-                         graph_up = False):
+                         graph_up = False, att_activation = 'sigmoid'):
         super(GATRelateCNetV2, self).__init__()
         
         k_conv = 3
@@ -638,14 +638,15 @@ class GATRelateCNetV2(nn.Module):
                                              stride = (1, 1), 
                                              padding = (0, 1), bias = True))
         
-        self.stem_gcn = VanillaAttConv()
+        self.stem_gcn = VanillaAttConv(activation = att_activation)
         self.stem_norm = nn.InstanceNorm2d(stem_channels)
         
         # after concatenating
         channels = stem_channels + in_channels
         
         for ix in range(len(res_channels)):
-            self.down.append(Res1dGraphBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers, gcn_channels = graph_channels))
+            self.down.append(Res1dGraphBlock((channels, pop_size, n_sites), res_channels[ix], n_res_layers, 
+                                             gcn_channels = graph_channels, att_activation = att_activation))
             self.norms_down.append(nn.Dropout(0.1))
             channels = res_channels[ix] * (n_res_layers) + graph_channels * n_res_layers
             
