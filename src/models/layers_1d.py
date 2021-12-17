@@ -607,7 +607,7 @@ class GATRelateCNet(nn.Module):
 ##
 class GATRelateCNetV2(nn.Module):
     def __init__(self, n_sites = 128, pop_size = 300, pred_pop = 1,
-                         n_layers = 4, in_channels = 2, 
+                         n_layers = 4, in_channels = 1, 
                          n_cycles = 1, hidden_channels = 16, 
                          graph_up = False):
         super(GATRelateCNetV2, self).__init__()
