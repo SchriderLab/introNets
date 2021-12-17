@@ -94,11 +94,16 @@ class Formatter(object):
             
             six = np.random.choice(indices)
             
+            if np.sum(y[:,six:six + self.n_sites]) == 0:
+                continue
+            
             x1 = x1[:,six:six + self.n_sites]
             x2 = x2[:,six:six + self.n_sites]
             
             y1 = y1[:,six:six + self.n_sites]
             y2 = y2[:,six:six + self.n_sites]
+            
+            
             
             if self.sorting == "seriate_match":
                 x1, ix1 = seriate_x(x1)
