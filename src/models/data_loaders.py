@@ -592,7 +592,7 @@ class GCNDataGeneratorH5(object):
         start_node = 0
         counter = 0
         for key in keys:
-            x = np.array(self.ifile[key]['x_0'])
+            x = np.expand_dims(np.array(self.ifile[key]['x_0']), 0)
             y = np.array(self.ifile[key]['y'])
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             edge_attr_ = np.array(self.ifile[key]['edge_attr'])
