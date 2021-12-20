@@ -62,7 +62,7 @@ def main():
         ix = np.where(x[k] != 0)[0]
         t = np.array(range(np.max(ix)))
         
-        x[k,:len(t)] = interp1d(t[ix], x[k,ix], kind = 'cubic')(t)
+        x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
         
     plt.imshow(x)
     plt.savefig('test_output.png', dpi = 100)
