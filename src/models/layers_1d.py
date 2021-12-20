@@ -983,7 +983,7 @@ class GATConv(MessagePassing):
         concat: bool = True,
         negative_slope: float = 0.2,
         dropout: float = 0.0,
-        add_self_loops: bool = False,
+        add_self_loops: bool = True,
         edge_dim: Optional[int] = None,
         fill_value: Union[float, Tensor, str] = 'mean',
         bias: bool = True,
@@ -1092,6 +1092,7 @@ class GATConv(MessagePassing):
                         "simultaneously is currently not yet supported for "
                         "'edge_index' in a 'SparseTensor' form")
 
+        print(x.shape)
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
         out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
                              size=size)
@@ -1229,10 +1230,10 @@ class GCNConvNet_beta(nn.Module):
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
-        #print(xc.shape)
+        print(xc.shape)
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-        #print(xg.shape)
+        print(xg.shape)
         
         xg = self.norms[0](self.gcns[0](xg, edge_index, edge_attr))
         
