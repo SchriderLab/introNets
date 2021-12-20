@@ -102,7 +102,7 @@ def main():
     fig, axes = plt.subplots(ncols = 2)
     
     axes[0].imshow(x_im)
-    axes[1].imshow(y, cmap = 'gray')
+    axes[1].imshow(y[j], cmap = 'gray')
     
     
     plt.savefig('test_output.png', dpi = 100)
