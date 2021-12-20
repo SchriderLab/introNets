@@ -1009,7 +1009,7 @@ class GATConv(MessagePassing):
         self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
 
         if edge_dim is not None:
-            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False)
+            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot')
             self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
