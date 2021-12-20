@@ -80,16 +80,17 @@ def main():
         if len(ix) > 3:
             x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
             
-    x = np.cos(x[:128,:])
-    D = pdist(x, metric = 'euclidean')
-    ix = seriate(D)
-
-    x = x[ix, :]
-
-    x_im = np.ones((150, 128, 3))
+            
+    x = np.cos(x)
     x1 = x[:150,:]
     x2 = x[150:300,:]
     
+    D = pdist(x1, metric = 'euclidean')
+    ix = seriate(D)
+
+    x1 = x1[ix, :]
+
+    x_im = np.ones((150, 128, 3))
     D = cdist(x1, x2, metric = 'euclidean')
     i, j = linear_sum_assignment(D)
     
