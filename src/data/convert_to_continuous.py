@@ -90,7 +90,7 @@ def main():
 
     x1 = x1[ix, :]
 
-    x_im = np.ones((150, 128, 3))
+    x_im = np.zeros((150, 128, 3))
     D = cdist(x1, x2, metric = 'euclidean')
     i, j = linear_sum_assignment(D)
     
@@ -99,7 +99,12 @@ def main():
     x_im[:,:,0] = x1
     x_im[:,:,1] = x2
     
-    plt.imshow(x_im)
+    fig, axes = plt.subplots(ncols = 2)
+    
+    axes[0].imshow(x_im)
+    axes[1].imshow(y, cmap = 'gray')
+    
+    
     plt.savefig('test_output.png', dpi = 100)
     plt.close()
     
