@@ -1229,7 +1229,7 @@ class GCNConvNet_beta(nn.Module):
             xg = to_dense_batch(xg, batch)[0]
             xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
                 
-            xs.append(torch.cat([self.downs[ix - 1](xs[-1]), xc, xg]) + xs[-1])
+            xs.append(torch.cat([self.downs[ix - 1](xs[-1]), xc, xg], dim = 1) + xs[-1])
                   
         x = torch.cat(xs, dim = 1)
         
