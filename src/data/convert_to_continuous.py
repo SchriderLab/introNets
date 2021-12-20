@@ -79,7 +79,7 @@ def main():
         if len(ix) > 3:
             x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
             
-    x = np.cos(x[:,128])
+    x = np.cos(x[:128,:])
     D = pdist(x, metric = 'euclidean')
     ix = seriate(D)
 
