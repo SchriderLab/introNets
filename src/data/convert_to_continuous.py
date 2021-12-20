@@ -16,8 +16,10 @@ matplotlib.use('Agg')
 import sys
 
 import matplotlib.pyplot as plt
-from scipy.spatial.distance import pdist
+from scipy.spatial.distance import pdist, cdist
 from seriate import seriate
+
+from scipy.optimize import linear_sum_assignment
 
 def parse_args():
     # Argument Parser
@@ -53,7 +55,8 @@ def main():
     #train_keys = list(ifile['train'].keys())
     #val_keys = list(ifile['val'].keys())
 
-    x = np.array(ifile['train']['0']['x_0'])
+    x = np.array(ifile['train']['0']['x_0'])[0,:,:]
+    y = np.array(ifile['train']['0']['y'])[0,:,:]
     x[:,:,-1] = 1
     
     x = np.cumsum(x, axis = 2) * 2 * np.pi
@@ -66,8 +69,6 @@ def main():
     mask[:,:,-1] = 1
     
     x[mask == 0] = 0
-    
-    x = x.reshape(x.shape[0] * x.shape[1], -1)
     t = np.array(range(x.shape[-1]))
     
     for k in range(len(x)):
@@ -83,7 +84,19 @@ def main():
     D = pdist(x, metric = 'euclidean')
     ix = seriate(D)
 
-    x = x[ix, :]        
+    x = x[ix, :]
+
+    x_im = np.ones((150, 128, 0))
+    x1 = x[:150,:]
+    x2 = x[150:300,:]
+    
+    D = cdist(x1, x2, metric = 'euclidean')
+    i, j = linear_sum_assignment(D)
+    
+    x2 = x2[j,:]
+    
+    x_im[:,:,0] = x1
+    x_im[:,:,1] = x2
     
     plt.imshow(x)
     plt.savefig('test_output.png', dpi = 100)
