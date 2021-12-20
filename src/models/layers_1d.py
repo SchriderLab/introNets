@@ -1070,28 +1070,6 @@ class GATConv(MessagePassing):
         alpha_dst = None if x_dst is None else (x_dst * self.att_dst).sum(-1)
         alpha = (alpha_src, alpha_dst)
 
-        if self.add_self_loops:
-            if isinstance(edge_index, Tensor):
-                # We only want to add self-loops for nodes that appear both as
-                # source and target nodes:
-                num_nodes = x_src.size(0)
-                if x_dst is not None:
-                    num_nodes = min(num_nodes, x_dst.size(0))
-                num_nodes = min(size) if size is not None else num_nodes
-                edge_index, edge_attr = remove_self_loops(
-                    edge_index, edge_attr)
-                edge_index, edge_attr = add_self_loops(
-                    edge_index, edge_attr, fill_value=self.fill_value,
-                    num_nodes=num_nodes)
-            elif isinstance(edge_index, SparseTensor):
-                if self.edge_dim is None:
-                    edge_index = set_diag(edge_index)
-                else:
-                    raise NotImplementedError(
-                        "The usage of 'edge_attr' and 'add_self_loops' "
-                        "simultaneously is currently not yet supported for "
-                        "'edge_index' in a 'SparseTensor' form")
-
         print(x.shape)
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
         out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
