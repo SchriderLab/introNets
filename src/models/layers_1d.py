@@ -1042,12 +1042,12 @@ class Eq1dConv(nn.Module):
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
         self.register_buffer('up_filter', design_lowpass_filter())
         self.register_buffer('down_filter', design_lowpass_filter(cutoff = 128 - 1, width = WIDTH * 2, fs = 256))
-        self.bias = torch.nn.Parameter(torch.zeros([self.out_channels]))
+        self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
         
-        pad_total = (128 - 1) * self.down_factor + 1 # Desired output size before downsampling.
-        pad_total -= (128 + 3 - 1) * self.up_factor # Input size after upsampling.
+        pad_total = (128 - 1) * 2 + 1 # Desired output size before downsampling.
+        pad_total -= (128 + 3 - 1) * 2 # Input size after upsampling.
         pad_total += - 2 # Size reduction caused by the filters.
         pad_lo = (pad_total + 2) // 2 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
         pad_hi = pad_total - pad_lo
@@ -1057,7 +1057,7 @@ class Eq1dConv(nn.Module):
         # convolve and the perform
         x = self.conv(self.norm(x))
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
-            up=self.up_factor, down=self.down_factor, padding=self.padding, gain=1., clamp=self.conv_clamp)
+            up=2, down=2, padding=self.padding, gain=1., clamp=self.conv_clamp)
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, pred_pop = 1):
