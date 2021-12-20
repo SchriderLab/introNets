@@ -55,6 +55,9 @@ def main():
         x = np.cumsum(np.array(ifile['train'][key]['x_0']), axis = 2) * 2 * np.pi
         mask = np.zeros(x.shape)
         
+        print(x.shape)
+        print(np.diff(x).shape)
+        
         mask[np.where(np.diff(x, axis = 2) != 0)[0] + 1] = 1
         x[mask == 0] = np.nan
         
