@@ -1090,6 +1090,7 @@ class GCNConvNet_beta(nn.Module):
         xc = self.convs[0](x)
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
         xg = self.norms[0](self.gcns[0](x, edge_index, edge_attr))
+        print(xg.shape)
         
         xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
