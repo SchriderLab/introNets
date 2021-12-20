@@ -1087,10 +1087,16 @@ class GCNConvNet_beta(nn.Module):
         self.pred_pop = pred_pop
     
     def forward(self, x, edge_index, edge_attr, batch):
+        print(x.shape, edge_index.shape, edge_attr.shape, batch.shape)
+        
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
+        print(xc.shape)
+        
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
+        print(xg.shape)
+        
         xg = self.norms[0](self.gcns[0](x, edge_index, edge_attr))
         
         xg = to_dense_batch(xg, batch)[0]
