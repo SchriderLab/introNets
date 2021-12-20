@@ -1051,7 +1051,7 @@ class Eq1dConv(nn.Module):
         pad_total += - 2 # Size reduction caused by the filters.
         pad_lo = (pad_total + 2) // 2 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
         pad_hi = pad_total - pad_lo
-        self.padding = [int(pad_lo[0]), int(pad_hi[0]), int(pad_lo[1]), int(pad_hi[1])]
+        self.padding = [int(pad_lo), int(pad_hi), int(pad_lo), int(pad_hi)]
         
     def forward(self, x):
         # convolve and the perform
