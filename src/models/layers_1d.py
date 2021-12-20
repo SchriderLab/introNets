@@ -1216,6 +1216,7 @@ class GCNConvNet_beta(nn.Module):
         print(xg.shape)
         
         xg = self.norms[0](self.gcns[0](xg, edge_index, edge_attr))
+        print(xg.max())
         
         xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
