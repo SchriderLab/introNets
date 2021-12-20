@@ -1208,6 +1208,8 @@ class GCNConvNet_beta(nn.Module):
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
+        print(xc.max())
+        
         print(xc.shape)
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1223,6 +1225,8 @@ class GCNConvNet_beta(nn.Module):
         xs = [x]
         for ix in range(1, len(self.convs)):
             xc = self.convs[ix](xs[-1])
+            print(xc.max())
+            
             xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
             xg = self.norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
             
