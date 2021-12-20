@@ -98,6 +98,8 @@ def main():
     device = torch.device(device_strings[0])
 
     model = NestedUNetV2(1, 2)
+    
+    
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -120,7 +122,7 @@ def main():
     vl = generator.val_length
 
     criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([float(args.pos_weight)]).to(device))
-    optimizer = optim.Adam(model.parameters(), lr = 0.0005)
+    optimizer = optim.Adam(model.parameters(), lr = 0.001)
     
     decayRate = 0.96
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
