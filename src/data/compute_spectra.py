@@ -84,7 +84,8 @@ def main():
     spectrum_size = 4 * 128
     spectrum = torch.zeros(spectrum_size).to(torch.float64).to(device)
     for key in np.random.choice(keys, 1000, replace = False):
-        x = torch.FloatTensor(np.array(ifile['train'][key]['x_0'])).to(device)
+        x = torch.FloatTensor(np.array(ifile['train'][key]['x_0'])).to(device).flatten(0, 1)
+        print(x.shape)
         
         s = calc(x, mean, std).squeeze(0)
         
@@ -92,6 +93,7 @@ def main():
         n += 1
         
     spectrum /= n
+    spectrum = spectrum.detach().cpu().numpy()
     
     logging.info('plotting and saving...')
     np.savez(os.path.join(args.odir, 'average_spectrum.npz'), spectrum = spectrum)
