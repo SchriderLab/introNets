@@ -27,6 +27,7 @@ EDGE_MEAN = np.array([
 EDGE_STD = np.array([5.2765501e-01, 8.9487451e-01, 1.1330474e+03, 2.4047951e+01])
 
 from mpi4py import MPI
+from format_unet_data_h5 import make_continuous
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -39,6 +40,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     edge_index = []
     
     x_ = np.array(ifile[key]['x'])
+    x_ = make_continuous(x_)
+    
     y_ = np.array(ifile[key]['y'])
     
     if np.sum(y_) == 0:
