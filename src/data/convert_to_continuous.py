@@ -52,11 +52,11 @@ def main():
     #val_keys = list(ifile['val'].keys())
 
     x = np.cumsum(np.array(ifile['train']['0']['x_0']), axis = 2) * 4 * np.pi
-    mask = np.zeros(x.shape)
-    ix = np.where(np.diff(x) != 0)
-    ix[-1] += 1
-    mask[ix] = 1
     
+    mask = np.zeros(x.shape)
+    ix = list(np.where(np.diff(x) != 0))
+    ix[-1] += 1
+    mask[tuple(ix)] = 1
     x[mask == 0] = 0
 
     x[:,:,0] = 2 * np.pi
@@ -72,10 +72,6 @@ def main():
         
         if len(ix) > 3:
             x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
-        elif len(ix) > 2:
-            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'quadratic')(t)
-        else:
-            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'quadratic')(t)
             
     plt.imshow(x)
     plt.savefig('test_output.png', dpi = 100)
