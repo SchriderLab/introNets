@@ -1034,7 +1034,7 @@ class GATConv(MessagePassing):
         glorot(self.att_edge)
         
     def update(self, inputs, x):
-        return self.norm(x, inputs)
+        return self.norm(x[0], inputs)
 
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
