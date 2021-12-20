@@ -1223,18 +1223,18 @@ class GCNConvNet_beta(nn.Module):
         self.pred_pop = pred_pop
     
     def forward(self, x, edge_index, edge_attr, batch):
-        print(x.shape, edge_index.shape, edge_attr.shape, batch.shape)
-        print(edge_index.max())
+        #print(x.shape, edge_index.shape, edge_attr.shape, batch.shape)
+        #print(edge_index.max())
         
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
-        print(xc.shape)
+        #print(xc.shape)
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-        print(xg.shape)
+        #print(xg.shape)
         
-        xg = self.norms[0](self.gcns[0](x, edge_index, edge_attr))
+        xg = self.norms[0](self.gcns[0](xg, edge_index, edge_attr))
         
         xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
@@ -1245,7 +1245,7 @@ class GCNConvNet_beta(nn.Module):
         for ix in range(1, len(self.convs)):
             xc = self.convs[ix](xs[-1])
             xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-            xg = self.norms[ix](self.gcns[ix](x, edge_index, edge_attr))
+            xg = self.norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
             
             xg = to_dense_batch(xg, batch)[0]
             xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
