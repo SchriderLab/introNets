@@ -73,7 +73,7 @@ def main():
         if len(ix) > 3:
             x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
             
-    plt.imshow(x)
+    plt.imshow(x[:128])
     plt.savefig('test_output.png', dpi = 100)
     plt.close()
     
