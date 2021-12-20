@@ -1211,7 +1211,7 @@ class GCNConvNet_beta(nn.Module):
         for ix in range(depth):
             self.convs.append(Eq1dConv(in_channels, 1))
             self.gcns.append(GATConv(128, 128, edge_dim = 8))
-            self.norms.append(nn.LayerNorm(128))
+            self.norms.append(nn.InstanceNorm1d(128))
                     
             channels += 3
             in_channels = 3
