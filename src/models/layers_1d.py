@@ -1224,6 +1224,7 @@ class GCNConvNet_beta(nn.Module):
     
     def forward(self, x, edge_index, edge_attr, batch):
         print(x.shape, edge_index.shape, edge_attr.shape, batch.shape)
+        print(edge_index.max())
         
         batch_size, _, ind, sites = x.shape
         
