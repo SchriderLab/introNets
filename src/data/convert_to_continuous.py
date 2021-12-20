@@ -57,16 +57,16 @@ def main():
 
     x = np.array(ifile['train']['0']['x_0'])[0,:,:]
     y = np.array(ifile['train']['0']['y'])[0,:,:]
-    x[:,:,-1] = 1
+    x[:,-1] = 1
     
-    x = np.cumsum(x, axis = 2) * 2 * np.pi
+    x = np.cumsum(x, axis = 1) * 2 * np.pi
 
     
     mask = np.zeros(x.shape)
     ix = list(np.where(np.diff(x) != 0))
     ix[-1] += 1
     mask[tuple(ix)] = 1
-    mask[:,:,-1] = 1
+    mask[:,-1] = 1
     
     x[mask == 0] = 0
     t = np.array(range(x.shape[-1]))
