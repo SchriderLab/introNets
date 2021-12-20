@@ -1079,7 +1079,7 @@ class GCNConvNet_beta(nn.Module):
             in_channels = 3
             
             if ix > 0:
-                self.down.append(nn.Conv2d(3, 1, 1, 1))
+                self.downs.append(nn.Conv2d(3, 1, 1, 1))
             
         self.out = nn.Conv2d(channels, 1, 1, 1, bias = False)
         self.pred_pop = pred_pop
