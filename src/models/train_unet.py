@@ -26,6 +26,7 @@ import h5py
 import numpy as np
 from sklearn.metrics import accuracy_score
 import pandas as pd
+import pickle
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -38,6 +39,13 @@ import matplotlib.pyplot as plt
 ## 000: 5.146955817634787
 ## 001: 5.469970200977819
 ## 002: 6.25023282070848
+
+# i2
+## 000: 8.379942663085659
+## 001: 4.116404380681516
+## 002: 4.449054245190725
+## 003: 5.2208065886452
+
 
 def parse_args():
     # Argument Parser
@@ -58,8 +66,8 @@ def parse_args():
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
     
-    # for AO to BF we had: 6.66666 # hail satan
-    parser.add_argument("--pos_weight", default = "9.108325464834794")
+    # for AO to BF we had: 
+    parser.add_argument("--pos_weight", default = "8.379942663085659")
     
     # ${args}
 
@@ -103,13 +111,19 @@ def main():
     # define the generator
     print('reading data keys...')
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = int(args.batch_size))
+    val_keys = generator.val_keys
+    
+    # save them for later
+    pickle.dump(val_keys, open(os.path.join(args.odir, '{}_val_keys.pkl'.format(args.tag)), 'wb'))
     
     l = generator.length
     vl = generator.val_length
 
     criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([float(args.pos_weight)]).to(device))
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
-    scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
+    optimizer = optim.Adam(model.parameters(), lr = 0.0005)
+    
+    decayRate = 0.96
+    lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
 
     min_val_loss = np.inf
     early_count = 0
