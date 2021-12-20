@@ -1061,7 +1061,7 @@ class GATConv(MessagePassing):
 
         H, C = self.heads, self.out_channels
 
-        x_src = x_dst = x
+        x_src = x_dst = x * 1.
         x = (x_src, x_dst)
 
         # Next, we compute node-level attention coefficients, both for source
