@@ -24,6 +24,8 @@ def calc(x, mean, std, beta = 8, interp = 4, device=torch.device('cuda')):
 
     x = (x.to(torch.float64) - mean) / std
     x = torch.nn.functional.pad(x, [0, 0, 0, padding])
+    print(x.shape)
+    
     spectrum = torch.fft.fftn(x, dim=[1]).abs().square().mean(dim=[0])
 
     return spectrum
