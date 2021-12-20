@@ -58,7 +58,7 @@ def main():
         print(x.shape)
         print(np.diff(x).shape)
         
-        mask[np.where(np.diff(x, axis = 2) != 0)[0] + 1] = 1
+        mask[np.where(np.diff(x) != 0)[0] + 1] = 1
         x[mask == 0] = np.nan
         
         x[:,:,0] = 0.
