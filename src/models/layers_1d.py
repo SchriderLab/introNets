@@ -1036,7 +1036,6 @@ class GATConv(MessagePassing):
     def update(self, inputs, x):
         return self.norm(x[0], inputs)
 
-
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
                 edge_attr: OptTensor = None, size: Size = None,
                 return_attention_weights=None):
@@ -1116,7 +1115,10 @@ class GATConv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
+        print(alpha)
+        
         return x_j * alpha.unsqueeze(-1)
+    
     
     
 
@@ -1181,6 +1183,7 @@ class GCNConvNet_beta(nn.Module):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
+        self.norm_convs = nn.ModuleList()
         self.gcns = nn.ModuleList()
         
         self.downs = nn.ModuleList()
