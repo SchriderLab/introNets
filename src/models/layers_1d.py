@@ -1049,8 +1049,8 @@ class Eq1dConv(nn.Module):
         pad_total = (128 - 1) * 2 + 1 # Desired output size before downsampling.
         pad_total -= (128 + 3 - 1) * 2 # Input size after upsampling.
         pad_total += - 2 # Size reduction caused by the filters.
-        pad_lo = (pad_total + 2) // 2 + 18 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
-        pad_hi = pad_total - pad_lo + 18
+        pad_lo = (pad_total + 2) // 2 + 12 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
+        pad_hi = pad_total - pad_lo + 12
         self.padding = [int(pad_lo), int(pad_hi), int(pad_lo), int(pad_hi)]
         
     def forward(self, x):
