@@ -19,6 +19,35 @@ from seriate import seriate
 from scipy.spatial.distance import pdist, cdist
 
 from scipy.optimize import linear_sum_assignment
+from scipy.interpolate import interp1d
+
+def make_continuous(x):
+    x = np.cumsum(x, axis = 1) * 2 * np.pi
+
+    mask = np.zeros(x.shape)
+    ix = list(np.where(np.diff(x) != 0))
+    ix[-1] += 1
+    mask[tuple(ix)] = 1
+    mask[:,-1] = 1
+    
+    x[mask == 0] = 0
+    t = np.array(range(x.shape[-1]))
+    
+    for k in range(len(x)):
+        ix = [0] + list(np.where(x[k] != 0)[0])
+        print(len(ix))
+        
+        t = np.array(range(np.max(ix)))
+        
+        if len(ix) > 3:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
+        elif len(ix) > 2:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'quadratic')(t)
+        elif len(ix) > 1:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'linear')(t)
+            
+    x = np.cos(x)
+    return x
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
@@ -84,6 +113,9 @@ class Formatter(object):
             
             x1 = x[x1_indices, :]
             x2 = x[x2_indices, :]
+            
+            x1 = make_continuous(x1)
+            x2 = make_continuous(x2)
             
             y1 = y[x1_indices, :]
             y2 = y[x2_indices, :]
