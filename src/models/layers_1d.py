@@ -1069,6 +1069,9 @@ class GATConv(MessagePassing):
         alpha_src = (x_src * self.att_src).sum(dim=-1)
         alpha_dst = None if x_dst is None else (x_dst * self.att_dst).sum(-1)
         alpha = (alpha_src, alpha_dst)
+        
+        edge_index, edge_attr = remove_self_loops(
+                    edge_index, edge_attr)
 
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
         out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
