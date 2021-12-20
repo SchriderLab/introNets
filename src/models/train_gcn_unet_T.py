@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2
+from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta
 from data_loaders import GCNDataGeneratorH5
 import glob
 from scipy.special import expit
@@ -148,7 +148,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GATRelateCNetV2(n_sites = int(args.n_sites), att_activation = args.att_activation)
+    model = GCNConvNet_beta()
     print(model)
     d_model = count_parameters(model)
     
