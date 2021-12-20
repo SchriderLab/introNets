@@ -1172,7 +1172,7 @@ class Eq1dConv(nn.Module):
         # convolve and the perform
         x = self.conv(self.norm(x))
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
-            up=2, down=2, padding=self.padding, gain=1., clamp=None)
+            up=2, down=2, padding=self.padding, gain=1., clamp=self.conv_clamp)
         
         return x
 
