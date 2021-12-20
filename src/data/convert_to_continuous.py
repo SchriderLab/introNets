@@ -16,6 +16,8 @@ matplotlib.use('Agg')
 import sys
 
 import matplotlib.pyplot as plt
+from scipy.spatial.distance import pdist
+from seriate import seriate
 
 def parse_args():
     # Argument Parser
@@ -51,15 +53,17 @@ def main():
     #train_keys = list(ifile['train'].keys())
     #val_keys = list(ifile['val'].keys())
 
-    x = np.cumsum(np.array(ifile['train']['0']['x_0']), axis = 2) * 4 * np.pi
+    x = np.array(ifile['train']['0']['x_0'])
+    x[:,:,-1] = 1
+    
+    x = np.cumsum(x, axis = 2) * 4 * np.pi
+    
     
     mask = np.zeros(x.shape)
     ix = list(np.where(np.diff(x) != 0))
     ix[-1] += 1
     mask[tuple(ix)] = 1
     x[mask == 0] = 0
-
-    x[:,:,0] = 2 * np.pi
     
     x = x.reshape(x.shape[0] * x.shape[1], -1)
     t = np.array(range(x.shape[-1]))
@@ -73,7 +77,13 @@ def main():
         if len(ix) > 3:
             x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
             
-    plt.imshow(np.cos(x[:128]))
+    x = np.cos(x[:,128])
+    D = pdist(x, metric = 'euclidean')
+    ix = seriate(D)
+
+    x = x[ix, :]        
+    
+    plt.imshow(x)
     plt.savefig('test_output.png', dpi = 100)
     plt.close()
     
