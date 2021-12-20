@@ -1010,7 +1010,7 @@ class GATConv(MessagePassing):
                 f'{self.out_channels}, heads={self.heads})')
     
 WIDTH = (np.sqrt(2) - 1) * 64 * 2
-def design_lowpass_filter(numtaps = 7, cutoff = 64 - 1, width = WIDTH, fs = 128, radial=False):
+def design_lowpass_filter(numtaps = 4, cutoff = 64 - 1, width = WIDTH, fs = 128, radial=False):
     assert numtaps >= 1
 
     # Identity filter.
