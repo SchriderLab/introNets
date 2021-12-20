@@ -744,7 +744,6 @@ class GATRelateCNetV2(nn.Module):
     
 from torch.nn import Parameter
 from torch_sparse import SparseTensor, set_diag
-from torch_geometric.nn.dense.linear import Linear
 from torch_geometric.nn.conv import MessagePassing
 from torch_geometric.utils import remove_self_loops, add_self_loops, softmax
 
@@ -867,14 +866,14 @@ class GATConv(MessagePassing):
         self.edge_dim = edge_dim
         self.fill_value = fill_value
 
+        self.norm = MessageNorm(True)
 
         # The learnable parameters to compute attention coefficients:
         self.att_src = Parameter(torch.Tensor(1, heads, out_channels))
         self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
 
         if edge_dim is not None:
-            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False,
-                                   weight_initializer='glorot')
+            self.lin_edge = nn.Linear(edge_dim, heads * out_channels, bias=False)
             self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
@@ -897,6 +896,9 @@ class GATConv(MessagePassing):
         glorot(self.att_src)
         glorot(self.att_dst)
         glorot(self.att_edge)
+        
+    def update(self, inputs, x):
+        return self.norm(x, inputs)
 
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
