@@ -46,34 +46,29 @@ def main():
     args = parse_args()
     
     ifile = h5py.File(args.ifile, 'r')
-    ofile = h5py.File(args.ofile, 'w')
+    #ofile = h5py.File(args.ofile, 'w')
     
-    train_keys = list(ifile['train'].keys())
-    val_keys = list(ifile['val'].keys())
+    #train_keys = list(ifile['train'].keys())
+    #val_keys = list(ifile['val'].keys())
 
-    for key in train_keys:
-        x = np.cumsum(np.array(ifile['train'][key]['x_0']), axis = 2) * 2 * np.pi
-        mask = np.zeros(x.shape)
+    x = np.cumsum(np.array(ifile['train']['0']['x_0']), axis = 2) * 4 * np.pi
+
+    x[:,:,0] = 2 * np.pi
+    
+    x = x.reshape(x.shape[0] * x.shape[1], -1)
+    t = np.array(range(x.shape[-1]))
+    
+    for k in range(len(x)):
+        ix = np.where(x[k] != 0)[0]
+        t = np.array(range(np.max(ix)))
         
-        print(x.shape)
-        print(np.diff(x).shape)
+        x[k,:len(t)] = interp1d(t[ix], x[k,ix], kind = 'cubic')(t)
         
-        mask[np.where(np.diff(x) != 0)[0] + 1] = 1
-        x[mask == 0] = np.nan
-        
-        x[:,:,0] = 0.
-        x = x.reshape(x.shape[0] * x.shape[1], -1)
-        t = np.array(range(x.shape[-1]))
-        
-        for k in range(len(x)):
-            ix = np.where(~np.isnan(x[k]))[0]
-            x[k,:] = interp1d(t[ix], x[k,ix], kind = 'cubic')(t)
-            
-        plt.imshow(x)
-        plt.savefig('test_output.png', dpi = 100)
-        plt.close()
-        
-        sys.exit()
+    plt.imshow(x)
+    plt.savefig('test_output.png', dpi = 100)
+    plt.close()
+    
+    sys.exit()
             
             
     # ${code_blocks}
