@@ -57,6 +57,7 @@ def main():
     x[:,:,-1] = 1
     
     x = np.cumsum(x, axis = 2) * 4 * np.pi
+    x[:,:,0] = 2 * np.pi
     
     mask = np.zeros(x.shape)
     ix = list(np.where(np.diff(x) != 0))
