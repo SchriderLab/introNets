@@ -1242,7 +1242,7 @@ class GCNConvNet_beta(nn.Module):
         
         x = self.out(x)
         
-        return x
+        return torch.squeeze(x)
 
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
