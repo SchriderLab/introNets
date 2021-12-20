@@ -58,11 +58,12 @@ def main():
     
     x = np.cumsum(x, axis = 2) * 4 * np.pi
     
-    
     mask = np.zeros(x.shape)
     ix = list(np.where(np.diff(x) != 0))
     ix[-1] += 1
     mask[tuple(ix)] = 1
+    mask[:,:,-1] = 1
+    
     x[mask == 0] = 0
     
     x = x.reshape(x.shape[0] * x.shape[1], -1)
