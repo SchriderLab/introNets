@@ -1067,6 +1067,7 @@ class GCNConvNet_beta(nn.Module):
         self.gcns = nn.ModuleList()
         
         self.downs = nn.ModuleList()
+        self.norms = nn.ModuleList()
     
         channels = 0
         for ix in range(depth):
