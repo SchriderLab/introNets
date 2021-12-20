@@ -56,8 +56,8 @@ def main():
     x = np.array(ifile['train']['0']['x_0'])
     x[:,:,-1] = 1
     
-    x = np.cumsum(x, axis = 2) * 4 * np.pi
-    x[:,:,0] = 2 * np.pi
+    x = np.cumsum(x, axis = 2) * 2 * np.pi
+
     
     mask = np.zeros(x.shape)
     ix = list(np.where(np.diff(x) != 0))
@@ -71,7 +71,7 @@ def main():
     t = np.array(range(x.shape[-1]))
     
     for k in range(len(x)):
-        ix = np.where(x[k] != 0)[0]
+        ix = [0] + list(np.where(x[k] != 0)[0])
         print(len(ix))
         
         t = np.array(range(np.max(ix)))
