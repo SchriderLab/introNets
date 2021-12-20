@@ -108,7 +108,18 @@ class Formatter(object):
             if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                 continue
             
-            x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size))
+            if self.pop_sizes[0] >= self.pop_size:
+                replace = False
+            else:
+                replace = True
+            
+            x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size, replace = replace))
+            
+            if self.pop_sizes[1] >= self.pop_size:
+                replace = False
+            else:
+                replace = True
+            
             x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
             
             x1 = x[x1_indices, :]
@@ -134,7 +145,6 @@ class Formatter(object):
             
             y1 = y1[:,six:six + self.n_sites]
             y2 = y2[:,six:six + self.n_sites]
-            
             
             
             if self.sorting == "seriate_match":
