@@ -60,6 +60,8 @@ def main():
     
     for k in range(len(x)):
         ix = np.where(x[k] != 0)[0]
+        print(len(ix))
+        
         t = np.array(range(np.max(ix)))
         
         x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
