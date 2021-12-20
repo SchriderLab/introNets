@@ -1040,8 +1040,8 @@ class Eq1dConv(nn.Module):
         self.norm = nn.InstanceNorm2d(in_channels)
         self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
-        self.register_buffer('up_filter', self.design_lowpass_filter())
-        self.register_buffer('down_filter', self.design_lowpass_filter(cutoff = 128, width = WIDTH * 2))
+        self.register_buffer('up_filter', design_lowpass_filter())
+        self.register_buffer('down_filter', design_lowpass_filter(cutoff = 128, width = WIDTH * 2))
         self.bias = torch.nn.Parameter(torch.zeros([self.out_channels]))
         
         self.conv_clamp = 64
