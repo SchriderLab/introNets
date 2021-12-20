@@ -25,6 +25,8 @@ def calc(x, mean, std, beta = 8, interp = 4, device=torch.device('cuda')):
     window = torch.kaiser_window(image_size, periodic=False, beta=beta, device=device)
     window *= window.square().sum().rsqrt()
     window = window.ger(window).unsqueeze(0).unsqueeze(1)
+    
+    print(window.shape)
 
     x = (x.to(torch.float64) - mean) / std
     x = torch.nn.functional.pad(x * window, [0, padding])
