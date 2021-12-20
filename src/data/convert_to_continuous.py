@@ -99,7 +99,7 @@ def main():
     x_im[:,:,0] = x1
     x_im[:,:,1] = x2
     
-    plt.imshow(x)
+    plt.imshow(x_im)
     plt.savefig('test_output.png', dpi = 100)
     plt.close()
     
