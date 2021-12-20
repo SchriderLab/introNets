@@ -216,7 +216,7 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        scheduler.step(val_loss)
+        lr_scheduler.step()
         generator.on_epoch_end()
 
         df = pd.DataFrame(history)
