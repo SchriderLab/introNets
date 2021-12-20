@@ -21,16 +21,10 @@ def calc(x, mean, std, beta = 8, interp = 4, device=torch.device('cuda')):
     spectrum_size = image_size * interp
     padding = spectrum_size - image_size
 
-    # Setup window function.
-    window = torch.kaiser_window(image_size, periodic=False, beta=beta, device=device)[64]
-    window *= window.square().sum().rsqrt()
-    window = window.ger(window).unsqueeze(0)
-    
-    print(window.shape)
 
     x = (x.to(torch.float64) - mean) / std
-    x = torch.nn.functional.pad(x * window, [0, padding])
-    spectrum = torch.fft.fftn(x, dim=[2]).abs().square().mean(dim=[0,1])
+    x = torch.nn.functional.pad(x, [0, 0, 0, padding])
+    spectrum = torch.fft.fftn(x, dim=[1]).abs().square().mean(dim=[0])
 
     return spectrum
 
@@ -87,11 +81,7 @@ def main():
     spectrum = torch.zeros(spectrum_size).to(torch.float64).to(device)
     for key in np.random.choice(keys, 1000, replace = False):
         x = np.array(ifile['train'][key]['x_0'])
-        ix = list(range(64)) + list(range(150, 214))
-        x = x[:,ix,:]
-        x = np.expand_dims(x, 1)
-        
-        x = torch.FloatTensor(x).to(device)
+        x = torch.FloatTensor(x).to(device).flatten(0, 1)
     
         print(x.shape)
         
