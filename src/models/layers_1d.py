@@ -1186,7 +1186,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 4, sites = 128):
+                         pred_pop = 1, out_channels = 12, sites = 128):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
