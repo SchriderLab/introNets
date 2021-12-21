@@ -1006,8 +1006,8 @@ class GATConv(MessagePassing):
         self.norm = MessageNorm(True)
 
         # The learnable parameters to compute attention coefficients:
-        self.att_src = Parameter(torch.Tensor(1, heads))
-        self.att_dst = Parameter(torch.Tensor(1, heads))
+        self.att_src = Parameter(torch.Tensor(1, heads, 1))
+        self.att_dst = Parameter(torch.Tensor(1, heads, 1))
 
         if edge_dim is not None:
             self.lin_edge = nn.Sequential(Linear(edge_dim, heads, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(), 
