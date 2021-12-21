@@ -1196,6 +1196,8 @@ class GCNConvNet_beta(nn.Module):
         
         self.downs = nn.ModuleList()
         self.norms = nn.ModuleList()
+        
+        channels_ = out_channels * 2 + in_channels
     
         channels = 0
         for ix in range(depth):
@@ -1205,9 +1207,9 @@ class GCNConvNet_beta(nn.Module):
             self.gcn_norms.append(LayerNorm(sites * out_channels))
             
             if ix > 0:
-                self.downs.append(nn.Conv2d(out_channels * 2 + in_channels, 1, 1, 1))
-            channels += out_channels * 2 + in_channels
-            in_channels = out_channels * 2 + in_channels
+                self.downs.append(nn.Conv2d(channels_, 1, 1, 1))
+            channels += channels_
+            in_channels = channels_
             
                 
         self.out_channels = out_channels
