@@ -1165,7 +1165,7 @@ class Eq1dConv(nn.Module):
         
         self.conv_clamp = 64
         
-        self.padding = [5, 5, 0, 0]
+        self.padding = [4, 4, 0, 0]
         
     def forward(self, x):
         # convolve and the perform
@@ -1208,9 +1208,7 @@ class GCNConvNet_beta(nn.Module):
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
-        
-        return xc
-    
+
         print(xc.max())
         
         print(xc.shape)
