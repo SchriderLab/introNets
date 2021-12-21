@@ -1166,6 +1166,8 @@ class Eq1dConv(nn.Module):
         
         self.conv_clamp = 64
         
+        print(self.up_filter, self.down_filter)
+        
         self.padding = [3, 3, 0, 0]
         
     def forward(self, x):
