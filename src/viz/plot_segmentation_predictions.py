@@ -150,7 +150,7 @@ def main():
                 ax1.set_title('pop B')
                 
                 ax2 = fig.add_subplot(153)
-                ax2.imshow(y[k,:,:], cmap = 'gray')
+                ax2.imshow(y[k,0,:], cmap = 'gray')
                 ax2.set_title('pop B (y)')
                 
                 ax3 = fig.add_subplot(154)
