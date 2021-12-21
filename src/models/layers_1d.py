@@ -989,7 +989,7 @@ class GATConv(MessagePassing):
         bias: bool = True,
         **kwargs,
     ):
-        kwargs.setdefault('aggr', 'add')
+        kwargs.setdefault('aggr', 'mean')
         super().__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
@@ -1096,7 +1096,9 @@ class GATConv(MessagePassing):
                 return out, edge_index.set_value(alpha, layout='coo')
         else:
             return out
-
+        
+    def update(self, inputs, x):
+        return self.norm(x[0], inputs)
 
     def message(self, x_j: Tensor, alpha_j: Tensor, alpha_i: OptTensor,
                 edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
@@ -1176,7 +1178,7 @@ class Eq1dConv(nn.Module):
         # convolve and the perform
         x = self.conv(self.norm(x))
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
-            up=2, down=2, padding=self.padding, gain=1., clamp=self.conv_clamp)
+            up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
         return x
 
@@ -1195,7 +1197,7 @@ class GCNConvNet_beta(nn.Module):
         for ix in range(depth):
             self.convs.append(Eq1dConv(in_channels, 1))
             self.gcns.append(GATConv(128, 128, edge_dim = 8))
-            self.norms.append(nn.BatchNorm1d(128))
+            self.norms.append(nn.InstanceNorm2d(1))
                     
             channels += 3
             in_channels = 3
@@ -1211,12 +1213,7 @@ class GCNConvNet_beta(nn.Module):
         #print(edge_index.max())
         
         batch_size, _, ind, sites = x.shape
-        
-        xc = self.convs[0](x)
-
-        print(xc.max())
-        
-        print(xc.shape)
+        xc = self.norms[0](self.convs[0](x))
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
         print(xg.shape)
@@ -1231,8 +1228,7 @@ class GCNConvNet_beta(nn.Module):
         
         xs = [x]
         for ix in range(1, len(self.convs)):
-            xc = self.convs[ix](xs[-1])
-            print(xc.max())
+            xc = self.norms[ix](self.convs[ix](xs[-1]))
             
             xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
             xg = self.gcns[ix](xg, edge_index, edge_attr)
