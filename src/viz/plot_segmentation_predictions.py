@@ -80,7 +80,7 @@ def parse_args():
     parser.add_argument("--keys", default = "None")
     
     parser.add_argument("--odir", default = "None")
-    parser.add_argument("--n_samples", default = "4")
+    parser.add_argument("--n_samples", default = "100")
     
     args = parser.parse_args()
 
@@ -115,13 +115,15 @@ def main():
     model.eval()
     
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4)
+    generator.val_keys = pickle.load(open(args.keys, 'rb'))
+    
     counter = 0
     
     Y = []
     Y_pred = []
     for ix in range(int(args.n_samples)):
         with torch.no_grad():
-            x, y = generator.get_batch()
+            x, y = generator.get_batch(True)
             
             x = x.to(device)
             y = y.to(device)
