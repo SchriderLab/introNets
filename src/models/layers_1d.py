@@ -1149,31 +1149,40 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
         
 
 class Eq1dConv(nn.Module):
-    def __init__(self, in_channels = 1, out_channels = 1, k = 3, s = 128):
+    def __init__(self, in_channels = 1, out_channels = 1, k = 3, s = 128, n_layers = 3):
         super(Eq1dConv, self).__init__()
         
-        self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
-                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
+        self.convs = nn.ModuleList()
+        self.norms = nn.ModuleList()
+        
+        for ix in range(len(n_layers)):
+            self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
+                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+            self.norms.append(nn.InstanceNorm2d(1))
+            
+            out_channels = 1
+        
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
         self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
         self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
         
-        print(self.up_filter, self.down_filter)
-        
         self.padding = [3, 3, 0, 0]
         
     def forward(self, x):
         # convolve and the perform
-        x = self.conv(x)
+        x = self.norms[0](self.convs[0](x))
+        for ix in range(1, len(self.convs)):
+            x = self.norms[ix](self.convs[ix](x)) + x
+        
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
         return x
 
 class GCNConvNet_beta(nn.Module):
-    def __init__(self, in_channels = 1, depth = 7, pred_pop = 1):
+    def __init__(self, in_channels = 1, depth = 11, pred_pop = 1):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1208,7 +1217,7 @@ class GCNConvNet_beta(nn.Module):
         xc = self.norms[0](self.convs[0](x))
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-        xg = self.gcn_norms[0](self.gcns[0](xg, edge_index, edge_attr))
+        xg = self.gcn_norms[0](self.gcns[0](xg, edge_index, edge_attr)).relu_()
         
         xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
@@ -1220,7 +1229,7 @@ class GCNConvNet_beta(nn.Module):
             xc = self.norms[ix](self.convs[ix](xs[-1]))
             
             xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-            xg = self.gcn_norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
+            xg = self.gcn_norms[ix](self.gcns[ix](xg, edge_index, edge_attr)).relu_()
             
             xg = to_dense_batch(xg, batch)[0]
             xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
