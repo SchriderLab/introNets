@@ -1012,7 +1012,7 @@ class GATConv(MessagePassing):
         if edge_dim is not None:
             self.lin_edge = nn.Sequential(Linear(edge_dim, heads, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(), 
                                           Linear(heads, heads, bias=False, weight_initializer='glorot'))
-            self.att_edge = Parameter(torch.Tensor(1, heads))
+            self.att_edge = Parameter(torch.Tensor(1, heads, 1))
         else:
             self.lin_edge = None
             self.register_parameter('att_edge', None)
@@ -1106,7 +1106,7 @@ class GATConv(MessagePassing):
                 edge_attr = edge_attr.view(-1, 1)
             assert self.lin_edge is not None
             edge_attr = self.lin_edge(edge_attr)
-            edge_attr = edge_attr.view(-1, self.heads, self.out_channels)
+            edge_attr = edge_attr.view(-1, self.heads, 1)
             alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
             alpha = alpha + alpha_edge
 
