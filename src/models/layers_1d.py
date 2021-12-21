@@ -1202,7 +1202,7 @@ class GCNConvNet_beta(nn.Module):
         channels = 0
         for ix in range(depth):
             self.convs.append(Eq1dConv(in_channels, out_channels))
-            self.gcns.append(GATConv(sites * out_channels, sites * out_channels, edge_dim = 8, heads = out_channels))
+            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
             self.gcn_norms.append(LayerNorm(sites * out_channels))
             
