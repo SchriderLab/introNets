@@ -1121,14 +1121,8 @@ class GATConv(MessagePassing):
         alpha = softmax(alpha, index, ptr, size_i)
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
-        print(alpha)
-        print(alpha.max())
-        
-        print(x_j)
-        print(x_j.max())
         
         return x_j * alpha.unsqueeze(-1)
-    
     
     
 
@@ -1198,7 +1192,7 @@ class GCNConvNet_beta(nn.Module):
         for ix in range(depth):
             self.convs.append(Eq1dConv(in_channels, 1))
             self.gcns.append(GATConv(128, 128, edge_dim = 8))
-            self.norms.append(nn.InstanceNorm2d(1))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(1), nn.Dropout2d(0.2)))
             self.gcn_norms.append(LayerNorm(128))
                     
             channels += 3
@@ -1216,9 +1210,9 @@ class GCNConvNet_beta(nn.Module):
         
         batch_size, _, ind, sites = x.shape
         xc = self.norms[0](self.convs[0](x))
+        print(xc.max())
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-        print(xg.shape)
         
         xg = self.gcn_norms[0](self.gcns[0](xg, edge_index, edge_attr))
         print(xg.max())
