@@ -1107,6 +1107,9 @@ class GATConv(MessagePassing):
             assert self.lin_edge is not None
             edge_attr = self.lin_edge(edge_attr)
             edge_attr = edge_attr.view(-1, self.heads, 1)
+            print(edge_attr.shape)
+            print(self.att_edge)
+            
             alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
             alpha = alpha + alpha_edge
 
