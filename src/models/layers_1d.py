@@ -982,7 +982,7 @@ class GATConv(MessagePassing):
         heads: int = 1,
         concat: bool = True,
         negative_slope: float = 0.2,
-        dropout: float = 0.0,
+        dropout: float = 0.2,
         add_self_loops: bool = True,
         edge_dim: Optional[int] = None,
         fill_value: Union[float, Tensor, str] = 'mean',
@@ -1163,7 +1163,6 @@ class Eq1dConv(nn.Module):
     def __init__(self, in_channels = 1, out_channels = 1, k = 3, s = 128):
         super(Eq1dConv, self).__init__()
         
-        self.norm = nn.InstanceNorm2d(in_channels)
         self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
@@ -1176,7 +1175,7 @@ class Eq1dConv(nn.Module):
         
     def forward(self, x):
         # convolve and the perform
-        x = self.conv(self.norm(x))
+        x = self.conv(x)
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
