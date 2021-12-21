@@ -982,7 +982,7 @@ class GATConv(MessagePassing):
         in_channels: Union[int, Tuple[int, int]],
         out_channels: int,
         heads: int = 1,
-        concat: bool = True,
+        concat: bool = False,
         negative_slope: float = 0.2,
         dropout: float = 0.2,
         add_self_loops: bool = True,
@@ -1199,7 +1199,7 @@ class GCNConvNet_beta(nn.Module):
         self.downs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
-        channels_ = out_channels * n_layers * 2 + in_channels
+        channels_ = out_channels * n_layers + in_channels + 1
     
         channels = 0
         for ix in range(depth):
