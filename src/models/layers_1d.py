@@ -1160,7 +1160,7 @@ class Eq1dConv(nn.Module):
         self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
         self.register_buffer('up_filter', design_lowpass_filter())
-        self.register_buffer('down_filter', design_lowpass_filter(fs = 256))
+        self.register_buffer('down_filter', design_lowpass_filter())
         self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         print(self.up_filter.shape, self.down_filter.shape)
@@ -1178,7 +1178,7 @@ class Eq1dConv(nn.Module):
         # convolve and the perform
         x = self.conv(self.norm(x))
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
-            up=[2,1], down=[2,1], padding=self.padding, gain=1., clamp=self.conv_clamp)
+            up=1, down=1, padding=self.padding, gain=1., clamp=self.conv_clamp)
         
         return x
 
