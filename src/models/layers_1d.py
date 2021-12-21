@@ -1107,8 +1107,6 @@ class GATConv(MessagePassing):
             assert self.lin_edge is not None
             edge_attr = self.lin_edge(edge_attr)
             edge_attr = edge_attr.view(-1, self.heads, 1)
-            print(edge_attr.shape)
-            print(self.att_edge)
             
             alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
             alpha = alpha + alpha_edge
@@ -1188,7 +1186,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 32, sites = 128):
+                         pred_pop = 1, out_channels = 16, sites = 128):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
