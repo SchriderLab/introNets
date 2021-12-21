@@ -1160,7 +1160,7 @@ class Eq1dConv(nn.Module):
             dilation = dilations[ix]
             
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
-                                        stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - 1), bias = False))
+                                        stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))
             self.norms.append(nn.InstanceNorm2d(1))
             
             in_channels = 1
