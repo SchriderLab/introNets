@@ -1165,7 +1165,7 @@ class Eq1dConv(nn.Module):
         
         self.conv_clamp = 64
         
-        self.padding = [4, 4, 0, 0]
+        self.padding = [3, 3, 0, 0]
         
     def forward(self, x):
         # convolve and the perform
