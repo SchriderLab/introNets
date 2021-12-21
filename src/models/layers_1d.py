@@ -36,6 +36,7 @@ from torch_geometric.utils import add_self_loops, degree
 
 from torch_geometric.nn.inits import glorot
 from torch_utils.ops import filtered_lrelu
+from torch_geometric.nn import GraphNorm
             
 class GATCNet(nn.Module):
     def __init__(self):
@@ -1188,6 +1189,7 @@ class GCNConvNet_beta(nn.Module):
         self.convs = nn.ModuleList()
         self.norm_convs = nn.ModuleList()
         self.gcns = nn.ModuleList()
+        self.gcn_norms = nn.ModuleList()
         
         self.downs = nn.ModuleList()
         self.norms = nn.ModuleList()
@@ -1197,6 +1199,7 @@ class GCNConvNet_beta(nn.Module):
             self.convs.append(Eq1dConv(in_channels, 1))
             self.gcns.append(GATConv(128, 128, edge_dim = 8))
             self.norms.append(nn.InstanceNorm2d(1))
+            self.gcn_norms.append(GraphNorm(128))
                     
             channels += 3
             in_channels = 3
@@ -1217,7 +1220,7 @@ class GCNConvNet_beta(nn.Module):
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
         print(xg.shape)
         
-        xg = self.gcns[0](xg, edge_index, edge_attr)
+        xg = self.gcn_norms[0](self.gcns[0](xg, edge_index, edge_attr))
         print(xg.max())
         
         xg = to_dense_batch(xg, batch)[0]
@@ -1230,7 +1233,7 @@ class GCNConvNet_beta(nn.Module):
             xc = self.norms[ix](self.convs[ix](xs[-1]))
             
             xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
-            xg = self.gcns[ix](xg, edge_index, edge_attr)
+            xg = self.gcn_norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
             
             xg = to_dense_batch(xg, batch)[0]
             xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
