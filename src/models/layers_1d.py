@@ -1155,7 +1155,7 @@ class Eq1dConv(nn.Module):
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
-        for ix in range(len(n_layers)):
+        for ix in range(n_layers):
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
             self.norms.append(nn.InstanceNorm2d(1))
