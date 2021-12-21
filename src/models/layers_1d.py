@@ -37,6 +37,7 @@ from torch_geometric.utils import add_self_loops, degree
 from torch_geometric.nn.inits import glorot
 from torch_utils.ops import filtered_lrelu
 from torch_geometric.nn import LayerNorm
+import torch_geometric.nn as geonn
             
 class GATCNet(nn.Module):
     def __init__(self):
@@ -990,7 +991,7 @@ class GATConv(MessagePassing):
         bias: bool = False,
         **kwargs,
     ):
-        kwargs.setdefault('aggr', 'mean')
+        kwargs.setdefault('aggr', 'max')
         super().__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
@@ -1186,7 +1187,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 16, sites = 128):
+                         pred_pop = 1, out_channels = 16, sites = 128, n_layers = 5):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1201,7 +1202,7 @@ class GCNConvNet_beta(nn.Module):
     
         channels = 0
         for ix in range(depth):
-            self.convs.append(Eq1dConv(in_channels, out_channels))
+            self.convs.append(Eq1dConv(in_channels, out_channels, n_layers = 5))
             self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
             self.gcn_norms.append(LayerNorm(sites * out_channels))
