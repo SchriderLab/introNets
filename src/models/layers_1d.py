@@ -36,7 +36,7 @@ from torch_geometric.utils import add_self_loops, degree
 
 from torch_geometric.nn.inits import glorot
 from torch_utils.ops import filtered_lrelu
-from torch_geometric.nn import GraphNorm
+from torch_geometric.nn import LayerNorm
             
 class GATCNet(nn.Module):
     def __init__(self):
@@ -1199,7 +1199,7 @@ class GCNConvNet_beta(nn.Module):
             self.convs.append(Eq1dConv(in_channels, 1))
             self.gcns.append(GATConv(128, 128, edge_dim = 8))
             self.norms.append(nn.InstanceNorm2d(1))
-            self.gcn_norms.append(GraphNorm(128))
+            self.gcn_norms.append(LayerNorm(128))
                     
             channels += 3
             in_channels = 3
