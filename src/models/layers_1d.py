@@ -1213,7 +1213,7 @@ class GCNConvNet_beta(nn.Module):
             channels += channels_
             in_channels = channels_
             
-        self.out_channels = out_channels
+        self.out_channels = out_channels * n_layers
             
         self.out = nn.Conv2d(channels, 1, 1, 1, bias = False)
         self.pred_pop = pred_pop
