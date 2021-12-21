@@ -987,7 +987,7 @@ class GATConv(MessagePassing):
         add_self_loops: bool = True,
         edge_dim: Optional[int] = None,
         fill_value: Union[float, Tensor, str] = 'mean',
-        bias: bool = True,
+        bias: bool = False,
         **kwargs,
     ):
         kwargs.setdefault('aggr', 'mean')
@@ -1071,9 +1071,6 @@ class GATConv(MessagePassing):
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
         out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
                              size=size)
-        
-        print(out)
-        print(out.max())
 
         alpha = self._alpha
         assert alpha is not None
@@ -1086,9 +1083,6 @@ class GATConv(MessagePassing):
 
         if self.bias is not None:
             out += self.bias
-            
-        print(out)
-        print(out.max())
 
         if isinstance(return_attention_weights, bool):
             if isinstance(edge_index, Tensor):
