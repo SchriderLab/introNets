@@ -593,6 +593,8 @@ class GCNDataGeneratorH5(object):
         counter = 0
         for key in keys:
             x = np.expand_dims(np.array(self.ifile[key]['x_0']), 1)
+            x /= np.linalg.norm(x, axis = -1)
+            
             y = np.array(self.ifile[key]['y'])
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             edge_attr_ = np.array(self.ifile[key]['edge_attr'])
@@ -617,6 +619,7 @@ class GCNDataGeneratorH5(object):
         Y = Y * (1 - ey) + 0.5 * ey
             
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
+
 class GCNDataGeneratorT(object):
     def __init__(self, idir, indices, batch_size = 8, 
                      val_prop = 0.05, k = 12, 
