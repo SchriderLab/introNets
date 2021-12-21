@@ -135,7 +135,7 @@ def main():
             y_pred = y_pred.detach().cpu().numpy()
             
             Y.extend(y.flatten())
-            Y_pred.extend(y_pred.flatten())
+            Y_pred.extend(expit(y_pred.flatten()))
             
             for k in range(x.shape[0]):
                 
