@@ -991,7 +991,7 @@ class GATConv(MessagePassing):
         bias: bool = False,
         **kwargs,
     ):
-        kwargs.setdefault('aggr', 'max')
+        kwargs.setdefault('aggr', 'add')
         super().__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
@@ -1176,10 +1176,11 @@ class Eq1dConv(nn.Module):
         
     def forward(self, x):
         # convolve and the perform
-        x = self.norms[0](self.convs[0](x))
+        xs = [self.norms[0](self.convs[0](x))]
         for ix in range(1, len(self.convs)):
-            x = self.norms[ix](self.convs[ix](x)) + x
+            xs.append(self.norms[ix](self.convs[ix](x)) + xs[-1])
         
+        x = torch.cat(xs, dim = 1)
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
@@ -1187,7 +1188,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 16, sites = 128, n_layers = 5):
+                         pred_pop = 1, out_channels = 4, sites = 128, n_layers = 4):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1198,14 +1199,14 @@ class GCNConvNet_beta(nn.Module):
         self.downs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
-        channels_ = out_channels * 2 + in_channels
+        channels_ = out_channels * n_layers * 2 + in_channels
     
         channels = 0
         for ix in range(depth):
-            self.convs.append(Eq1dConv(in_channels, out_channels, n_layers = 5))
-            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels))
-            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
-            self.gcn_norms.append(LayerNorm(sites * out_channels))
+            self.convs.append(Eq1dConv(in_channels, out_channels, n_layers = n_layers))
+            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels * n_layers))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels * n_layers)))
+            self.gcn_norms.append(LayerNorm(sites * out_channels * n_layers))
             
             if ix > 0:
                 self.downs.append(nn.Conv2d(channels_, 1, 1, 1))
