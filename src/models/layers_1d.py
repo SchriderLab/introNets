@@ -1029,8 +1029,6 @@ class GATConv(MessagePassing):
         self.reset_parameters()
 
     def reset_parameters(self):
-        if self.lin_edge is not None:
-            self.lin_edge.reset_parameters()
         glorot(self.att_src)
         glorot(self.att_dst)
         glorot(self.att_edge)
