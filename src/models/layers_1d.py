@@ -1160,16 +1160,18 @@ class Eq1dConv(nn.Module):
         self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
         self.register_buffer('up_filter', design_lowpass_filter())
-        self.register_buffer('down_filter', design_lowpass_filter(cutoff = 128 - 1, width = WIDTH * 2, fs = 256))
+        self.register_buffer('down_filter', design_lowpass_filter(fs = 256))
         self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
+        
+        print(self.up_filter.shape, self.down_filter.shape)
         
         self.conv_clamp = 64
         
         pad_total = (128 - 1) * 2 + 1 # Desired output size before downsampling.
         pad_total -= (128 + 3 - 1) * 2 # Input size after upsampling.
         pad_total += - 2 # Size reduction caused by the filters.
-        pad_lo = (pad_total + 2) // 2 + 12 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
-        pad_hi = pad_total - pad_lo + 12
+        pad_lo = (pad_total + 2) // 2 # Shift sample locations according to the symmetric interpretation (Appendix C.3).
+        pad_hi = pad_total - pad_lo
         self.padding = [int(pad_lo), int(pad_hi), int(pad_lo), int(pad_hi)]
         
     def forward(self, x):
