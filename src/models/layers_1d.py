@@ -1208,6 +1208,7 @@ class GCNConvNet_beta(nn.Module):
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
+        return xc
 
         print(xc.max())
         

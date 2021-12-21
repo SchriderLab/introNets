@@ -198,6 +198,13 @@ def main():
             edge_attr = edge_attr.to(device)
             
             y_pred = model(x, edges, edge_attr, batch)
+            
+            y_pred = y_pred.detach().cpu().numpy()
+            plt.imshow(y_pred[0,0,:,:])
+            plt.savefig('lrelu_conv.png')
+            
+            plt.close()
+            sys.exit()
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
