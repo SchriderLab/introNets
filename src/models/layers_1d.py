@@ -1070,6 +1070,8 @@ class GATConv(MessagePassing):
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
         out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
                              size=size)
+        
+        print(out)
 
         alpha = self._alpha
         assert alpha is not None
