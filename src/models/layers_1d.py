@@ -1006,12 +1006,13 @@ class GATConv(MessagePassing):
         self.norm = MessageNorm(True)
 
         # The learnable parameters to compute attention coefficients:
-        self.att_src = Parameter(torch.Tensor(1, heads, out_channels))
-        self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
+        self.att_src = Parameter(torch.Tensor(1, heads))
+        self.att_dst = Parameter(torch.Tensor(1, heads))
 
         if edge_dim is not None:
-            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot')
-            self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
+            self.lin_edge = nn.Sequential(Linear(edge_dim, heads, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(), 
+                                          Linear(heads, heads, bias=False, weight_initializer='glorot'))
+            self.att_edge = Parameter(torch.Tensor(1, heads))
         else:
             self.lin_edge = None
             self.register_parameter('att_edge', None)
@@ -1186,7 +1187,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 12, sites = 128):
+                         pred_pop = 1, out_channels = 32, sites = 128):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
