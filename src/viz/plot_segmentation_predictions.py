@@ -123,7 +123,7 @@ def main():
     Y_pred = []
     for ix in range(int(args.n_samples)):
         with torch.no_grad():
-            x, y = generator.get_batch(True)
+            x, y = generator.get_val_batch()
             
             x = x.to(device)
             y = y.to(device)
