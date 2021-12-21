@@ -1230,7 +1230,7 @@ class GCNConvNet_beta(nn.Module):
         channels = self.out_channels
         
         xg = to_dense_batch(xg, batch)[0]
-        xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+        xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
         
         x = torch.cat([x, xc, xg], dim = 1)
         
@@ -1242,7 +1242,7 @@ class GCNConvNet_beta(nn.Module):
             xg = self.gcn_norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
             
             xg = to_dense_batch(xg, batch)[0]
-            xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
                 
             xs.append(torch.cat([self.downs[ix - 1](xs[-1]), xc, xg], dim = 1) + xs[-1])
                   
