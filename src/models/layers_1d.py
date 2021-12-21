@@ -1032,9 +1032,6 @@ class GATConv(MessagePassing):
         glorot(self.att_src)
         glorot(self.att_dst)
         glorot(self.att_edge)
-        
-    def update(self, inputs, x):
-        return self.norm(x[0], inputs)
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
                 edge_attr: OptTensor = None, size: Size = None,
@@ -1208,7 +1205,6 @@ class GCNConvNet_beta(nn.Module):
         batch_size, _, ind, sites = x.shape
         
         xc = self.convs[0](x)
-        return xc
 
         print(xc.max())
         
