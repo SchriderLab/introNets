@@ -1163,7 +1163,7 @@ class Eq1dConv(nn.Module):
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))
             self.norms.append(nn.InstanceNorm2d(1))
             
-            in_channels = 1
+            in_channels = out_channels
         
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
         self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
