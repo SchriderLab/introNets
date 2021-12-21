@@ -1208,7 +1208,7 @@ class GCNConvNet_beta(nn.Module):
             in_channels = out_channels * 2 + in_channels
             
             if ix > 0:
-                self.downs.append(nn.Conv2d(3, 1, 1, 1))
+                self.downs.append(nn.Conv2d(out_channels, 1, 1, 1))
                 
         self.out_channels = out_channels
             
