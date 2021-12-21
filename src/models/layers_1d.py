@@ -1203,12 +1203,12 @@ class GCNConvNet_beta(nn.Module):
             self.gcns.append(GATConv(sites * out_channels, sites * out_channels, edge_dim = 8))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
             self.gcn_norms.append(LayerNorm(sites * out_channels))
-                    
-            channels += out_channels * 2 + in_channels
-            in_channels = out_channels * 2 + in_channels
             
             if ix > 0:
                 self.downs.append(nn.Conv2d(out_channels * 2 + in_channels, 1, 1, 1))
+            channels += out_channels * 2 + in_channels
+            in_channels = out_channels * 2 + in_channels
+            
                 
         self.out_channels = out_channels
             
