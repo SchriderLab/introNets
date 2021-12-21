@@ -1155,9 +1155,12 @@ class Eq1dConv(nn.Module):
         self.convs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
+        dilations = [1] + [k * 2 for k in range(1, n_layers)]
         for ix in range(n_layers):
+            dilation = dilations[ix]
+            
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
-                                        stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False))
+                                        stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - 1), bias = False))
             self.norms.append(nn.InstanceNorm2d(1))
             
             in_channels = 1
@@ -1182,7 +1185,7 @@ class Eq1dConv(nn.Module):
         return x
 
 class GCNConvNet_beta(nn.Module):
-    def __init__(self, in_channels = 1, depth = 11, pred_pop = 1):
+    def __init__(self, in_channels = 1, depth = 7, pred_pop = 1):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
