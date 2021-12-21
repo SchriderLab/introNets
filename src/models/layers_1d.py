@@ -1085,6 +1085,9 @@ class GATConv(MessagePassing):
 
         if self.bias is not None:
             out += self.bias
+            
+        print(out)
+        print(out.max())
 
         if isinstance(return_attention_weights, bool):
             if isinstance(edge_index, Tensor):
