@@ -982,7 +982,7 @@ class GATConv(MessagePassing):
         in_channels: Union[int, Tuple[int, int]],
         out_channels: int,
         heads: int = 1,
-        concat: bool = False,
+        concat: bool = True,
         negative_slope: float = 0.2,
         dropout: float = 0.2,
         add_self_loops: bool = True,
@@ -1162,7 +1162,7 @@ class Eq1dConv(nn.Module):
             
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))
-            self.norms.append(nn.InstanceNorm2d(out_channels))
+            self.norms.append(nn.InstanceNorm2d(1))
             
             in_channels = out_channels
         
@@ -1176,11 +1176,10 @@ class Eq1dConv(nn.Module):
         
     def forward(self, x):
         # convolve and the perform
-        xs = [self.norms[0](self.convs[0](x))]
+        x = self.norms[0](self.convs[0](x))
         for ix in range(1, len(self.convs)):
-            xs.append(self.norms[ix](self.convs[ix](xs[-1])) + xs[-1])
+            x = self.norms[ix](self.convs[ix](x)) + x
         
-        x = torch.cat(xs, dim = 1)
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
@@ -1188,7 +1187,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 12, sites = 128, n_layers = 2):
+                         pred_pop = 1, out_channels = 4, sites = 128, n_layers = 5):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1199,21 +1198,21 @@ class GCNConvNet_beta(nn.Module):
         self.downs = nn.ModuleList()
         self.norms = nn.ModuleList()
         
-        channels_ = out_channels * n_layers + in_channels + 1
+        channels_ = out_channels * 2 + in_channels
     
         channels = 0
         for ix in range(depth):
             self.convs.append(Eq1dConv(in_channels, out_channels, n_layers = n_layers))
-            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels * n_layers))
-            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels * n_layers)))
-            self.gcn_norms.append(LayerNorm(sites * out_channels * n_layers))
+            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels))
+            self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
+            self.gcn_norms.append(LayerNorm(sites * out_channels))
             
             if ix > 0:
                 self.downs.append(nn.Conv2d(channels_, 1, 1, 1))
             channels += channels_
             in_channels = channels_
             
-        self.out_channels = out_channels * n_layers
+        self.out_channels = out_channels
             
         self.out = nn.Conv2d(channels, 1, 1, 1, bias = False)
         self.pred_pop = pred_pop
@@ -1230,7 +1229,7 @@ class GCNConvNet_beta(nn.Module):
         channels = self.out_channels
         
         xg = to_dense_batch(xg, batch)[0]
-        xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
+        xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
         
         x = torch.cat([x, xc, xg], dim = 1)
         
@@ -1242,7 +1241,7 @@ class GCNConvNet_beta(nn.Module):
             xg = self.gcn_norms[ix](self.gcns[ix](xg, edge_index, edge_attr))
             
             xg = to_dense_batch(xg, batch)[0]
-            xg = xg.reshape(batch_size, ind, 1, sites).transpose(1, 2)
+            xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
                 
             xs.append(torch.cat([self.downs[ix - 1](xs[-1]), xc, xg], dim = 1) + xs[-1])
                   
