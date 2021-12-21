@@ -1072,6 +1072,7 @@ class GATConv(MessagePassing):
                              size=size)
         
         print(out)
+        print(out.max())
 
         alpha = self._alpha
         assert alpha is not None
@@ -1115,8 +1116,10 @@ class GATConv(MessagePassing):
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
         print(alpha)
+        print(alpha.max())
         
         print(x_j)
+        print(x_j.max())
         
         return x_j * alpha.unsqueeze(-1)
     
