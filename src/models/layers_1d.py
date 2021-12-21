@@ -1167,7 +1167,7 @@ class Eq1dConv(nn.Module):
         
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
         self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
-        self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
+        #self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
         
@@ -1179,7 +1179,7 @@ class Eq1dConv(nn.Module):
         for ix in range(1, len(self.convs)):
             x = self.norms[ix](self.convs[ix](x)) + x
         
-        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
+        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
         return x
@@ -1209,6 +1209,8 @@ class GCNConvNet_beta(nn.Module):
             
             if ix > 0:
                 self.downs.append(nn.Conv2d(3, 1, 1, 1))
+                
+        self.out_channels = out_channels
             
         self.out = nn.Conv2d(channels, 1, 1, 1, bias = False)
         self.pred_pop = pred_pop
@@ -1222,7 +1224,7 @@ class GCNConvNet_beta(nn.Module):
         
         xg = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
         xg = self.gcn_norms[0](self.gcns[0](xg, edge_index, edge_attr))
-        channels = 2
+        channels = self.out_channels
         
         xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
