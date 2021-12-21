@@ -1129,7 +1129,7 @@ class GATConv(MessagePassing):
                 f'{self.out_channels}, heads={self.heads})')
     
 WIDTH = (np.sqrt(2) - 1) * 64 * 2
-def design_lowpass_filter(numtaps = 4, cutoff = 64 - 1, width = WIDTH, fs = 128, radial=False):
+def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128, radial=False):
     assert numtaps >= 1
 
     # Identity filter.
@@ -1160,7 +1160,7 @@ class Eq1dConv(nn.Module):
         self.conv = nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), padding = (0, (k + 1) // 2 - 1), bias = False)
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 4))
-        self.register_buffer('down_filter', design_lowpass_filter(fs = 256).view(1, 4))
+        self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
         self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
