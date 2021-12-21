@@ -165,7 +165,7 @@ def main():
                 counter += 1
                 plt.close()
                 
-    cm_analysis(Y, Y_pred, os.path.join(args.odir, 'confusion_matrix.png'), ['native', 'introgressed'])
+    cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.png'), ['native', 'introgressed'])
 
     
 if __name__ == '__main__':
