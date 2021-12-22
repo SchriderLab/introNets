@@ -1321,7 +1321,7 @@ class GCNUNet_delta(nn.Module):
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
             
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
-            self.norms_up_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
+            self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
             
             in_channels = up_channels[ix]
             
@@ -1367,6 +1367,8 @@ class GCNUNet_delta(nn.Module):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
+            print(x.shape, xs[-1].shape)
+            
             x = x + self.att_blocks[ix](x, xs[-1])
             
             batch_size, channels, ind, sites = x.shape
