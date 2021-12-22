@@ -134,6 +134,8 @@ def main():
             y = y.detach().cpu().numpy()
             y_pred = y_pred.detach().cpu().numpy()
             
+            print(x.shape, y.shape, y_pred.shape)
+            
             Y.extend(y.flatten())
             Y_pred.extend(expit(y_pred.flatten()))
             
@@ -150,7 +152,7 @@ def main():
                 ax1.set_title('pop B')
                 
                 ax2 = fig.add_subplot(153)
-                ax2.imshow(y[k,0,:], cmap = 'gray')
+                ax2.imshow(y[k,0,:,:], cmap = 'gray')
                 ax2.set_title('pop B (y)')
                 
                 ax3 = fig.add_subplot(154)
