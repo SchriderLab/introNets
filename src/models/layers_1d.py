@@ -1325,7 +1325,7 @@ class GCNUNet_delta(nn.Module):
             
             in_channels = up_channels[ix]
             
-        self.out = nn.Conv2d(24, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d(16, 1, 1, 1, bias = False)
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
