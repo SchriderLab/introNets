@@ -1314,8 +1314,9 @@ class GCNUNet_delta(nn.Module):
             
             in_channels = res_channels[ix] * 2
             
+        in_channels_ = copy.copy(in_channels)
         for ix in range(len(up_channels)):
-            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
+            self.up.append(Eq1dConv(in_channels_, up_channels[ix], up = 4, down = 2, s = n_sites))
             n_sites *= 2
             
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
@@ -1323,7 +1324,7 @@ class GCNUNet_delta(nn.Module):
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
             
-            in_channels = up_channels[ix]
+            in_channels_ = up_channels[ix]
             
             if ix != len(up_channels) - 1:
                 self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
