@@ -1005,13 +1005,9 @@ class GATConv(MessagePassing):
 
         self.norm = MessageNorm(True)
 
-        # The learnable parameters to compute attention coefficients:
-        self.att_src = Parameter(torch.Tensor(1, heads, out_channels))
-        self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
-
         if edge_dim is not None:
-            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot')
-            self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
+            self.lin_edge = Linear(edge_dim, heads, bias=False, weight_initializer='glorot')
+            self.att_edge = Parameter(torch.Tensor(1, heads, 1))
         else:
             self.lin_edge = None
             self.register_parameter('att_edge', None)
@@ -1030,8 +1026,6 @@ class GATConv(MessagePassing):
     def reset_parameters(self):
         if self.lin_edge is not None:
             self.lin_edge.reset_parameters()
-        glorot(self.att_src)
-        glorot(self.att_dst)
         glorot(self.att_edge)
 
     def forward(self, x: Union[Tensor, OptPairTensor], edge_index: Adj,
@@ -1100,16 +1094,14 @@ class GATConv(MessagePassing):
                 size_i: Optional[int]) -> Tensor:
         # Given edge-level attention coefficients for source and target nodes,
         # we simply need to sum them up to "emulate" concatenation:
-        alpha = alpha_j if alpha_i is None else alpha_j + alpha_i
-
-        if edge_attr is not None:
-            if edge_attr.dim() == 1:
-                edge_attr = edge_attr.view(-1, 1)
-            assert self.lin_edge is not None
-            edge_attr = self.lin_edge(edge_attr)
-            edge_attr = edge_attr.view(-1, self.heads, self.out_channels)
-            alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
-            alpha = alpha + alpha_edge
+        
+        if edge_attr.dim() == 1:
+            edge_attr = edge_attr.view(-1, 1)
+        assert self.lin_edge is not None
+        edge_attr = self.lin_edge(edge_attr)
+        edge_attr = edge_attr.view(-1, self.heads, 1)
+        alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
+        alpha = alpha_edge
 
         alpha = F.leaky_relu(alpha, self.negative_slope)
         alpha = softmax(alpha, index, ptr, size_i)
@@ -1150,7 +1142,8 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
         
 
 class Eq1dConv(nn.Module):
-    def __init__(self, in_channels = 1, out_channels = 1, k = 3, s = 128, n_layers = 3):
+    def __init__(self, in_channels = 1, out_channels = 1, k = 3, 
+                         s = 128, n_layers = 3, down = 2, up = 2):
         super(Eq1dConv, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1173,6 +1166,9 @@ class Eq1dConv(nn.Module):
         self.conv_clamp = 64
         
         self.padding = [3, 3, 0, 0]
+        
+        self.down = down
+        self.up = up
         
     def forward(self, x):
         # convolve and the perform
@@ -1259,8 +1255,23 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
-#class GCNUNet_delta(nn.Module):
-    
+class GCNUNet_delta(nn.Module):
+    def __init__(self, n_layers = 3, sites = 128):
+        # Two sets of convolutional filters
+        self.down = nn.ModuleList()
+        self.up = nn.ModuleList()
+        
+        self.norms_up = nn.ModuleList()
+        self.norms_down = nn.ModuleList()
+        
+        in_channels = 8
+        channels = [16, 32, 64]
+        
+        self.stem_conv = Eq1dConv(1, 4)
+        self.stem_gcn = GATConv(sites * 4, sites * 4, edge_dim = 8)
+        
+        for ix in range(channels):
+            self.down.append(Eq1dConv(8, 16, 
     
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
