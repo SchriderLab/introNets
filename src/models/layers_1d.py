@@ -1249,6 +1249,8 @@ class GCNConvNet_beta(nn.Module):
     
 class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128):
+        super(GCNUNet_delta, self).__init__()
+        
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
         self.down_gcns = nn.ModuleList()
