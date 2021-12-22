@@ -1115,6 +1115,7 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
     if numtaps == 1:
         return None
 
+    width = (np.sqrt(2) - 1) * fs
     # Separable Kaiser low-pass filter.
     if not radial:
         f = scipy.signal.firwin(numtaps=numtaps, cutoff=cutoff, width=width, fs=fs)
@@ -1302,6 +1303,8 @@ class GCNUNet_delta(nn.Module):
         
         self.stem_conv = Eq1dConv(1, in_channels // 2)
         self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = 8)
+        self.stem_norm = nn.InstanceNorm2d(in_channels // 2)
+        self.stem_gcn_norm = nn.InstanceNorm2d(in_channels // 2)
         
         for ix in range(len(res_channels)):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
@@ -1323,10 +1326,8 @@ class GCNUNet_delta(nn.Module):
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
             
-            
-            if ix != len(up_channels) - 1:
-                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
-                in_channels = up_channels[ix]
+            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            in_channels = up_channels[ix]
             
         in_channels = 16
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
@@ -1337,14 +1338,14 @@ class GCNUNet_delta(nn.Module):
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
         
-        x = self.stem_conv(x)
+        x = self.stem_norm(self.stem_conv(x))
         
         channels = x.shape[1]
         xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
         xg = self.stem_gcn(xg, edge_index, edge_attr)
         
         xg = to_dense_batch(xg, batch)[0]
-        xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+        xg = self.stem_gcn_norm(xg.reshape(batch_size, ind, channels, sites).transpose(1, 2))
         
         x = torch.cat([x, xg], dim = 1)
         
@@ -1369,9 +1370,7 @@ class GCNUNet_delta(nn.Module):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
-            
-            if ix != len(self.up) - 1:
-                x = x + self.att_blocks[ix](x, xs[-1])
+            x = x + self.att_blocks[ix](x, xs[-1])
             
             batch_size, channels, ind, sites = x.shape
             
