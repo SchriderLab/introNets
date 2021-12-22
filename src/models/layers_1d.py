@@ -1152,8 +1152,8 @@ class Eq1dConv(nn.Module):
             
             in_channels = out_channels
         
-        self.register_buffer('up_filter', design_lowpass_filter(fs = s).view(1, 5))
-        self.register_buffer('down_filter', design_lowpass_filter(4, fs = s * up).view(1, 4))
+        self.register_buffer('up_filter', design_lowpass_filter(cutoff = s // 2 - 1, fs = s).view(1, 5))
+        self.register_buffer('down_filter', design_lowpass_filter(4, cutoff = s // 2 - 1, fs = s * up).view(1, 4))
 
         self.conv_clamp = 64
         
