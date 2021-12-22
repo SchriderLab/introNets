@@ -1006,7 +1006,7 @@ class GATConv(MessagePassing):
         self.norm = MessageNorm(True)
 
         if edge_dim is not None:
-            self.lin_edge = nn.Sequential(Linear(edge_dim, heads * 2, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(),
+            self.lin_edge = nn.Sequential(Linear(edge_dim, heads * 2, weight_initializer='glorot'), nn.LayerNorm(heads * 2), nn.ReLU(),
                                           Linear(heads * 2, heads, bias = False, weight_initializer='glorot'))
             self.att_edge = Parameter(torch.Tensor(1, heads, 1))
         else:
