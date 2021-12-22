@@ -157,8 +157,8 @@ def upfirdn2d(x, f, up=1, down=1, padding=0, flip_filter=False, gain=1, impl='cu
     """
     assert isinstance(x, torch.Tensor)
     assert impl in ['ref', 'cuda']
-    if impl == 'cuda' and x.device.type == 'cuda' and _init():
-        return _upfirdn2d_cuda(up=up, down=down, padding=padding, flip_filter=flip_filter, gain=gain).apply(x, f)
+    #if impl == 'cuda' and x.device.type == 'cuda' and _init():
+    #    return _upfirdn2d_cuda(up=up, down=down, padding=padding, flip_filter=flip_filter, gain=gain).apply(x, f)
     return _upfirdn2d_ref(x, f, up=up, down=down, padding=padding, flip_filter=flip_filter, gain=gain)
 
 #----------------------------------------------------------------------------
