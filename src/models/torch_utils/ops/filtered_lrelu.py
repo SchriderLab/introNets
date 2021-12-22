@@ -148,7 +148,7 @@ def _filtered_lrelu_ref(x, fu=None, fd=None, b=None, up=1, down=1, padding=0, ga
     x = upfirdn2d.upfirdn2d(x=x, f=fd, down=down, flip_filter=flip_filter) # Downsample.
 
     # Check output shape & dtype.
-    misc.assert_shape(x, [batch_size, channels, out_h, out_w])
+    #misc.assert_shape(x, [batch_size, channels, out_h, out_w])
     assert x.dtype == in_dtype
     return x
 
