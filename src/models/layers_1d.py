@@ -1119,7 +1119,7 @@ class GATConv(MessagePassing):
         
         print(x_j.shape, alpha.shape)
         
-        return x_j * alpha
+        return x_j * alpha.unsqueeze(-1)
     
     
 
