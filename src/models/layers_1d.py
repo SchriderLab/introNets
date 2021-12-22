@@ -1274,7 +1274,7 @@ class GCNUNet_delta(nn.Module):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
             
-            self.down_norms.append(nn.InstanceNorm2d(res_channels[ix]))
+            self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
             
             in_channels = res_channels[ix]
             
@@ -1285,7 +1285,7 @@ class GCNUNet_delta(nn.Module):
             n_sites *= 2
             
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
-            self.up_norms.append(nn.InstanceNorm2d(up_channels[ix]))
+            self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             
             in_channels = up_channels[ix]
             
@@ -1306,7 +1306,7 @@ class GCNUNet_delta(nn.Module):
         
         xs = [x]
         for ix in range(len(self.down)):
-            x = self.down_norms[ix](self.down[ix](xs[-1]))
+            x = self.norms_down[ix](self.down[ix](xs[-1]))
             print(x.shape)
             
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1319,7 +1319,7 @@ class GCNUNet_delta(nn.Module):
             
         for ix in range(len(self.up)):
             del xs[-1]
-            x = self.up_norms[ix](self.up[ix](x)) + xs[-1]
+            x = self.norms_up[ix](self.up[ix](x)) + xs[-1]
             print(x.shape)
             
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
