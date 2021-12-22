@@ -1112,7 +1112,11 @@ class GATConv(MessagePassing):
             alpha = alpha + alpha_edge
 
         alpha = F.leaky_relu(alpha, self.negative_slope)
+        print(index, ptr, size_i)
+        
         alpha = softmax(alpha, index, ptr, size_i)
+        print(alpha.shape)
+        
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
         
