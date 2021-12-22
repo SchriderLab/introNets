@@ -1325,7 +1325,8 @@ class GCNUNet_delta(nn.Module):
             
             in_channels = up_channels[ix]
             
-            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            if ix != len(up_channels) - 1:
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
@@ -1367,9 +1368,9 @@ class GCNUNet_delta(nn.Module):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
-            print(x.shape, xs[-1].shape)
             
-            x = x + self.att_blocks[ix](x, xs[-1])
+            if ix != len(self.up) - 1:
+                x = x + self.att_blocks[ix](x, xs[-1])
             
             batch_size, channels, ind, sites = x.shape
             
