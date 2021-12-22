@@ -1152,10 +1152,9 @@ class Eq1dConv(nn.Module):
             
             in_channels = out_channels
         
-        self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
-        self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
-        #self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
-        
+        self.register_buffer('up_filter', design_lowpass_filter(fs = s).view(1, 5))
+        self.register_buffer('down_filter', design_lowpass_filter(4, fs = s * up).view(1, 4))
+
         self.conv_clamp = 64
         
         self.padding = [3, 3, 0, 0]
@@ -1170,7 +1169,7 @@ class Eq1dConv(nn.Module):
             x = self.norms[ix](self.convs[ix](x)) + x
         
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
-            up=2, down=2, padding=self.padding, gain=1., clamp=None)
+            up = self.up, down = self.down, padding=self.padding, gain=1., clamp=None)
         
         return x
 
@@ -1252,19 +1251,84 @@ class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128):
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
+        self.down_gcns = nn.ModuleList()
+        
         self.up = nn.ModuleList()
+        self.up_gcns = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
         self.norms_down = nn.ModuleList()
         
         in_channels = 8
-        channels = [16, 32, 64]
+        res_channels = [16, 32, 64]
+        up_channels = [32, 16, 8]
+        
+        n_sites = sites
         
         self.stem_conv = Eq1dConv(1, 4)
-        self.stem_gcn = GATConv(sites * 4, sites * 4, edge_dim = 8)
+        self.stem_gcn = GATConv(sites, sites, heads = 4, edge_dim = 8)
         
-        for ix in range(channels):
-            self.down.append(Eq1dConv(8, 16))
+        for ix in range(res_channels):
+            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
+            self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
+            
+            self.down_norms.append(nn.InstanceNorm2d(res_channels[ix]))
+            
+            in_channels = res_channels[ix]
+            
+            n_sites = n_sites // 2
+            
+        for ix in range(len(up_channels)):
+            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
+            n_sites *= 2
+            
+            self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
+            self.up_norms.append(nn.InstanceNorm2d(up_channels[ix]))
+            
+            in_channels = up_channels[ix]
+            
+        self.out = nn.Conv2d(16, 1, 1, 1)
+        
+    def forward(self, x, edge_index, edge_attr, batch):
+        batch_size, channels, ind, sites = x.shape
+        
+        x = self.stem_conv(x)
+        
+        xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+        xg = self.stem_gcn(xg, edge_index, edge_attr)
+        
+        xg = to_dense_batch(xg, batch)[0]
+        xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+        
+        x = torch.cat([x, xg], dim = 1)
+        
+        xs = [x]
+        for ix in range(len(self.down)):
+            x = self.down_norms[ix](self.down[ix](xs[-1]))
+            print(x.shape)
+            
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            x = self.down_gcns[ix](x, edge_index, edge_attr)
+            
+            x = to_dense_batch(x, batch)[0]
+            x = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            
+            xs.append(x)
+            
+        for ix in range(len(self.up)):
+            del xs[-1]
+            x = self.up_norms[ix](self.up[ix](x)) + xs[-1]
+            print(x.shape)
+            
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            x = self.up_gcns[ix](x, edge_index, edge_attr)
+            
+            x = to_dense_batch(x, batch)[0]
+            x = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            
+        x = torch.cat([x, xs[0]], dim = 1)
+        
+        return self.out(x)
     
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
