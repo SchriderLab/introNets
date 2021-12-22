@@ -1141,7 +1141,7 @@ class Eq1dConv(nn.Module):
         
         dilations = [1] + [k * 2 for k in range(1, n_layers)]
         for ix in range(n_layers):
-            dilation = dilations[ix]
+            dilation = 1
             
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))
@@ -1294,14 +1294,14 @@ class GCNUNet_delta(nn.Module):
         
         self.att_blocks = nn.ModuleList()
         
-        in_channels = 8
-        res_channels = [16, 32, 64]
-        up_channels = [64, 32, 8]
+        in_channels = 16
+        res_channels = [32, 64, 128]
+        up_channels = [64, 32, in_channels]
         
         n_sites = sites
         
-        self.stem_conv = Eq1dConv(1, 4)
-        self.stem_gcn = GATConv(sites, sites, heads = 4, edge_dim = 8)
+        self.stem_conv = Eq1dConv(1, in_channels // 2)
+        self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = 8)
         
         for ix in range(len(res_channels)):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
@@ -1325,7 +1325,12 @@ class GCNUNet_delta(nn.Module):
             
             in_channels = up_channels[ix]
             
-        self.out = nn.Conv2d(16, 1, 1, 1, bias = False)
+            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            
+        self.out = nn.Conv2d(in_channels * 2 + in_channels, 1, 1, 1, bias = False)
+        
+        self.out_down1 = nn.Conv2d(in_channels * 2, in_channels // 4, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels * 2, in_channels // 4, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
@@ -1361,7 +1366,9 @@ class GCNUNet_delta(nn.Module):
         for ix in range(len(self.up)):
             del xs[-1]
             
-            x = self.norms_up[ix](self.up[ix](x)) + xs[-1]
+            x = self.norms_up[ix](self.up[ix](x))
+            x = x + self.att_blocks[ix](x, xs[-1])
+            
             batch_size, channels, ind, sites = x.shape
             
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1374,12 +1381,23 @@ class GCNUNet_delta(nn.Module):
             
         x = torch.cat([x, xs[0]], dim = 1)
         
+        x1 = self.out_down1(x[:,:,ind // 2:,:])
+        x2 = self.out_down2(x[:,:,:ind // 2,:])
+        
+        x1_m = torch.mean(x1, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_m = torch.mean(x2, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        
+        x1_std = torch.std(x1, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_std = torch.std(x2, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        
         # we only want the second pop
         if self.pred_pop == 1:
             x = x[:,:,ind // 2:,:]
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:ind // 2,:]
+            
+        x = torch.cat([x, x1_m, x2_m, x1_std, x2_std], dim = 1)
         
         return torch.squeeze(self.out(x))
     
