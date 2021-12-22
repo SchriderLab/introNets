@@ -1006,7 +1006,8 @@ class GATConv(MessagePassing):
         self.norm = MessageNorm(True)
 
         if edge_dim is not None:
-            self.lin_edge = Linear(edge_dim, heads, bias=False, weight_initializer='glorot')
+            self.lin_edge = nn.Sequential(Linear(edge_dim, heads * 2, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(),
+                                          Linear(heads * 2, heads, bias = False, weight_initializer='glorot'))
             self.att_edge = Parameter(torch.Tensor(1, heads, 1))
         else:
             self.lin_edge = None
@@ -1104,8 +1105,6 @@ class GATConv(MessagePassing):
         
         return x_j * alpha.unsqueeze(-1)
     
-    
-
     def __repr__(self) -> str:
         return (f'{self.__class__.__name__}({self.in_channels}, '
                 f'{self.out_channels}, heads={self.heads})')
@@ -1261,7 +1260,10 @@ class GCNUNet_delta(nn.Module):
         self.up_gcns = nn.ModuleList()
         
         self.norms_up = nn.ModuleList()
+        self.norms_up_gcn = nn.ModuleList()
+        
         self.norms_down = nn.ModuleList()
+        self.norms_down_gcn = nn.ModuleList()
         
         in_channels = 8
         res_channels = [16, 32, 64]
