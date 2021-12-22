@@ -1271,7 +1271,7 @@ class GCNUNet_delta(nn.Module):
         self.stem_gcn = GATConv(sites * 4, sites * 4, edge_dim = 8)
         
         for ix in range(channels):
-            self.down.append(Eq1dConv(8, 16, 
+            self.down.append(Eq1dConv(8, 16))
     
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
