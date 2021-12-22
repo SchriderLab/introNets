@@ -1012,7 +1012,7 @@ class GATConv(MessagePassing):
 
         if edge_dim is not None:
             self.lin_edge = nn.Sequential(Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads * out_channels), nn.ReLU(), 
-                                          Linear(heads, heads * out_channels, bias=False, weight_initializer='glorot'))
+                                          Linear(heads * out_channels, heads * out_channels, bias=False, weight_initializer='glorot'))
             self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
@@ -1258,9 +1258,11 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
-#class GCNUNet_delta(nn.Module):
+class GCNUNet_delta(nn.Module):
+    def __init__(self, n_layers = 4):
+        super(GCNUNet_delta, self).__init__()
         
-    
+        # we need a convolution layer, a GRU layer 
 
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
