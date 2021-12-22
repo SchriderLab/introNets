@@ -1272,13 +1272,13 @@ class GCNUNet_delta(nn.Module):
         
         for ix in range(len(res_channels)):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
+            n_sites = n_sites // 2
+            
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
             
             self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
             
             in_channels = res_channels[ix]
-            
-            n_sites = n_sites // 2
             
         for ix in range(len(up_channels)):
             self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
