@@ -1315,7 +1315,7 @@ class GCNUNet_delta(nn.Module):
             x = self.down_gcns[ix](x, edge_index, edge_attr)
             
             x = to_dense_batch(x, batch)[0]
-            x = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
             xs.append(x)
             
@@ -1329,7 +1329,7 @@ class GCNUNet_delta(nn.Module):
             x = self.up_gcns[ix](x, edge_index, edge_attr)
             
             x = to_dense_batch(x, batch)[0]
-            x = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
         x = torch.cat([x, xs[0]], dim = 1)
         
