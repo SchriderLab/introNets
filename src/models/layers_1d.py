@@ -1117,7 +1117,7 @@ class GATConv(MessagePassing):
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
         
-        return x_j * alpha.unsqueeze(-1)
+        return x_j * alpha
     
     
 
