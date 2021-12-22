@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta
+from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta, GCNUNet_delta
 from data_loaders import GCNDataGeneratorH5
 import glob
 from scipy.special import expit
@@ -148,7 +148,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GCNConvNet_beta()
+    model = GCNUNet_delta()
     print(model)
     d_model = count_parameters(model)
     
@@ -166,7 +166,7 @@ def main():
                                  batch_size = int(args.batch_size))
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6770421376306798]).to(device))
     
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = optim.Adam(model.parameters(), lr = 0.00005)
     early_count = 0
     
     decayRate = 0.999
