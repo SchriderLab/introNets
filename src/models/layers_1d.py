@@ -1115,7 +1115,6 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
     if numtaps == 1:
         return None
 
-    width = (np.sqrt(2) - 1) * fs
     # Separable Kaiser low-pass filter.
     if not radial:
         f = scipy.signal.firwin(numtaps=numtaps, cutoff=cutoff, width=width, fs=fs)
