@@ -175,7 +175,11 @@ def _upfirdn2d_ref(x, f, up=1, down=1, padding=0, flip_filter=False, gain=1):
     assert f.dtype == torch.float32 and not f.requires_grad
     batch_size, num_channels, in_height, in_width = x.shape
     upx, upy = _parse_scaling(up)
+    upy = 1
+    
     downx, downy = _parse_scaling(down)
+    downy = 1
+    
     padx0, padx1, pady0, pady1 = _parse_padding(padding)
 
     # Check that upsampled buffer is not smaller than the filter.
