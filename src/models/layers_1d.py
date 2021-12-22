@@ -1388,11 +1388,11 @@ class GCNUNet_delta(nn.Module):
         x1 = self.out_down1(x[:,:,ind // 2:,:])
         x2 = self.out_down2(x[:,:,:ind // 2,:])
         
-        x1_m = torch.mean(x1, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
-        x2_m = torch.mean(x2, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x1_m = torch.expand_dims(torch.mean(x1, dim = 2), -1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_m = torch.expand_dims(torch.mean(x2, dim = 2), -1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
         
-        x1_std = torch.std(x1, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
-        x2_std = torch.std(x2, dim = 2).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x1_std = torch.expand_dims(torch.std(x1, dim = 2), -1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_std = torch.expand_dims(torch.std(x2, dim = 2), -1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
         
         # we only want the second pop
         if self.pred_pop == 1:
