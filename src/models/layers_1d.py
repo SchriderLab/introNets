@@ -1112,10 +1112,7 @@ class GATConv(MessagePassing):
             alpha = alpha + alpha_edge
 
         alpha = F.leaky_relu(alpha, self.negative_slope)
-        print(index, ptr, size_i)
-        
         alpha = softmax(alpha, index, ptr, size_i)
-        print(alpha.shape)
         
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
@@ -1190,7 +1187,7 @@ class Eq1dConv(nn.Module):
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 4, sites = 128):
+                         pred_pop = 1, out_channels = 12, sites = 128):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
