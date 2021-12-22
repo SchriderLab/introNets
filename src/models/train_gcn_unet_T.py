@@ -166,10 +166,10 @@ def main():
                                  batch_size = int(args.batch_size))
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6770421376306798]).to(device))
     
-    optimizer = optim.Adam(model.parameters(), lr = 0.00005)
+    optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    decayRate = 0.999
+    decayRate = 0.96
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
     
     history = dict()
