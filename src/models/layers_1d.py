@@ -1308,9 +1308,8 @@ class GCNUNet_delta(nn.Module):
         xs = [x]
         for ix in range(len(self.down)):
             x = self.norms_down[ix](self.down[ix](xs[-1]))
-            channels = x.shape[1]
             batch_size, channels, ind, sites = x.shape
-            
+            print(x.shape)
             
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
             x = self.down_gcns[ix](x, edge_index, edge_attr)
@@ -1323,7 +1322,7 @@ class GCNUNet_delta(nn.Module):
         for ix in range(len(self.up)):
             del xs[-1]
             x = self.norms_up[ix](self.up[ix](x)) + xs[-1]
-            channels = x.shape[1]
+            print(x.shape)
             batch_size, channels, ind, sites = x.shape
             
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
