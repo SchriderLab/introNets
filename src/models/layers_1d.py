@@ -1295,8 +1295,8 @@ class GCNUNet_delta(nn.Module):
         self.att_blocks = nn.ModuleList()
         
         in_channels = 16
-        res_channels = [32, 64, 128]
-        up_channels = [128, 64, 32]
+        res_channels = [16, 32, 64]
+        up_channels = [64, 32, 16]
         
         n_sites = sites
         
