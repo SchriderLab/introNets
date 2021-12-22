@@ -1258,7 +1258,7 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
-class GCNUNet_delta(nn.Module):
+#class GCNUNet_delta(nn.Module):
         
     
 
