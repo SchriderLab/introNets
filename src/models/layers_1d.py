@@ -990,7 +990,7 @@ class GATConv(MessagePassing):
         bias: bool = False,
         **kwargs,
     ):
-        kwargs.setdefault('aggr', 'mean')
+        kwargs.setdefault('aggr', 'add')
         super().__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
@@ -1244,6 +1244,35 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
+class Attention_block(nn.Module):
+    def __init__(self,F_g,F_l,F_int):
+        super(Attention_block,self).__init__()
+        self.W_g = nn.Sequential(
+            nn.Conv2d(F_g, F_int, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(F_int)
+            )
+        
+        self.W_x = nn.Sequential(
+            nn.Conv2d(F_l, F_int, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(F_int)
+        )
+
+        self.psi = nn.Sequential(
+            nn.Conv2d(F_int, 1, kernel_size=1,stride=1,padding=0,bias=True),
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
+        
+        self.relu = nn.ReLU(inplace=True)
+        
+    def forward(self,g,x):
+        g1 = self.W_g(g)
+        x1 = self.W_x(x)
+        psi = self.relu(g1+x1)
+        psi = self.psi(psi)
+
+        return x*psi
+    
 class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, pred_pop = 1):
         super(GCNUNet_delta, self).__init__()
@@ -1263,9 +1292,11 @@ class GCNUNet_delta(nn.Module):
         self.norms_down = nn.ModuleList()
         self.norms_down_gcn = nn.ModuleList()
         
+        self.att_blocks = nn.ModuleList()
+        
         in_channels = 8
         res_channels = [16, 32, 64]
-        up_channels = [32, 16, 8]
+        up_channels = [64, 32, 16]
         
         n_sites = sites
         
@@ -1279,6 +1310,7 @@ class GCNUNet_delta(nn.Module):
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
             
             self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
+            self.norms_down_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
             
             in_channels = res_channels[ix]
             
@@ -1287,11 +1319,13 @@ class GCNUNet_delta(nn.Module):
             n_sites *= 2
             
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
+            
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
+            self.norms_up_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
             
             in_channels = up_channels[ix]
             
-        self.out = nn.Conv2d(16, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d(24, 1, 1, 1, bias = False)
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
@@ -1318,6 +1352,8 @@ class GCNUNet_delta(nn.Module):
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
+            x = self.norms_down_gcn[ix](x)
+            
             xs.append(x)
             
         for ix in range(len(self.up)):
@@ -1331,6 +1367,8 @@ class GCNUNet_delta(nn.Module):
             
             x = to_dense_batch(x, batch)[0]
             x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            
+            x = self.norms_up_gcn[ix](x)
             
         x = torch.cat([x, xs[0]], dim = 1)
         
