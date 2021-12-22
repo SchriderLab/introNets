@@ -223,10 +223,10 @@ def _upfirdn2d_cuda(up=1, down=1, padding=0, flip_filter=False, gain=1):
     """
     # Parse arguments.
     upx, upy = _parse_scaling(up)
-    upy = 1
+    upy = 2
     
     downx, downy = _parse_scaling(down)
-    downy = 1
+    downy = 2
     
     padx0, padx1, pady0, pady1 = _parse_padding(padding)
 
