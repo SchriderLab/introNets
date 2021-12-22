@@ -1248,8 +1248,10 @@ class GCNConvNet_beta(nn.Module):
         return torch.squeeze(x)
     
 class GCNUNet_delta(nn.Module):
-    def __init__(self, n_layers = 3, sites = 128):
+    def __init__(self, n_layers = 3, sites = 128, pred_pop = 1):
         super(GCNUNet_delta, self).__init__()
+        
+        self.pred_pop = pred_pop
         
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
@@ -1289,7 +1291,7 @@ class GCNUNet_delta(nn.Module):
             
             in_channels = up_channels[ix]
             
-        self.out = nn.Conv2d(16, 1, 1, 1)
+        self.out = nn.Conv2d(16, 1, 1, 1, bias = False)
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
@@ -1333,7 +1335,14 @@ class GCNUNet_delta(nn.Module):
             
         x = torch.cat([x, xs[0]], dim = 1)
         
-        return self.out(x)
+        # we only want the second pop
+        if self.pred_pop == 1:
+            x = x[:,:,ind // 2:,:]
+        # we only want the first pop
+        elif self.pred_pop == 0:
+            x = x[:,:,:ind // 2,:]
+        
+        return torch.squeeze(self.out(x))
     
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
