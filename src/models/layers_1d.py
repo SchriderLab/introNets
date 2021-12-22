@@ -1296,7 +1296,7 @@ class GCNUNet_delta(nn.Module):
         
         in_channels = 16
         res_channels = [32, 64, 128]
-        up_channels = [64, 32, in_channels]
+        up_channels = [128, 64, 32]
         
         n_sites = sites
         
@@ -1327,10 +1327,10 @@ class GCNUNet_delta(nn.Module):
             
             self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             
-        self.out = nn.Conv2d(in_channels * 2 + in_channels, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels * 2, in_channels // 4, 1, 1)
-        self.out_down2 = nn.Conv2d(in_channels * 2, in_channels // 4, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch):
         batch_size, channels, ind, sites = x.shape
