@@ -1055,15 +1055,8 @@ class GATConv(MessagePassing):
         x_src = x_dst = x.view(-1, H, C)
         x = (x_src, x_dst)
 
-        # Next, we compute node-level attention coefficients, both for source
-        # and target nodes (if present):
-        alpha_src = (x_src * self.att_src).sum(dim=-1)
-        alpha_dst = None if x_dst is None else (x_dst * self.att_dst).sum(-1)
-        alpha = (alpha_src, alpha_dst)
-        
-
         # propagate_type: (x: OptPairTensor, alpha: OptPairTensor, edge_attr: OptTensor)  # noqa
-        out = self.propagate(edge_index, x=x, alpha=alpha, edge_attr=edge_attr,
+        out = self.propagate(edge_index, x=x, edge_attr=edge_attr,
                              size=size)
 
         alpha = self._alpha
@@ -1089,7 +1082,7 @@ class GATConv(MessagePassing):
     def update(self, inputs, x):
         return self.norm(x[0], inputs)
 
-    def message(self, x_j: Tensor, alpha_j: Tensor, alpha_i: OptTensor,
+    def message(self, x_j: Tensor,
                 edge_attr: OptTensor, index: Tensor, ptr: OptTensor,
                 size_i: Optional[int]) -> Tensor:
         # Given edge-level attention coefficients for source and target nodes,
