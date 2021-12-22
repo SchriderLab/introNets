@@ -37,7 +37,6 @@ from torch_geometric.utils import add_self_loops, degree
 from torch_geometric.nn.inits import glorot
 from torch_utils.ops import filtered_lrelu
 from torch_geometric.nn import LayerNorm
-import torch_geometric.nn as geonn
             
 class GATCNet(nn.Module):
     def __init__(self):
@@ -991,7 +990,7 @@ class GATConv(MessagePassing):
         bias: bool = False,
         **kwargs,
     ):
-        kwargs.setdefault('aggr', 'add')
+        kwargs.setdefault('aggr', 'mean')
         super().__init__(node_dim=0, **kwargs)
 
         self.in_channels = in_channels
@@ -1011,8 +1010,7 @@ class GATConv(MessagePassing):
         self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
 
         if edge_dim is not None:
-            self.lin_edge = nn.Sequential(Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads * out_channels), nn.ReLU(), 
-                                          Linear(heads * out_channels, heads * out_channels, bias=False, weight_initializer='glorot'))
+            self.lin_edge = Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot')
             self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
@@ -1030,6 +1028,8 @@ class GATConv(MessagePassing):
         self.reset_parameters()
 
     def reset_parameters(self):
+        if self.lin_edge is not None:
+            self.lin_edge.reset_parameters()
         glorot(self.att_src)
         glorot(self.att_dst)
         glorot(self.att_edge)
@@ -1107,8 +1107,7 @@ class GATConv(MessagePassing):
                 edge_attr = edge_attr.view(-1, 1)
             assert self.lin_edge is not None
             edge_attr = self.lin_edge(edge_attr)
-            edge_attr = edge_attr.view(-1, self.heads, edge_attr.shape[-1])
-            
+            edge_attr = edge_attr.view(-1, self.heads, self.out_channels)
             alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
             alpha = alpha + alpha_edge
 
@@ -1168,7 +1167,7 @@ class Eq1dConv(nn.Module):
         
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
         self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
-        self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
+        #self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
         
@@ -1180,14 +1179,14 @@ class Eq1dConv(nn.Module):
         for ix in range(1, len(self.convs)):
             x = self.norms[ix](self.convs[ix](x)) + x
         
-        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
+        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
         return x
 
 class GCNConvNet_beta(nn.Module):
     def __init__(self, in_channels = 1, depth = 7, 
-                         pred_pop = 1, out_channels = 4, sites = 128, n_layers = 5):
+                         pred_pop = 1, out_channels = 4, sites = 128):
         super(GCNConvNet_beta, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1202,16 +1201,17 @@ class GCNConvNet_beta(nn.Module):
     
         channels = 0
         for ix in range(depth):
-            self.convs.append(Eq1dConv(in_channels, out_channels, n_layers = n_layers))
-            self.gcns.append(GATConv(sites, sites, edge_dim = 8, heads = out_channels))
+            self.convs.append(Eq1dConv(in_channels, out_channels))
+            self.gcns.append(GATConv(sites * out_channels, sites * out_channels, edge_dim = 8))
             self.norms.append(nn.Sequential(nn.InstanceNorm2d(out_channels)))
             self.gcn_norms.append(LayerNorm(sites * out_channels))
             
             if ix > 0:
                 self.downs.append(nn.Conv2d(channels_, 1, 1, 1))
             channels += channels_
-            in_channels = channels_
+            in_channels = channels_ 
             
+                
         self.out_channels = out_channels
             
         self.out = nn.Conv2d(channels, 1, 1, 1, bias = False)
@@ -1258,12 +1258,9 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
-class GCNUNet_delta(nn.Module):
-    def __init__(self, n_layers = 4):
-        super(GCNUNet_delta, self).__init__()
-        
-        # we need a convolution layer, a GRU layer 
-
+#class GCNUNet_delta(nn.Module):
+    
+    
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
         super(GGRUCNet, self).__init__()
