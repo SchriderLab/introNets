@@ -1270,7 +1270,7 @@ class GCNUNet_delta(nn.Module):
         self.stem_conv = Eq1dConv(1, 4)
         self.stem_gcn = GATConv(sites, sites, heads = 4, edge_dim = 8)
         
-        for ix in range(res_channels):
+        for ix in range(len(res_channels)):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
             
