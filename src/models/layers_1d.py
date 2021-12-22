@@ -1007,13 +1007,13 @@ class GATConv(MessagePassing):
         self.norm = MessageNorm(True)
 
         # The learnable parameters to compute attention coefficients:
-        self.att_src = Parameter(torch.Tensor(1, heads, 1))
-        self.att_dst = Parameter(torch.Tensor(1, heads, 1))
+        self.att_src = Parameter(torch.Tensor(1, heads, out_channels))
+        self.att_dst = Parameter(torch.Tensor(1, heads, out_channels))
 
         if edge_dim is not None:
-            self.lin_edge = nn.Sequential(Linear(edge_dim, heads, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads), nn.ReLU(), 
-                                          Linear(heads, heads, bias=False, weight_initializer='glorot'))
-            self.att_edge = Parameter(torch.Tensor(1, heads, 1))
+            self.lin_edge = nn.Sequential(Linear(edge_dim, heads * out_channels, bias=False, weight_initializer='glorot'), nn.LayerNorm(heads * out_channels), nn.ReLU(), 
+                                          Linear(heads, heads * out_channels, bias=False, weight_initializer='glorot'))
+            self.att_edge = Parameter(torch.Tensor(1, heads, out_channels))
         else:
             self.lin_edge = None
             self.register_parameter('att_edge', None)
@@ -1168,7 +1168,7 @@ class Eq1dConv(nn.Module):
         
         self.register_buffer('up_filter', design_lowpass_filter().view(1, 5))
         self.register_buffer('down_filter', design_lowpass_filter(4, fs = 256).view(1, 4))
-        #self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
+        self.bias = torch.nn.Parameter(torch.zeros([out_channels]))
         
         self.conv_clamp = 64
         
@@ -1180,7 +1180,7 @@ class Eq1dConv(nn.Module):
         for ix in range(1, len(self.convs)):
             x = self.norms[ix](self.convs[ix](x)) + x
         
-        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
+        x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = self.bias.to(x.dtype),
             up=2, down=2, padding=self.padding, gain=1., clamp=None)
         
         return x
@@ -1258,9 +1258,10 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
-#class GCNUNet_delta(nn.Module):
+class GCNUNet_delta(nn.Module):
+        
     
-    
+
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
         super(GGRUCNet, self).__init__()
