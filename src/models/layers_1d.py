@@ -983,7 +983,7 @@ class GATConv(MessagePassing):
         heads: int = 1,
         concat: bool = True,
         negative_slope: float = 0.2,
-        dropout: float = 0.2,
+        dropout: float = 0.,
         add_self_loops: bool = True,
         edge_dim: Optional[int] = None,
         fill_value: Union[float, Tensor, str] = 'mean',
@@ -1095,8 +1095,8 @@ class GATConv(MessagePassing):
         alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
         alpha = alpha_edge
 
-        alpha = F.leaky_relu(alpha, self.negative_slope)
-        alpha = softmax(alpha, index, ptr, size_i)
+        alpha = torch.sigmoid(F.leaky_relu(alpha, self.negative_slope))
+        #alpha = softmax(alpha, index, ptr, size_i)
         
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
