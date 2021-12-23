@@ -99,8 +99,8 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         # from pop 1
         for ix in range(D.shape[1] // 2):
             # to pop 1
-            ij1 = np.argsort(D[0, ix, :D.shape[1] // 2])[nn_samp]
-            ij2 = np.argsort(D[0, ix, D.shape[1] // 2:])[nn_samp]
+            ij1 = np.argsort(D[-2, ix, :D.shape[1] // 2])[nn_samp]
+            ij2 = np.argsort(D[-2, ix, D.shape[1] // 2:])[nn_samp]
             
             # pop 1 -> 2
             edge_class = np.zeros((len(nn_samp), 4))
@@ -124,9 +124,9 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
         # from pop 2
         for ix in range(D.shape[0] // 2, D.shape[1]):
             # to pop 1
-            ij1 = np.argsort(D[0, ix, :D.shape[1] // 2])[nn_samp]
+            ij1 = np.argsort(D[-2, ix, :D.shape[1] // 2])[nn_samp]
             # to pop 2
-            ij2 = np.argsort(D[0, ix, D.shape[1] // 2:])[nn_samp]
+            ij2 = np.argsort(D[-2, ix, D.shape[1] // 2:])[nn_samp]
             
             # pop 2 -> 2
             edge_class = np.zeros((len(nn_samp), 4))
