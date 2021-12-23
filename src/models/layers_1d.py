@@ -1141,7 +1141,7 @@ class Eq1dConv(nn.Module):
         
         dilations = [1] + [k * 2 for k in range(1, n_layers)]
         for ix in range(n_layers):
-            dilation = 1
+            dilation = dilations[ix]
             
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))

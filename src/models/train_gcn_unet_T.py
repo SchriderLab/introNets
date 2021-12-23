@@ -169,7 +169,7 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     early_count = 0
     
-    decayRate = 0.96
+    decayRate = 0.99
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
     
     history = dict()
