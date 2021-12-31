@@ -1325,10 +1325,13 @@ class GCNUNet_delta(nn.Module):
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
             
-            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            if ix != len(up_channels) - 1:
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             in_channels = up_channels[ix]
             
         in_channels = 16
+        
+        self.pre_out = Res1dBlock(in_channels * 2 + up_channels[-1], in_channels * 2 + up_channels[-1], 1, pooling = None)
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
@@ -1369,7 +1372,8 @@ class GCNUNet_delta(nn.Module):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
-            x = x + self.att_blocks[ix](x, xs[-1])
+            if ix != len(self.up) - 1:
+                x = x + self.att_blocks[ix](x, xs[-1])
             
             batch_size, channels, ind, sites = x.shape
             
@@ -1383,9 +1387,13 @@ class GCNUNet_delta(nn.Module):
             
         x = torch.cat([x, xs[0]], dim = 1)
         
+        # separate out the populations (assumes equi-sampled, fix later)
+        # down sample global features via 1x1 convolution
         x1 = self.out_down1(x[:,:,ind // 2:,:])
         x2 = self.out_down2(x[:,:,:ind // 2,:])
         
+        # catting global features with individual features for final segmentation
+        ######
         x1_m = torch.mean(x1, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
         x2_m = torch.mean(x2, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
         
@@ -1398,8 +1406,10 @@ class GCNUNet_delta(nn.Module):
         # we only want the first pop
         elif self.pred_pop == 0:
             x = x[:,:,:ind // 2,:]
-            
+        
+        # cat the global features we computed
         x = torch.cat([x, x1_m, x2_m, x1_std, x2_std], dim = 1)
+        x = self.pre_out(x)
         
         return torch.squeeze(self.out(x))
     
