@@ -1306,7 +1306,7 @@ class GCNUNet_delta(nn.Module):
         self.att_blocks = nn.ModuleList()
         
         in_channels = 16
-        res_channels = [16, 32, 64]
+        res_channels = [32, 64, 128]
         up_channels = [64, 32, 16]
         
         n_sites = sites
@@ -1338,9 +1338,9 @@ class GCNUNet_delta(nn.Module):
             
             if not self.use_final_att:
                 if ix != len(up_channels) - 1:
-                    self.att_blocks.append(Attention_block(up_channels[ix] // 2, up_channels[ix] // 2, up_channels[ix] // 4))
+                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             else:
-                self.att_blocks.append(Attention_block(up_channels[ix] // 2, up_channels[ix] // 2, up_channels[ix] // 4))
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             in_channels = up_channels[ix]
             
         in_channels = 16
