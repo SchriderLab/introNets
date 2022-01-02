@@ -1406,7 +1406,7 @@ class GCNUNet_delta(nn.Module):
             xg = self.up_gcns[ix](xg, edge_index, edge_attr)
             
             xg = to_dense_batch(xg, batch)[0]
-            xg = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
             x = self.norms_up_gcn[ix](x) + xg
             
