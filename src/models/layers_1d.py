@@ -1338,9 +1338,9 @@ class GCNUNet_delta(nn.Module):
             
             if not self.use_final_att:
                 if ix != len(up_channels) - 1:
-                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix]))
+                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix] // 2, up_channels[ix] // 2))
             else:
-                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix]))
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix] // 2, up_channels[ix] // 2))
             in_channels = up_channels[ix]
             
         in_channels = 16
