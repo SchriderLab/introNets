@@ -151,7 +151,7 @@ def main():
                 plt.close()
                 
             Y.extend(y.flatten())
-            Y_pred.extend(np.round(np.expit(y_pred.flatten())))
+            Y_pred.extend(np.round(expit(y_pred.flatten())))
 
     print(accuracy_score(Y, Y_pred))
                 
