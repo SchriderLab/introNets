@@ -1371,6 +1371,7 @@ class GCNUNet_delta(nn.Module):
             xs_down.append(x.detach().clone())
         
         xs = [x]
+        print(xs[-1].shape)
         for ix in range(len(self.down)):
             x = self.norms_down[ix](self.down[ix](xs[-1]))
         
@@ -1389,10 +1390,14 @@ class GCNUNet_delta(nn.Module):
             
             xs.append(x)
             
+            print(xs[-1].shape)
+            
         for ix in range(len(self.up)):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
+            
+            print(x.shape)
             
             if not self.use_final_att:
                 if ix != len(self.up) - 1:
