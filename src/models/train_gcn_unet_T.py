@@ -167,7 +167,7 @@ def main():
                                  batch_size = int(args.batch_size))
     criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6770421376306798]).to(device))
     
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = optim.Adam(model.parameters(), lr = float(args.lr))
     early_count = 0
     
     decayRate = 0.99
