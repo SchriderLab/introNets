@@ -1331,7 +1331,7 @@ class GCNUNet_delta(nn.Module):
             
         in_channels = 16
         
-        self.pre_out = Res1dBlock(in_channels * 2 + up_channels[-1], in_channels * 2 + up_channels[-1], 1, pooling = None)
+        self.pre_out = Res1dBlock((in_channels * 2 + up_channels[-1], ), in_channels * 2 + up_channels[-1], 1, pooling = None)
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
