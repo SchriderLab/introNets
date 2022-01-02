@@ -1137,7 +1137,7 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
 
 class Eq1dConv(nn.Module):
     def __init__(self, in_channels = 1, out_channels = 1, k = 3, 
-                         s = 128, n_layers = 3, down = 2, up = 2, dilation_ = False):
+                         s = 128, n_layers = 3, down = 2, up = 2, dilation_ = True):
         super(Eq1dConv, self).__init__()
         
         self.convs = nn.ModuleList()
