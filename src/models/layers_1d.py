@@ -1402,7 +1402,7 @@ class GCNUNet_delta(nn.Module):
             
             batch_size, channels, ind, sites = x.shape
             
-            xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)
+            xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
             xg = self.up_gcns[ix](xg, edge_index, edge_attr)
             
             xg = to_dense_batch(xg, batch)[0]
