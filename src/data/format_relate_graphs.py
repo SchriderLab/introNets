@@ -125,7 +125,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([np.vstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
+            _ = np.vstack([np.hstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
         
             ## i -> j
             edge_index_.extend([(ix, u) for u in ij])
@@ -151,7 +151,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([np.vstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
+            _ = np.vstack([np.hstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
             
             ## i -> j
             edge_index_.extend([(u, ix) for u in ij])
