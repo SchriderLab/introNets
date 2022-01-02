@@ -33,7 +33,7 @@ def transform_im(pca, x):
     x = pca.transform(x)
     
     # reshape back to batch,h,w,channel
-    x = x.reshape(*shape)
+    x = x.reshape(*(shape[:-1] + [3]))
     
     return x
     
