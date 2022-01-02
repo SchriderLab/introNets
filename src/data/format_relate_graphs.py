@@ -54,10 +54,16 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
     indices = range(bp[0], bp[-1])
     for j in range(n_samples):
         D = np.zeros((4, 300, 300))
+        D_var = np.zeros((4, 300, 300))
+        
         count = 0
         
         s = np.random.choice(range(indices[0], indices[-1] - n_sites))
         s = list(range(s, s + n_sites))
+        
+        # no zeros!!!
+        if np.sum(y_[:,s]) == 0:
+            continue
         
         gix = list(np.where((bp >= s[0]) & (bp < s[-1]))[0])
         
@@ -76,13 +82,18 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
                 w = (s[-1] - bp[k]) / n_sites
         
             D += D_ * w
-            count += 1
+            
+        for k in gix:
+            D_ = np.array(ifile[key]['graph']['{}'.format(k)]['D'])
+            
+            D_ = np.array([squareform(u) for u in D_], dtype = np.float32)
+            
+            if bp[k + 1] <= s[-1]:
+                w = (bp[k + 1] - bp[k]) / n_sites
+            else:
+                w = (s[-1] - bp[k]) / n_sites
         
-        D /= count
-        
-        # hop, bran
-        # preserve n_mutations as the un-scaled one
-        D[1,:,:] *= count
+            D_var += (D_ - D) ** 2 * w
         
         x_e = x_[:,s]
         y_e = y_[150:,s]
@@ -114,7 +125,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([(D[:,ix,u] - EDGE_MEAN) / EDGE_STD for u in ij])
+            _ = np.vstack([np.vstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
         
             ## i -> j
             edge_index_.extend([(ix, u) for u in ij])
@@ -140,7 +151,7 @@ def format_example(ifile, key, nn_samp, n_samples, n_sites = 128):
             
             ij = np.array(list(ij1) + list(ij2))
             
-            _ = np.vstack([(D[:,u,ix] - EDGE_MEAN) / EDGE_STD for u in ij])
+            _ = np.vstack([np.vstack([D[:,ix,u], D_var[:,ix,u]]) for u in ij])
             
             ## i -> j
             edge_index_.extend([(u, ix) for u in ij])
