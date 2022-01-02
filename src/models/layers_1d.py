@@ -1376,18 +1376,18 @@ class GCNUNet_delta(nn.Module):
         
             batch_size, channels, ind, sites = x.shape
             
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            x = self.down_gcns[ix](x, edge_index, edge_attr)
+            xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            xg = self.down_gcns[ix](xg, edge_index, edge_attr)
             
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = to_dense_batch(xg, batch)[0]
+            xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
-            x = self.norms_down_gcn[ix](x)
+            xg = self.norms_down_gcn[ix](xg)
             
             if return_intermediates:
                 xs_down.append(x.detach().clone())
             
-            xs.append(x)
+            xs.append(x + xg)
             
         for ix in range(len(self.up)):
             del xs[-1]
@@ -1402,13 +1402,13 @@ class GCNUNet_delta(nn.Module):
             
             batch_size, channels, ind, sites = x.shape
             
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            x = self.up_gcns[ix](x, edge_index, edge_attr)
+            xg = torch.flatten(xg.transpose(1, 2), 2, 3).flatten(0, 1)
+            xg = self.up_gcns[ix](xg, edge_index, edge_attr)
             
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = to_dense_batch(xg, batch)[0]
+            xg = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
-            x = self.norms_up_gcn[ix](x)
+            x = self.norms_up_gcn[ix](x) + xg
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
