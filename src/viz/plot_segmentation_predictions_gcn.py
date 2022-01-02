@@ -162,6 +162,8 @@ def main():
     
     for key in sorted(channels_down.keys()):
         channels_down[key] = np.array(channels_down[key], dtype = np.float32)
+        print(channels_down[key].shape)
+        
         
         pca = PCA(3)
         pca.fit(channels_down[key])
