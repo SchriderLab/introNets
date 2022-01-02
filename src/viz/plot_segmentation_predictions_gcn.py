@@ -27,7 +27,7 @@ def transform_im(pca, x):
     x = x.transpose(0, 2, 3, 1)
     shape = list(x.shape)
     
-    x = x.reshape(np.product(list(shape[:-1])), shape[-1])
+    x = x.reshape(-1, shape[-1])
     
     # do the linear transform
     x = pca.transform(x)
@@ -156,14 +156,13 @@ def main():
             channels_down[k].append(x[k].transpose(0,2,3,1))
             shape = list(channels_down[k][-1].shape)
             
-            channels_down[k][-1] = channels_down[k][-1].reshape(np.product(shape[:-1]), shape[-1])
+            channels_down[k][-1] = channels_down[k][-1].reshape(-1, shape[-1])
         
     pcas_down = []
     
     for key in sorted(channels_down.keys()):
         channels_down[key] = np.array(channels_down[key], dtype = np.float32)
-        print(channels_down[key].shape)
-        
+        print(channels_down[key].shape, key)
         
         pca = PCA(3)
         pca.fit(channels_down[key])
@@ -185,7 +184,7 @@ def main():
             channels_up[k].append(x[k].transpose(0,2,3,1))
             shape = list(channels_up[k][-1].shape)
             
-            channels_up[k][-1] = channels_up[k][-1].reshape(np.product(shape[:-1]), shape[-1])
+            channels_up[k][-1] = channels_up[k][-1].reshape(-1, shape[-1])
         
     pcas_up = []
     
