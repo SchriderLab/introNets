@@ -162,10 +162,9 @@ def main():
     
     for key in sorted(channels_down.keys()):
         channels_down[key] = np.array(channels_down[key], dtype = np.float32)
-        print(channels_down[key].shape, key)
         
         pca = PCA(3)
-        pca.fit(channels_down[key])
+        pca.fit(channels_down[key].reshape(-1, channels_down[key].shape[-1]))
         
         pcas_down.append(pca)
         
@@ -192,7 +191,7 @@ def main():
         channels_up[key] = np.array(channels_up[key], dtype = np.float32)
         
         pca = PCA(3)
-        pca.fit(channels_down[key])
+        pca.fit(channels_up[key].reshape(-1, channels_up[key].shape[-1]))
         
         pcas_up.append(pca)
         
