@@ -229,7 +229,7 @@ def main():
             
             # for each one transform the n-channel space to 3-channel:
             xs_down_ = [transform_im(pcas_down[k], xs_down_[k]) for k in range(len(xs_down_))]
-            xs_up_ = [transform_im(pcas_down[k], xs_up_[k]) for k in range(len(xs_up_))]
+            xs_up_ = [transform_im(pcas_up[k], xs_up_[k]) for k in range(len(xs_up_))]
             
             for k in list(set(batch)):                
                 fig = plt.figure(figsize=(16, 12))
