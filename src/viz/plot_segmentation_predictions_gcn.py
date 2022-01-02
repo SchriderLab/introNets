@@ -25,9 +25,13 @@ from sklearn.decomposition import PCA
 def transform_im(pca, x):
     # reshape to (N, channels) for transform
     x = x.transpose(0, 2, 3, 1)
+    print(x.shape)
+    
     shape = list(x.shape)
     
     x = x.reshape(-1, shape[-1])
+    
+    print(x.shape)
     
     # do the linear transform
     x = pca.transform(x)
