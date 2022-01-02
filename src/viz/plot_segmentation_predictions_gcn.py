@@ -22,6 +22,8 @@ from data_loaders import H5UDataGenerator, GCNDataGeneratorH5
 from scipy.special import expit
 from sklearn.decomposition import PCA
 
+from sklearn.metrics import accuracy_score
+
 def transform_im(pca, x):
     # reshape to (N, channels) for transform
     x = x.transpose(0, 2, 3, 1)
@@ -92,6 +94,9 @@ def main():
     xs_down = []
     xs_up = []
     
+    Y = []
+    Y_pred = []
+    
     logging.info('plotting initial predictions and gathering intermediates...')
     
     for ix in range(int(args.n_samples)):
@@ -145,6 +150,10 @@ def main():
                 counter += 1
                 plt.close()
                 
+            Y.extend(y.flatten())
+            Y_pred.extend(np.round(np.expit(y_pred.flatten())))
+
+    print(accuracy_score(Y, Y_pred))
                 
     logging.info('fitting down PCAs...')
     # compute the PCA of each pixel space -> 3
@@ -241,32 +250,32 @@ def main():
                 ##### down side of the U
                 # -----------------------
                 ax0 = fig.add_subplot(4, 4, 5)
-                ax0.imshow(xs_down_[0][k,:,:,:])
+                ax0.imshow(xs_down_[0][k,:,:,:], extent = (0, 1, 0, 1))
                 ax0.set_title('down transforms')
                 
                 ax0 = fig.add_subplot(446)                
-                ax0.imshow(xs_down_[1][k,:,:,:])
+                ax0.imshow(xs_down_[1][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ax0 = fig.add_subplot(447)                
-                ax0.imshow(xs_down_[2][k,:,:,:])
+                ax0.imshow(xs_down_[2][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ax0 = fig.add_subplot(448)                
-                ax0.imshow(xs_down_[3][k,:,:,:])
+                ax0.imshow(xs_down_[3][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ##### up side of the U
                 # ---------------------
                 ax0 = fig.add_subplot(449)
-                ax0.imshow(xs_up_[-1][k,:,:,:])
-                ax0.set_title('down transforms')
+                ax0.imshow(xs_up_[-1][k,:,:,:], extent = (0, 1, 0, 1))
+                ax0.set_title('up transforms')
                 
                 ax0 = fig.add_subplot(4, 4, 10)                
-                ax0.imshow(xs_up_[-2][k,:,:,:])
+                ax0.imshow(xs_up_[-2][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ax0 = fig.add_subplot(4, 4, 11)                
-                ax0.imshow(xs_up_[-3][k,:,:,:])
+                ax0.imshow(xs_up_[-3][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ax0 = fig.add_subplot(4, 4, 12)                
-                ax0.imshow(xs_up_[-4][k,:,:,:])
+                ax0.imshow(xs_up_[-4][k,:,:,:], extent = (0, 1, 0, 1))
                 
                 ax2 = fig.add_subplot(4, 4, 13)
                 ax2.imshow(y[k,:], cmap = 'gray')
