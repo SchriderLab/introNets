@@ -1307,7 +1307,7 @@ class GCNUNet_delta(nn.Module):
         
         in_channels = 16
         res_channels = [24, 48, 64]
-        up_channels = [48, 32, 16]
+        up_channels = [48, 24, 16]
         
         n_sites = sites
         
