@@ -982,6 +982,7 @@ class GATConv(MessagePassing):
         out_channels: int,
         heads: int = 1,
         concat: bool = True,
+        activation: str = 'softmax',
         negative_slope: float = 0.2,
         dropout: float = 0.,
         add_self_loops: bool = True,
@@ -1021,6 +1022,7 @@ class GATConv(MessagePassing):
             self.register_parameter('bias', None)
 
         self._alpha = None
+        self.activation = activation
 
         self.reset_parameters()
 
@@ -1095,8 +1097,10 @@ class GATConv(MessagePassing):
         alpha_edge = (edge_attr * self.att_edge).sum(dim=-1)
         alpha = alpha_edge
 
-        alpha = torch.sigmoid(F.leaky_relu(alpha, self.negative_slope))
-        #alpha = softmax(alpha, index, ptr, size_i)
+        if self.activation == 'sigmoid':
+            alpha = torch.sigmoid(F.leaky_relu(alpha, self.negative_slope))
+        elif self.activation == 'softmax':
+            alpha = softmax(alpha, index, ptr, size_i)
         
         self._alpha = alpha  # Save for later use.
         alpha = F.dropout(alpha, p=self.dropout, training=self.training)
@@ -1133,7 +1137,7 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
 
 class Eq1dConv(nn.Module):
     def __init__(self, in_channels = 1, out_channels = 1, k = 3, 
-                         s = 128, n_layers = 3, down = 2, up = 2):
+                         s = 128, n_layers = 3, down = 2, up = 2, dilation_ = False):
         super(Eq1dConv, self).__init__()
         
         self.convs = nn.ModuleList()
@@ -1141,8 +1145,11 @@ class Eq1dConv(nn.Module):
         
         dilations = [1] + [k * 2 for k in range(1, n_layers)]
         for ix in range(n_layers):
-            dilation = dilations[ix]
-            
+            if dilation_:
+                dilation = dilations[ix]
+            else:
+                dilation = 1
+                
             self.convs.append(nn.Conv2d(in_channels, out_channels, (1, k), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (k + 1) // 2 - dilation), bias = False))
             self.norms.append(nn.InstanceNorm2d(out_channels))
@@ -1274,10 +1281,14 @@ class Attention_block(nn.Module):
         return x*psi
     
 class GCNUNet_delta(nn.Module):
-    def __init__(self, n_layers = 3, sites = 128, pred_pop = 1):
+    def __init__(self, n_layers = 3, sites = 128, 
+                     pred_pop = 1, use_final_att = True, 
+                     gcn_act = 'softmax', use_final_conv = False):
         super(GCNUNet_delta, self).__init__()
         
         self.pred_pop = pred_pop
+        self.use_final_att = use_final_att
+        self.use_final_conv = use_final_conv
         
         # Two sets of convolutional filters
         self.down = nn.ModuleList()
@@ -1325,19 +1336,23 @@ class GCNUNet_delta(nn.Module):
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
             
-            if ix != len(up_channels) - 1:
+            if not self.use_final_att:
+                if ix != len(up_channels) - 1:
+                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            else:
                 self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             in_channels = up_channels[ix]
             
         in_channels = 16
         
-        self.pre_out = Res1dBlock((in_channels * 2 + up_channels[-1], ), in_channels * 2 + up_channels[-1], 1, pooling = None)
+        if self.use_final_conv:
+            self.pre_out = Res1dBlock((in_channels * 2 + up_channels[-1], ), in_channels * 2 + up_channels[-1], 1, pooling = None)
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
         self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
         
-    def forward(self, x, edge_index, edge_attr, batch):
+    def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
         batch_size, channels, ind, sites = x.shape
         
         x = self.stem_norm(self.stem_conv(x))
@@ -1351,9 +1366,16 @@ class GCNUNet_delta(nn.Module):
         
         x = torch.cat([x, xg], dim = 1)
         
+        xs_down = []
+        xs_up = []
+        
+        if return_intermediates:
+            xs_down.append(x.detach().clone())
+        
         xs = [x]
         for ix in range(len(self.down)):
             x = self.norms_down[ix](self.down[ix](xs[-1]))
+        
             batch_size, channels, ind, sites = x.shape
             
             xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1366,13 +1388,20 @@ class GCNUNet_delta(nn.Module):
             
             x = torch.cat([x, xg], dim = 1)
             
+            if return_intermediates:
+                xs_down.append(x.detach().clone())
+            
             xs.append(x)
             
         for ix in range(len(self.up)):
             del xs[-1]
             
             x = self.norms_up[ix](self.up[ix](x))
-            if ix != len(self.up) - 1:
+            
+            if not self.use_final_att:
+                if ix != len(self.up) - 1:
+                    x = x + self.att_blocks[ix](x, xs[-1])
+            else:
                 x = x + self.att_blocks[ix](x, xs[-1])
             
             batch_size, channels, ind, sites = x.shape
@@ -1384,6 +1413,9 @@ class GCNUNet_delta(nn.Module):
             x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
             x = self.norms_up_gcn[ix](x)
+            
+            if return_intermediates:
+                xs_up.append(x.detach().clone())
             
         x = torch.cat([x, xs[0]], dim = 1)
         
@@ -1409,9 +1441,16 @@ class GCNUNet_delta(nn.Module):
         
         # cat the global features we computed
         x = torch.cat([x, x1_m, x2_m, x1_std, x2_std], dim = 1)
-        x = self.pre_out(x)
         
-        return torch.squeeze(self.out(x))
+        if self.use_final_conv:
+            x = self.pre_out(x)
+            
+        if return_intermediates:
+            xs_up.append(x.detach().clone())
+        
+            return torch.squeeze(self.out(x)), xs_up, xs_down
+        else:
+            return torch.squeeze(self.out(x))
     
 class GGRUCNet(nn.Module):
     def __init__(self, in_channels = 512, depth = 4):
