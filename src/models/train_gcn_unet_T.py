@@ -106,6 +106,7 @@ def parse_args():
     parser.add_argument("--batch_size", default = "16")
     
     parser.add_argument("--n_sites", default = "128")
+    parser.add_argument("--lr", default = "0.002")
     parser.add_argument("--n_steps", default = "4000")
 
     parser.add_argument("--odir", default = "training_output")
