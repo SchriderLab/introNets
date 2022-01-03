@@ -1331,7 +1331,7 @@ class GCNEqRegressor(nn.Module):
         
         in_channels = 8
         
-        self.stem_conv = nn.Eq1dConv(1, in_channels)
+        self.stem_conv = Eq1dConv(1, in_channels)
         
         out_channels = [[8, 8, 4, 8], 
                         [16, 16, 8, 8], 
