@@ -1587,6 +1587,8 @@ class GCNUNet_eps(nn.Module):
             
             x = self.norms_up[ix](self.up[ix](x))
             
+            batch_size, channels, ind, sites = x.shape
+            
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
             x = self.up_gcns[ix](x, edge_index, edge_attr)
             
