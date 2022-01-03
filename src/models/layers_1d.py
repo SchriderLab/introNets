@@ -1497,16 +1497,16 @@ class GCNUNet_eps(nn.Module):
         
         self.att_blocks = nn.ModuleList()
         
-        in_channels = 24
-        res_channels = [48, 64, 96]
-        up_channels = [64, 48, 24]
+        in_channels = 16
+        res_channels = [16, 32, 64]
+        up_channels = [64, 32, 16]
         
         n_sites = sites
         
-        self.stem_conv = Eq1dConv(1, in_channels)
-        self.stem_gcn = GATConv(sites, sites, heads = in_channels, edge_dim = edge_dim)
-        self.stem_norm = nn.InstanceNorm2d(in_channels)
-        self.stem_gcn_norm = nn.InstanceNorm2d(in_channels)
+        self.stem_conv = Eq1dConv(1, in_channels // 2)
+        self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = edge_dim)
+        self.stem_norm = nn.InstanceNorm2d(in_channels // 2)
+        self.stem_gcn_norm = nn.InstanceNorm2d(in_channels // 2)
         
         for ix in range(len(res_channels)):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
@@ -1517,7 +1517,7 @@ class GCNUNet_eps(nn.Module):
             self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
             self.norms_down_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
             
-            in_channels = res_channels[ix]
+            in_channels = res_channels[ix] * 2
             
         for ix in range(len(up_channels)):
             self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
@@ -1527,23 +1527,19 @@ class GCNUNet_eps(nn.Module):
             
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
+
+            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             
-            if not self.use_final_att:
-                if ix != len(up_channels) - 1:
-                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
-            else:
-                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
-            in_channels = up_channels[ix]
+            in_channels = up_channels[ix] * 2
             
-        in_channels = 24
+        in_channels = 16
         
-        if self.use_final_conv:
-            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 8, ), in_channels + up_channels[-1] + 8, 1, pooling = None)
+        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 2, pooling = None)
         
-        self.out = nn.Conv2d(in_channels + up_channels[-1] + 8, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 2, 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], 2, 1, 1)
-        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], 2, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
         batch_size, channels, ind, sites = x.shape
@@ -1551,11 +1547,13 @@ class GCNUNet_eps(nn.Module):
         x = self.stem_norm(self.stem_conv(x))
         
         channels = x.shape[1]
-        x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-        x = self.stem_gcn(x, edge_index, edge_attr)
+        xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+        xg = self.stem_gcn(xg, edge_index, edge_attr)
         
-        x = to_dense_batch(x, batch)[0]
-        x = self.stem_gcn_norm(x.reshape(batch_size, ind, channels, sites).transpose(1, 2))
+        xg = to_dense_batch(xg, batch)[0]
+        xg = self.stem_gcn_norm(xg.reshape(batch_size, ind, channels, sites).transpose(1, 2))
+        
+        x = torch.cat([x, xg], dim = 1)
         
         xs_down = []
         xs_up = []
@@ -1569,13 +1567,15 @@ class GCNUNet_eps(nn.Module):
         
             batch_size, channels, ind, sites = x.shape
             
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            x = self.down_gcns[ix](x, edge_index, edge_attr)
+            xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            xg = self.down_gcns[ix](xg, edge_index, edge_attr)
             
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = to_dense_batch(xg, batch)[0]
+            xg = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
-            x = self.norms_down_gcn[ix](x)
+            xg = self.norms_down_gcn[ix](xg)
+            
+            x = torch.cat([x, xg], dim = 1)
             
             if return_intermediates:
                 xs_down.append(x.detach().clone())
@@ -1587,14 +1587,6 @@ class GCNUNet_eps(nn.Module):
             
             x = self.norms_up[ix](self.up[ix](x))
             
-            if not self.use_final_att:
-                if ix != len(self.up) - 1:
-                    x = x + self.att_blocks[ix](x, xs[-1])
-            else:
-                x = x + self.att_blocks[ix](x, xs[-1])
-            
-            batch_size, channels, ind, sites = x.shape
-            
             x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
             x = self.up_gcns[ix](x, edge_index, edge_attr)
             
@@ -1602,6 +1594,8 @@ class GCNUNet_eps(nn.Module):
             x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
             x = self.norms_up_gcn[ix](x)
+            
+            x = torch.cat([x, self.att_blocks[ix](x, xs[-1])], dim = 1)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
