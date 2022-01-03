@@ -50,7 +50,7 @@ def main():
     edge_attrs = []
     y_means = []
     
-    for key in keys:
+    for key in keys[:int(args.n_samples)]:
         y = np.array(ifile['train'][key]['y'])
         
         y_means.append(np.mean(y))
