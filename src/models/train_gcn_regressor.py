@@ -34,7 +34,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GCNEqRegressor
+from layers_1d import GCNEqRegressor, GCNEqRegressor_beta
 from data_loaders import GCNDataGeneratorH5, GCNRegDataGeneratorH5
 import glob
 from scipy.special import expit
@@ -150,7 +150,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GCNEqRegressor()
+    model = GCNEqRegressor_beta()
     print(model)
     d_model = count_parameters(model)
     
