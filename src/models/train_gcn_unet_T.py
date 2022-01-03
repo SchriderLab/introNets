@@ -238,10 +238,7 @@ def main():
         Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
-                print(step)
-                    
                 x, y, edges, edge_attr, batch = generator.get_batch(val = True)
-
 
                 x = x.to(device)
                 y = y.to(device)
