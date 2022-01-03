@@ -1289,6 +1289,8 @@ class InceptionGCNBlock_A(nn.Module):
     
         xd = self.d(x)
         
+        print(xa.shape, xb.shape, xc.shape, xd.shape)
+        
         x = torch.cat([xa, xb, xc, xd], dim = 1)
     
         return self.down(x)
