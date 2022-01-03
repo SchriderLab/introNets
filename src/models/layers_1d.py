@@ -1497,9 +1497,9 @@ class GCNUNet_eps(nn.Module):
         
         self.att_blocks = nn.ModuleList()
         
-        in_channels = 32
+        in_channels = 24
         res_channels = [48, 64, 96]
-        up_channels = [64, 48, 32]
+        up_channels = [64, 48, 24]
         
         n_sites = sites
         
@@ -1535,7 +1535,7 @@ class GCNUNet_eps(nn.Module):
                 self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             in_channels = up_channels[ix]
             
-        in_channels = 16
+        in_channels = 24
         
         if self.use_final_conv:
             self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 4, ), in_channels + up_channels[-1] + 4, 1, pooling = None)
