@@ -1260,22 +1260,29 @@ class InceptionGCNBlock_A(nn.Module):
         self.a1 = nn.Conv2d(in_channels, out_channels[0], 1, 1)
         self.a2 = nn.Conv2d(out_channels[0], out_channels[0], (1, 3), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (3 + 1) // 2 - dilation), bias = False)
+        self.a_norm = nn.InstanceNorm2d(out_channels[0])
+    
     
         self.b1 = nn.Conv2d(in_channels, out_channels[1], 1, 1)
         self.b2 = nn.Conv2d(out_channels[1], out_channels[1], (1, 5), 
                                         stride = (1, 1), dilation = dilation, padding = (0, dilation * (5 + 1) // 2 - dilation), bias = False)
+        self.b_norm = nn.InstanceNorm2d(out_channels[1])
+    
     
         self.c = nn.Conv2d(in_channels, out_channels[2], 1, 1)
         self.gcn_conv = GATConv(n_sites, n_sites, heads = out_channels[2], edge_dim = edge_dim)
+        self.c_norm = nn.InstanceNorm2d(out_channels[2])
+        
         
         self.d = nn.Conv2d(in_channels, out_channels[3], 1, 1)
+        self.d_norm = nn.InstanceNorm2d(out_channels[3])
         
         self.down = Eq1dConv(sum(out_channels), sum(out_channels), n_layers = 0, up = 2, down = 4)
     
     def forward(self, x, edge_index, edge_attr, batch):
-        xa = self.a2(self.a1(x))
+        xa = self.a_norm(self.a2(self.a1(x)))
         
-        xb = self.b2(self.b1(x))
+        xb = self.b_norm(self.b2(self.b1(x)))
         
         xc = self.c(x)
         
@@ -1287,7 +1294,9 @@ class InceptionGCNBlock_A(nn.Module):
         xc = to_dense_batch(xc, batch)[0]
         xc = xc.reshape(batch_size, ind, channels, sites).transpose(1, 2)
     
-        xd = self.d(x)
+        xc = self.c_norm(xc)
+    
+        xd = self.d_norm(self.d(x))
         
         x = torch.cat([xa, xb, xc, xd], dim = 1)
     
@@ -1331,19 +1340,19 @@ class GCNEqRegressor(nn.Module):
         
         self.pred_pop = pred_pop
         
-        in_channels = 8
+        in_channels = 32
         
         self.stem_conv = Eq1dConv(1, in_channels)
         
-        out_channels = [[8, 8, 4, 8], 
-                        [16, 16, 8, 8], 
-                        [32, 32, 16, 16], 
-                        [64, 64, 16, 32]]
+        out_channels = [[16, 16, 4, 16], 
+                        [32, 32, 8, 32], 
+                        [64, 64, 16, 64], 
+                        [128, 128, 24, 128]]
         
         n_sites = sites
         for ix in range(len(out_channels)):
             self.layers.append(InceptionGCNBlock_A(in_channels, out_channels[ix], n_sites))
-            self.norms.append(nn.InstanceNorm2d(sum(out_channels[ix])))
+            self.norms.append(nn.Dropout2d(0.1))
         
             n_sites = n_sites // 2
             
