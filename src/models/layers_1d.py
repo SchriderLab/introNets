@@ -1279,7 +1279,7 @@ class InceptionGCNBlock_A(nn.Module):
         
         xc = self.c(x)
         
-        batch_size, ind, channels, sites = xc.shape
+        batch_size, channels, ind, sites = xc.shape
         
         xc = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
         xc = self.gcn_conv(xc, edge_index, edge_attr)
@@ -1288,8 +1288,6 @@ class InceptionGCNBlock_A(nn.Module):
         xc = xc.reshape(batch_size, ind, channels, sites).transpose(1, 2)
     
         xd = self.d(x)
-        
-        print(xa.shape, xb.shape, xc.shape, xd.shape)
         
         x = torch.cat([xa, xb, xc, xd], dim = 1)
     
