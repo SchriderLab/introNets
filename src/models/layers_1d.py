@@ -1279,8 +1279,6 @@ class InceptionGCNBlock_A(nn.Module):
         
         xc = self.c(x)
         
-        print(xc.shape)
-        
         batch_size, channels, ind, sites = xc.shape
         
         xc = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1331,6 +1329,8 @@ class GCNEqRegressor(nn.Module):
         self.layers = nn.ModuleList()
         self.norms = nn.ModuleList()
         
+        self.pred_pop = pred_pop
+        
         in_channels = 8
         
         self.stem_conv = Eq1dConv(1, in_channels)
@@ -1356,14 +1356,20 @@ class GCNEqRegressor(nn.Module):
                                  nn.Linear(2048, 1))
         
     def forward(self, x, edge_index, edge_attr, batch):
+        ind = x.shape[-2]
+        
         x = self.stem_conv(x)
         
         for ix in range(len(self.layers)):
-            print(ix)
             x = self.norms[ix](self.layers[ix](x, edge_index, edge_attr, batch))
             
-            print(x.shape)
-            
+        # we only want the second pop
+        if self.pred_pop == 1:
+            x = x[:,:,ind // 2:,:]
+        # we only want the first pop
+        elif self.pred_pop == 0:
+            x = x[:,:,:ind // 2,:]
+        
         x = x.view(-1, self.out_dim)
         
         return self.out(x)
