@@ -1342,7 +1342,7 @@ class GCNEqRegressor(nn.Module):
         
         n_sites = sites
         for ix in range(len(out_channels)):
-            self.layers.append(InceptionGCNBlock_A(in_channels, out_channels[ix]))
+            self.layers.append(InceptionGCNBlock_A(in_channels, out_channels[ix], n_sites))
             self.norms.append(nn.InstanceNorm2d(sum(out_channels[ix])))
         
             n_sites = n_sites // 2
