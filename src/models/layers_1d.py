@@ -1370,7 +1370,7 @@ class GCNEqRegressor(nn.Module):
         elif self.pred_pop == 0:
             x = x[:,:,:ind // 2,:]
         
-        x = x.view(-1, self.out_dim)
+        x = x.reshape(-1, self.out_dim)
         
         return self.out(x)
     
