@@ -616,9 +616,9 @@ class GCNDataGeneratorH5(object):
                 
             edge_attr.extend(list(edge_attr_))
             
+        Y = np.concatenate(Y)
         # label smooth
         if not val:
-            Y = np.concatenate(Y)
             ey = np.random.uniform(0., 0.1, Y.shape)
             
             Y = Y * (1 - ey) + 0.5 * ey
