@@ -1528,7 +1528,8 @@ class GCNUNet_eps(nn.Module):
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
 
-            self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            if ix != len(up_channels) - 1:
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             
             in_channels = up_channels[ix] * 2
             
@@ -1597,12 +1598,13 @@ class GCNUNet_eps(nn.Module):
             
             x = self.norms_up_gcn[ix](x)
             
-            x = torch.cat([x, self.att_blocks[ix](x, xs[-1])], dim = 1)
+            if ix != len(self.up) - 1:
+                x = torch.cat([x, self.att_blocks[ix](x, xs[-1])], dim = 1)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
             
-        #x = torch.cat([x, xs[0]], dim = 1)
+        x = torch.cat([x, xs[0]], dim = 1)
         
         # separate out the populations (assumes equi-sampled, fix later)
         # down sample global features via 1x1 convolution
