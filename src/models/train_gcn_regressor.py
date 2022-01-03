@@ -242,8 +242,8 @@ def main():
                 y_pred = y_pred.detach().cpu().numpy()
             
                 if step < 50:
-                    Y.extend(np.flatten(y))
-                    Y_pred.extend(np.flatten(y_pred))
+                    Y.extend(y.flatten())
+                    Y_pred.extend(y_pred.flatten())
                 
         
         val_loss = np.mean(val_losses)
