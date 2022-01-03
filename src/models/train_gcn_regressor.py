@@ -239,7 +239,7 @@ def main():
                 val_losses.append(loss.detach().item())
             
                 y = y.detach().cpu().numpy()
-                y_pred = y.detach().cpu().numpy()
+                y_pred = y_pred.detach().cpu().numpy()
             
                 if step < 50:
                     Y.extend(np.flatten(y))
