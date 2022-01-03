@@ -1472,6 +1472,175 @@ class GCNEqRegressor(nn.Module):
         
         return self.out(x)
     
+class GCNUNet_eps(nn.Module):
+    def __init__(self, n_layers = 3, sites = 128, 
+                     pred_pop = 1, use_final_att = True, 
+                     gcn_act = 'softmax', use_final_conv = True, edge_dim = 12):
+        super(GCNUNet_delta, self).__init__()
+        
+        self.pred_pop = pred_pop
+        self.use_final_att = use_final_att
+        self.use_final_conv = use_final_conv
+        
+        # Two sets of convolutional filters
+        self.down = nn.ModuleList()
+        self.down_gcns = nn.ModuleList()
+        
+        self.up = nn.ModuleList()
+        self.up_gcns = nn.ModuleList()
+        
+        self.norms_up = nn.ModuleList()
+        self.norms_up_gcn = nn.ModuleList()
+        
+        self.norms_down = nn.ModuleList()
+        self.norms_down_gcn = nn.ModuleList()
+        
+        self.att_blocks = nn.ModuleList()
+        
+        in_channels = 32
+        res_channels = [48, 64, 96]
+        up_channels = [64, 48, 32]
+        
+        n_sites = sites
+        
+        self.stem_conv = Eq1dConv(1, in_channels)
+        self.stem_gcn = GATConv(sites, sites, heads = in_channels, edge_dim = edge_dim)
+        self.stem_norm = nn.InstanceNorm2d(in_channels)
+        self.stem_gcn_norm = nn.InstanceNorm2d(in_channels)
+        
+        for ix in range(len(res_channels)):
+            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
+            n_sites = n_sites // 2
+            
+            self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = edge_dim))
+            
+            self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
+            self.norms_down_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
+            
+            in_channels = res_channels[ix]
+            
+        for ix in range(len(up_channels)):
+            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
+            n_sites *= 2
+            
+            self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = edge_dim))
+            
+            self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
+            self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
+            
+            if not self.use_final_att:
+                if ix != len(up_channels) - 1:
+                    self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            else:
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+            in_channels = up_channels[ix]
+            
+        in_channels = 16
+        
+        if self.use_final_conv:
+            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 4, ), in_channels + up_channels[-1] + 4, 1, pooling = None)
+        
+        self.out = nn.Conv2d(in_channels + up_channels[-1] + 4, 1, 1, 1, bias = False)
+        
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], 4, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], 4, 1, 1)
+        
+    def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
+        batch_size, channels, ind, sites = x.shape
+        
+        x = self.stem_norm(self.stem_conv(x))
+        
+        channels = x.shape[1]
+        x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+        x = self.stem_gcn(x, edge_index, edge_attr)
+        
+        x = to_dense_batch(x, batch)[0]
+        x = self.stem_gcn_norm(x.reshape(batch_size, ind, channels, sites).transpose(1, 2))
+        
+        xs_down = []
+        xs_up = []
+        
+        if return_intermediates:
+            xs_down.append(x.detach().clone())
+        
+        xs = [x]
+        for ix in range(len(self.down)):
+            x = self.norms_down[ix](self.down[ix](xs[-1]))
+        
+            batch_size, channels, ind, sites = x.shape
+            
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            x = self.down_gcns[ix](x, edge_index, edge_attr)
+            
+            x = to_dense_batch(x, batch)[0]
+            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            
+            x = self.norms_down_gcn[ix](x)
+            
+            if return_intermediates:
+                xs_down.append(x.detach().clone())
+            
+            xs.append(x)
+            
+        for ix in range(len(self.up)):
+            del xs[-1]
+            
+            x = self.norms_up[ix](self.up[ix](x))
+            
+            if not self.use_final_att:
+                if ix != len(self.up) - 1:
+                    x = x + self.att_blocks[ix](x, xs[-1])
+            else:
+                x = x + self.att_blocks[ix](x, xs[-1])
+            
+            batch_size, channels, ind, sites = x.shape
+            
+            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            x = self.up_gcns[ix](x, edge_index, edge_attr)
+            
+            x = to_dense_batch(x, batch)[0]
+            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            
+            x = self.norms_up_gcn[ix](x)
+            
+            if return_intermediates:
+                xs_up.append(x.detach().clone())
+            
+        x = torch.cat([x, xs[0]], dim = 1)
+        
+        # separate out the populations (assumes equi-sampled, fix later)
+        # down sample global features via 1x1 convolution
+        x1 = self.out_down1(x[:,:,ind // 2:,:])
+        x2 = self.out_down2(x[:,:,:ind // 2,:])
+        
+        # catting global features with individual features for final segmentation
+        ######
+        x1_m = torch.mean(x1, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_m = torch.mean(x2, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        
+        x1_std = torch.std(x1, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        x2_std = torch.std(x2, dim = 2).unsqueeze(-1).expand(-1, -1, -1, ind // 2).transpose(2, 3)
+        
+        # we only want the second pop
+        if self.pred_pop == 1:
+            x = x[:,:,ind // 2:,:]
+        # we only want the first pop
+        elif self.pred_pop == 0:
+            x = x[:,:,:ind // 2,:]
+        
+        # cat the global features we computed
+        x = torch.cat([x, x1_m, x2_m, x1_std, x2_std], dim = 1)
+        
+        if self.use_final_conv:
+            x = self.pre_out(x)
+            
+        if return_intermediates:
+            xs_up.append(x.detach().clone())
+        
+            return torch.squeeze(self.out(x)), xs_up, xs_down
+        else:
+            return torch.squeeze(self.out(x))
+    
 class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
                      pred_pop = 1, use_final_att = True, 

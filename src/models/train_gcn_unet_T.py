@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta, GCNUNet_delta
+from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta, GCNUNet_delta, GCNUNet_eps
 from data_loaders import GCNDataGeneratorH5
 import glob
 from scipy.special import expit
@@ -112,6 +112,8 @@ def parse_args():
     parser.add_argument("--odir", default = "training_output")
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--tag", default = "test")
+    
+    parser.add_argument("--net", default = "eps")
     args = parser.parse_args()
 
     if args.verbose:
@@ -149,7 +151,10 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
     
-    model = GCNUNet_delta()
+    if args.net == "eps":
+        model = GCNUNet_eps()
+    elif args.net == "delta":
+        model = GCNUNet_delta()
     print(model)
     d_model = count_parameters(model)
     
