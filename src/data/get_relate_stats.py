@@ -55,7 +55,7 @@ def main():
         
         y_means.append(np.mean(y))
 
-        edge_attr = np.array(ifile['train'][key]['edge_attr'])[:,:8]
+        edge_attr = np.array(ifile['train'][key]['edge_attr']).reshape(-1, 12)[:,:8]
 
         edge_attrs.append(edge_attr)
 
