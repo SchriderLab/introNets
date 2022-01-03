@@ -113,6 +113,8 @@ def parse_args():
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--tag", default = "test")
     
+    parser.add_argument("--decay_lr", action = "store_true")
+    
     parser.add_argument("--net", default = "eps")
     args = parser.parse_args()
 
@@ -288,7 +290,9 @@ def main():
                 break
 
         generator.reset_keys(True)
-        lr_scheduler.step()
+        
+        if args.decay_lr:
+            lr_scheduler.step()
         
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
