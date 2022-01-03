@@ -238,10 +238,12 @@ def main():
                 loss = criterion(y_pred, y)
                 val_losses.append(loss.detach().item())
             
-                
+                y = y.detach().cpu().numpy()
+                y_pred = y.detach().cpu().numpy()
+            
                 if step < 50:
-                    Y.extend(np.round(y))
-                    Y_pred.extend(np.round(y_pred))
+                    Y.extend(np.flatten(y))
+                    Y_pred.extend(np.flatten(y_pred))
                 
         
         val_loss = np.mean(val_losses)
@@ -257,6 +259,20 @@ def main():
             min_val_loss = val_loss
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
+            
+            Y = np.array(Y)
+            Y_pred = np.array(Y_pred)
+            
+            ix_ = list(np.random.choice(range(len(Y)), 1000, replace = False))
+            
+            fig, axes = plt.subplots(ncols = 2)
+            axes[0].scatter(Y[ix_], Y_pred[ix_], alpha = 0.1)
+            axes[0].plot([0, 1], [0, 1], color = 'k')
+            
+            axes[1].hist(Y_pred[ix_] - Y[ix_], bins = 35)
+            
+            plt.savefig(os.path.join(args.odir, '{}_best.png'.format(args.tag)))
+            plt.close()
 
             early_count = 0
         else:
