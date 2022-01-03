@@ -1638,7 +1638,6 @@ class GCNUNet_theta(nn.Module):
         xg, _ = self.pre_out_gru(xg)
         del _
         
-        xg = to_dense_batch(xg, batch)[0]
         xg = xg.reshape(batch_size, ind, sites, channels).transpose(2, 3).transpose(1, 2)
         
         x = torch.cat([x, xg], dim = 1)
