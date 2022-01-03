@@ -1352,6 +1352,8 @@ class GCNEqRegressor(nn.Module):
                                  nn.Linear(2048, 1))
         
     def forward(self, x, edge_index, edge_attr, batch):
+        x = self.stem_conv(x)
+        
         for ix in range(len(self.layers)):
             x = self.norms[ix](self.layers[ix](x, edge_index, edge_attr, batch))
             
