@@ -1279,6 +1279,8 @@ class InceptionGCNBlock_A(nn.Module):
         
         xc = self.c(x)
         
+        print(xc.shape)
+        
         batch_size, channels, ind, sites = xc.shape
         
         xc = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
@@ -1357,7 +1359,10 @@ class GCNEqRegressor(nn.Module):
         x = self.stem_conv(x)
         
         for ix in range(len(self.layers)):
+            print(ix)
             x = self.norms[ix](self.layers[ix](x, edge_index, edge_attr, batch))
+            
+            print(x.shape)
             
         x = x.view(-1, self.out_dim)
         
