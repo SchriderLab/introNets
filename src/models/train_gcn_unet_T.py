@@ -170,7 +170,7 @@ def main():
         
     generator = GCNDataGeneratorH5(args.ifile,
                                  batch_size = int(args.batch_size))
-    criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6770421376306798]).to(device))
+    criterion = nn.BCEWithLogitsLoss(pos_weight = torch.FloatTensor([0.6767389774323509]).to(device))
     
     optimizer = optim.Adam(model.parameters(), lr = float(args.lr))
     early_count = 0
