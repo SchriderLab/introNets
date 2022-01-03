@@ -1503,13 +1503,13 @@ class GCNUNet_eps(nn.Module):
         
         n_sites = sites
         
-        self.stem_conv = Eq1dConv(1, in_channels // 2, dilation = dilation)
+        self.stem_conv = Eq1dConv(1, in_channels // 2, dilation_ = dilation)
         self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = edge_dim)
         self.stem_norm = nn.InstanceNorm2d(in_channels // 2)
         self.stem_gcn_norm = nn.InstanceNorm2d(in_channels // 2)
         
         for ix in range(len(res_channels)):
-            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites, dilation = dilation))
+            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites, dilation_ = dilation))
             n_sites = n_sites // 2
             
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = edge_dim))
@@ -1520,7 +1520,7 @@ class GCNUNet_eps(nn.Module):
             in_channels = res_channels[ix] * 2
             
         for ix in range(len(up_channels)):
-            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites, dilation = dilation))
+            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites, dilation_ = dilation))
             n_sites *= 2
             
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = edge_dim))
