@@ -1538,12 +1538,12 @@ class GCNUNet_eps(nn.Module):
         in_channels = 24
         
         if self.use_final_conv:
-            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 4, ), in_channels + up_channels[-1] + 4, 1, pooling = None)
+            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 8, ), in_channels + up_channels[-1] + 4, 1, pooling = None)
         
-        self.out = nn.Conv2d(in_channels + up_channels[-1] + 4, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d(in_channels + up_channels[-1] + 8, 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], 4, 1, 1)
-        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], 4, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], 2, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], 2, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
         batch_size, channels, ind, sites = x.shape
