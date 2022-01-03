@@ -1602,7 +1602,7 @@ class GCNUNet_eps(nn.Module):
             if return_intermediates:
                 xs_up.append(x.detach().clone())
             
-        x = torch.cat([x, xs[0]], dim = 1)
+        #x = torch.cat([x, xs[0]], dim = 1)
         
         # separate out the populations (assumes equi-sampled, fix later)
         # down sample global features via 1x1 convolution
