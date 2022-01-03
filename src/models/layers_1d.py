@@ -1272,7 +1272,7 @@ class InceptionGCNBlock_A(nn.Module):
         
         self.down = Eq1dConv(sum(out_channels), sum(out_channels), n_layers = 0, up = 2, down = 4)
     
-    def forward(self, x, edge_index, edge_attr):
+    def forward(self, x, edge_index, edge_attr, batch):
         xa = self.a2(self.a1(x))
         
         xb = self.b2(self.b1(x))
