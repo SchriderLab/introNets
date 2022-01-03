@@ -1475,7 +1475,7 @@ class GCNEqRegressor(nn.Module):
 class GCNUNet_eps(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
                      pred_pop = 1, use_final_att = True, 
-                     gcn_act = 'softmax', use_final_conv = True, edge_dim = 12):
+                     gcn_act = 'softmax', use_final_conv = True, edge_dim = 12, dilation = False):
         super(GCNUNet_eps, self).__init__()
         
         self.pred_pop = pred_pop
@@ -1503,13 +1503,13 @@ class GCNUNet_eps(nn.Module):
         
         n_sites = sites
         
-        self.stem_conv = Eq1dConv(1, in_channels // 2)
+        self.stem_conv = Eq1dConv(1, in_channels // 2, dilation = dilation)
         self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = edge_dim)
         self.stem_norm = nn.InstanceNorm2d(in_channels // 2)
         self.stem_gcn_norm = nn.InstanceNorm2d(in_channels // 2)
         
         for ix in range(len(res_channels)):
-            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
+            self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites, dilation = dilation))
             n_sites = n_sites // 2
             
             self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = edge_dim))
@@ -1520,7 +1520,7 @@ class GCNUNet_eps(nn.Module):
             in_channels = res_channels[ix] * 2
             
         for ix in range(len(up_channels)):
-            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
+            self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites, dilation = dilation))
             n_sites *= 2
             
             self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = edge_dim))
@@ -1534,9 +1534,9 @@ class GCNUNet_eps(nn.Module):
             
         in_channels = 16
         
-        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 2, pooling = None)
+        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 1, pooling = None)
         
-        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 2, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d(in_channels + in_channels // 2 + up_channels[-1], 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
