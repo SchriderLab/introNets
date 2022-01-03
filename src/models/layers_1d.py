@@ -1324,6 +1324,8 @@ class Attention_block(nn.Module):
     
 class GCNEqRegressor(nn.Module):
     def __init__(self, sites = 128, pred_pop = 1, n_layers = 4):
+        super(GCNEqRegressor, self).__init__()
+        
         self.layers = nn.ModuleList()
         self.norms = nn.ModuleList()
         
