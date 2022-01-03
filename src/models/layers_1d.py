@@ -1538,7 +1538,7 @@ class GCNUNet_eps(nn.Module):
         in_channels = 24
         
         if self.use_final_conv:
-            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 8, ), in_channels + up_channels[-1] + 4, 1, pooling = None)
+            self.pre_out = Res1dBlock((in_channels + up_channels[-1] + 8, ), in_channels + up_channels[-1] + 8, 1, pooling = None)
         
         self.out = nn.Conv2d(in_channels + up_channels[-1] + 8, 1, 1, 1, bias = False)
         
