@@ -612,10 +612,82 @@ class GCNDataGeneratorH5(object):
             edge_attr.extend(list(edge_attr_))
             
         # label smooth
-        Y = np.concatenate(Y)
-        ey = np.random.uniform(0., 0.1, Y.shape)
+        if not val:
+            Y = np.concatenate(Y)
+            ey = np.random.uniform(0., 0.1, Y.shape)
+            
+            Y = Y * (1 - ey) + 0.5 * ey
+            
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
+
+class GCNRegDataGeneratorH5(object):
+    def __init__(self, ifile, batch_size = 16, chunk_size = 4):
+        self.ifile = h5py.File(ifile, 'r')
         
-        Y = Y * (1 - ey) + 0.5 * ey
+        self.reset_keys()
+        self.reset_keys(True)
+        
+        self.n_per = batch_size // chunk_size
+        
+        self.val_length = len(self.val_keys) // self.n_per
+        
+    def reset_keys(self, val = False):
+        if not val:
+            self.train_keys = list(self.ifile['train'].keys())
+            random.shuffle(self.train_keys)
+        else:
+            self.val_keys = list(self.ifile['val'].keys())
+        
+
+    def get_batch(self, val = False):
+        if not val:
+            if len(self.train_keys) < self.n_per:
+                self.reset_keys()
+                
+            keys = ['train/{}'.format(u) for u in self.train_keys[:self.n_per]]
+            
+            del self.train_keys[:self.n_per]
+        else:
+            keys = ['val/{}'.format(u) for u in self.val_keys[:self.n_per]]
+
+            del self.val_keys[:self.n_per]
+            
+        X = []
+        Y = []
+        edge_index = []
+        edge_attr = []
+        batch = []
+        
+        start_node = 0
+        counter = 0
+        for key in keys:
+            x = np.expand_dims(np.array(self.ifile[key]['x_0']), 1)
+            
+            y = np.array(self.ifile[key]['y'])
+            edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
+            edge_attr_ = np.array(self.ifile[key]['edge_attr'])
+            
+            X.append(x)
+            Y.append(y)
+            
+            for k in range(x.shape[0]):
+                e_ = edge_index_[k] + start_node
+                start_node += x.shape[2]
+                
+                edge_index.append(e_)
+                batch.extend(np.ones(x.shape[2], dtype = np.int32) * counter)
+                counter += 1
+                
+            edge_attr.extend(list(edge_attr_))
+            
+        # label smooth
+        if not val:
+            Y = np.concatenate(Y)
+            ey = np.random.uniform(0., 0.1, Y.shape)
+            
+            Y = Y * (1 - ey) + 0.5 * ey
+            
+        Y = np.mean(Y, axis = -1).reshape(-1, 1)
             
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y), torch.LongTensor(np.concatenate(edge_index).T), torch.FloatTensor(np.concatenate(edge_attr)), torch.LongTensor(batch)
 

@@ -1134,7 +1134,6 @@ def design_lowpass_filter(numtaps = 5, cutoff = 64 - 1, width = WIDTH, fs = 128,
     f /= np.sum(f)
     return torch.as_tensor(f, dtype=torch.float32)
         
-
 class Eq1dConv(nn.Module):
     def __init__(self, in_channels = 1, out_channels = 1, k = 3, 
                          s = 128, n_layers = 3, down = 2, up = 2, dilation_ = True):
@@ -1167,10 +1166,11 @@ class Eq1dConv(nn.Module):
         self.up = up
         
     def forward(self, x):
-        # convolve and the perform
-        x = self.norms[0](self.convs[0](x))
-        for ix in range(1, len(self.convs)):
-            x = self.norms[ix](self.convs[ix](x)) + x
+        if len(self.convs) > 0:
+            # convolve and the perform
+            x = self.norms[0](self.convs[0](x))
+            for ix in range(1, len(self.convs)):
+                x = self.norms[ix](self.convs[ix](x)) + x
         
         x = filtered_lrelu.filtered_lrelu(x=x, fu = self.up_filter, fd = self.down_filter, b = None,
             up = self.up, down = self.down, padding=self.padding, gain=1., clamp=None)
@@ -1251,6 +1251,48 @@ class GCNConvNet_beta(nn.Module):
         
         return torch.squeeze(x)
     
+class InceptionGCNBlock_A(nn.Module):
+    def __init__(self, in_channels, out_channels, n_sites = 128, edge_dim = 8):
+        super(InceptionGCNBlock_A,self).__init__()
+        
+        dilation = 1
+        
+        self.a1 = nn.Conv2d(in_channels, out_channels[0], 1, 1)
+        self.a2 = nn.Conv2d(out_channels[0], out_channels[0], (1, 3), 
+                                        stride = (1, 1), dilation = dilation, padding = (0, dilation * (3 + 1) // 2 - dilation), bias = False)
+    
+        self.b1 = nn.Conv2d(in_channels, out_channels[1], 1, 1)
+        self.b2 = nn.Conv2d(out_channels[1], out_channels[1], (1, 5), 
+                                        stride = (1, 1), dilation = dilation, padding = (0, dilation * (5 + 1) // 2 - dilation), bias = False)
+    
+        self.c = nn.Conv2d(in_channels, out_channels[2], 1, 1)
+        self.gcn_conv = GATConv(n_sites, n_sites, heads = out_channels[2], edge_dim = edge_dim)
+        
+        self.d = nn.Conv2d(in_channels, out_channels[3], 1, 1)
+        
+        self.down = Eq1dConv(sum(out_channels), sum(out_channels), n_layers = 0, up = 2, down = 4)
+    
+    def forward(self, x, edge_index, edge_attr):
+        xa = self.a2(self.a1(x))
+        
+        xb = self.b2(self.b1(x))
+        
+        xc = self.c(x)
+        
+        batch_size, ind, channels, sites = xc.shape
+        
+        xc = torch.flatten(xc.transpose(1, 2), 2, 3).flatten(0, 1)
+        xc = self.gcn_conv(xc, edge_index, edge_attr)
+        
+        xc = to_dense_batch(xc, batch)[0]
+        xc = xc.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+    
+        xd = self.d(x)
+        
+        x = torch.cat([xa, xb, xc, xd], dim = 1)
+    
+        return self.down(x)
+    
 class Attention_block(nn.Module):
     def __init__(self,F_g,F_l,F_int):
         super(Attention_block,self).__init__()
@@ -1279,6 +1321,41 @@ class Attention_block(nn.Module):
         psi = self.psi(psi)
 
         return x*psi
+    
+class GCNEqRegressor(nn.Module):
+    def __init__(self, sites = 128, pred_pop = 1, n_layers = 4):
+        self.layers = nn.ModuleList()
+        self.norms = nn.ModuleList()
+        
+        in_channels = 8
+        
+        self.stem_conv = nn.Eq1dConv(1, in_channels)
+        
+        out_channels = [[8, 8, 4, 8], 
+                        [16, 16, 8, 8], 
+                        [32, 32, 16, 16], 
+                        [64, 64, 16, 32]]
+        
+        n_sites = sites
+        for ix in range(len(out_channels)):
+            self.layers.append(InceptionGCNBlock_A(in_channels, out_channels[ix]))
+            self.norms.append(nn.InstanceNorm2d(sum(out_channels[ix])))
+        
+            n_sites = n_sites // 2
+            
+        self.out_dim = sum(out_channels[-1]) * n_sites
+        
+        self.out = nn.Sequential(nn.Linear(self.out_dim, 2048), nn.LayerNorm((2048, )), nn.ReLU(),
+                                 nn.Linear(2048, 2048), nn.LayerNorm((2048, )), nn.ReLU(),
+                                 nn.Linear(2048, 1))
+        
+    def forward(self, x, edge_index, edge_attr, batch):
+        for ix in range(len(self.layers)):
+            x = self.norms[ix](self.layers[ix](x, edge_index, edge_attr, batch))
+            
+        x = x.view(-1, self.out_dim)
+        
+        return self.out(x)
     
 class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
