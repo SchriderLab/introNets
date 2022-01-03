@@ -62,7 +62,8 @@ def main():
     edge_attrs = np.vstack(edge_attrs)
 
     print(np.mean(y_means))
-    print(np.mean(edge_attrs, axis = 0))        
+    print(np.mean(edge_attrs, axis = 0))
+    print(np.std(edge_attr, axis = 0))    
     # ${code_blocks}
 
 if __name__ == '__main__':
