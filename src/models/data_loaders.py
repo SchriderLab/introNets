@@ -332,10 +332,10 @@ def F(n):
     elif n == 1: return 1
     else: return F(n-1)+F(n-2)
     
-EDGE_MEAN = np.array([
-       8.9814079e-01, 1.0996692e+00, 1.0816846e+03, 1.5813326e+01],
-      dtype=np.float32)
-EDGE_STD = np.array([5.2765501e-01, 8.9487451e-01, 1.1330474e+03, 2.4047951e+01])
+EDGE_MEAN = np.array([[1.5445040e+00, 3.9543316e-01, 3.3245298e+03, 4.7975891e+01, 3.3634303e+00,
+                      2.6777378e-01, 6.0734084e+07, 1.6249618e+03]])
+EDGE_STD = np.array([[2.8873081e+00, 8.6436802e-01, 8.2655654e+03, 9.9553024e+01, 6.8482680e+00,
+                     6.8239963e-01, 1.9085554e+08, 7.9583955e+03]])
 
 class GCNDataGeneratorTv2(object):
     def __init__(self, idir, n_sites = 128, 
@@ -562,6 +562,8 @@ class GCNDataGeneratorH5(object):
         
         self.val_length = len(self.val_keys) // self.n_per
         
+        
+        
     def reset_keys(self, val = False):
         if not val:
             self.train_keys = list(self.ifile['train'].keys())
@@ -597,6 +599,9 @@ class GCNDataGeneratorH5(object):
             y = np.array(self.ifile[key]['y'])
             edge_index_ = np.array(self.ifile[key]['edge_index'], dtype = np.int32)
             edge_attr_ = np.array(self.ifile[key]['edge_attr'])
+            
+            for k in range(edge_attr_.shape[0]):
+                edge_attr_[k,:,4:] = (edge_attr_[k,:,4:] - EDGE_MEAN) / EDGE_STD
             
             X.append(x)
             Y.append(y)

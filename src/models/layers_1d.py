@@ -1475,7 +1475,7 @@ class GCNEqRegressor(nn.Module):
 class GCNUNet_delta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
                      pred_pop = 1, use_final_att = True, 
-                     gcn_act = 'softmax', use_final_conv = False):
+                     gcn_act = 'softmax', use_final_conv = True, edge_dim = 12):
         super(GCNUNet_delta, self).__init__()
         
         self.pred_pop = pred_pop
@@ -1504,7 +1504,7 @@ class GCNUNet_delta(nn.Module):
         n_sites = sites
         
         self.stem_conv = Eq1dConv(1, in_channels // 2)
-        self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = 8)
+        self.stem_gcn = GATConv(sites, sites, heads = in_channels // 2, edge_dim = edge_dim)
         self.stem_norm = nn.InstanceNorm2d(in_channels // 2)
         self.stem_gcn_norm = nn.InstanceNorm2d(in_channels // 2)
         
@@ -1512,7 +1512,7 @@ class GCNUNet_delta(nn.Module):
             self.down.append(Eq1dConv(in_channels, res_channels[ix], up = 2, down = 4, s = n_sites))
             n_sites = n_sites // 2
             
-            self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = 8))
+            self.down_gcns.append(GATConv(n_sites, n_sites, heads = res_channels[ix], edge_dim = edge_dim))
             
             self.norms_down.append(nn.InstanceNorm2d(res_channels[ix]))
             self.norms_down_gcn.append(nn.InstanceNorm2d(res_channels[ix]))
@@ -1523,7 +1523,7 @@ class GCNUNet_delta(nn.Module):
             self.up.append(Eq1dConv(in_channels, up_channels[ix], up = 4, down = 2, s = n_sites))
             n_sites *= 2
             
-            self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = 8))
+            self.up_gcns.append(GATConv(n_sites, n_sites, heads = up_channels[ix], edge_dim = edge_dim))
             
             self.norms_up.append(nn.InstanceNorm2d(up_channels[ix]))
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
@@ -1539,10 +1539,11 @@ class GCNUNet_delta(nn.Module):
         
         if self.use_final_conv:
             self.pre_out = Res1dBlock((in_channels * 2 + up_channels[-1], ), in_channels * 2 + up_channels[-1], 1, pooling = None)
+        
         self.out = nn.Conv2d(in_channels * 2 + up_channels[-1], 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
-        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 4, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
         batch_size, channels, ind, sites = x.shape
