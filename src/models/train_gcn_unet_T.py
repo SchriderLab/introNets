@@ -192,6 +192,7 @@ def main():
         accuracies = []
 
         for ij in range(int(args.n_steps)):
+
             optimizer.zero_grad()
             
             x, y, edges, edge_attr, batch = generator.get_batch()
@@ -235,7 +236,8 @@ def main():
         Y_pred = []
         for step in range(generator.val_length):
             with torch.no_grad():
-
+                print(step)
+                    
                 x, y, edges, edge_attr, batch = generator.get_batch(val = True)
 
 
