@@ -1345,6 +1345,8 @@ class GCNEqRegressor(nn.Module):
         
             n_sites = n_sites // 2
             
+            in_channels = sum(out_channels[ix])
+            
         self.out_dim = sum(out_channels[-1]) * n_sites
         
         self.out = nn.Sequential(nn.Linear(self.out_dim, 2048), nn.LayerNorm((2048, )), nn.ReLU(),
