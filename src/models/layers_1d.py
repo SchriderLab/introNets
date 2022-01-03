@@ -1476,7 +1476,7 @@ class GCNUNet_eps(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
                      pred_pop = 1, use_final_att = True, 
                      gcn_act = 'softmax', use_final_conv = True, edge_dim = 12):
-        super(GCNUNet_delta, self).__init__()
+        super(GCNUNet_eps, self).__init__()
         
         self.pred_pop = pred_pop
         self.use_final_att = use_final_att
