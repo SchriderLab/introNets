@@ -16,7 +16,7 @@ import h5py
 import sys
 sys.path.insert(0, os.path.join(os.getcwd(), 'src/models'))
 
-from layers_1d import GATRelateCNetV2, GCNUNet_delta
+from layers_1d import GATRelateCNetV2, GCNUNet_delta, GCNConvNet_beta, GCNUNet_delta, GCNUNet_eps, GCNUNet_theta
 from data_loaders import H5UDataGenerator, GCNDataGeneratorH5
 
 from scipy.special import expit
@@ -54,6 +54,7 @@ def parse_args():
     
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--n_samples", default = "4")
+    parser.add_argument("--net", default = "theta")
     
     args = parser.parse_args()
 
@@ -79,7 +80,12 @@ def main():
     else:
         device = torch.device('cpu')
 
-    model = GCNUNet_delta()
+    if args.net == "eps":
+        model = GCNUNet_eps()
+    elif args.net == "delta":
+        model = GCNUNet_delta()
+    elif args.net == "theta":
+        model = GCNUNet_theta()
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
