@@ -140,8 +140,10 @@ def main():
                 ax0.imshow(x[k,0,:,:], cmap = 'gray')
                 ax0.set_title('pop A')
                 
+                print(np.sum(y[k]))
+                
                 ax2 = fig.add_subplot(142)
-                ax2.imshow(y[k,:], cmap = 'gray')
+                ax2.imshow(y[k], cmap = 'gray')
                 ax2.set_title('pop B (y)')
                 
                 ax3 = fig.add_subplot(143)
