@@ -95,7 +95,7 @@ class Formatter(object):
         self.pop = pop
         
     # return a list of the desired array shapes
-    def format(self):
+    def format(self, return_indices = False, continuous = False):
         X = []
         Y = []
         
@@ -125,8 +125,9 @@ class Formatter(object):
             x1 = x[x1_indices, :]
             x2 = x[x2_indices, :]
             
-            x1 = make_continuous(x1)
-            x2 = make_continuous(x2)
+            if continuous:
+                x1 = make_continuous(x1)
+                x2 = make_continuous(x2)
             
             y1 = y[x1_indices, :]
             y2 = y[x2_indices, :]
@@ -156,6 +157,7 @@ class Formatter(object):
                 i, j = linear_sum_assignment(D)
                 
                 x2 = x2[j,:]
+                x2_indices = [x2_indices[u] for u in j]
                 
                 y1 = y1[ix1, :]
                 y2 = y2[j, :]
@@ -171,6 +173,10 @@ class Formatter(object):
             
             X.append(x)
             Y.append(y)
+
+
+        if return_indices:
+            return X[0], Y[0], (x1_indices, x2_indices)
             
         #print(len(X), len(Y))
         return X, Y
