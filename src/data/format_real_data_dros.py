@@ -47,9 +47,6 @@ def main():
     comm = MPI.COMM_WORLD
 
     if comm.rank == 0:
-        format_config = configparser.ConfigParser()
-        format_config.read(args.format_config)
-
         ifile = np.load(args.ifile)
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
@@ -63,13 +60,11 @@ def main():
     else:
         X = None
         positions = None
-        format_config = None
 
     comm.Barrier()
 
     X = comm.bcast(X, root=0)
     positions = comm.bcast(positions, root=0)
-    format_config = comm.bcast(format_config, root=0)
 
     comm.Barrier()
 
@@ -153,3 +148,6 @@ def main():
                 ofile.create_dataset('{0}/i2'.format(current_chunk), data = np.array([u[1] for u in indices[-chunk_size:]], dtype = np.uint8), compression = 'lzf')
 
         ofile.close()
+        
+if __name__ == '__main__':
+    main()
