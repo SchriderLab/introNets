@@ -111,6 +111,8 @@ def main():
             x, p, ix = comm.recv(source=MPI.ANY_SOURCE)
 
             n_received += 1
+            
+            print(n_received)
 
             X.append(x)
             P.append(p)
