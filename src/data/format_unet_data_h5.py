@@ -130,6 +130,9 @@ class Formatter(object):
             else:
                 x1 = x[:self.pop_size,:]
                 x2 = x[self.pop_size:,:]
+                
+                x1_indices = list(range(self.pop_size))
+                x2_indices = list(range(self.pop_size))
             
             if continuous:
                 x1 = make_continuous(x1)
@@ -139,7 +142,6 @@ class Formatter(object):
                 y1 = y[x1_indices, :]
                 y2 = y[x2_indices, :]
              
-            
                 indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
                 if len(indices) == 0:
                     continue
