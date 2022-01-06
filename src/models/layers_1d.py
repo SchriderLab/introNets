@@ -1539,12 +1539,12 @@ class GCNUNet_psi(nn.Module):
             
         in_channels = 16
         
-        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 1, pooling = None)
+        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1] * 2, ), in_channels + in_channels // 2 + up_channels[-1], 1, pooling = None)
         self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1], in_channels + in_channels // 2 + up_channels[-1], batch_first = True, bidirectional = True)
         
         self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 3, 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1] * 2, in_channels // 8, 1, 1)
         self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
@@ -1595,15 +1595,15 @@ class GCNUNet_psi(nn.Module):
             
             batch_size, channels, ind, sites = x.shape
             
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            x = self.up_gcns[ix](x, edge_index, edge_attr)
-            
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
-            
-            x = self.norms_up_gcn[ix](x)
-            
             if ix != len(self.up) - 1:
+                x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+                x = self.up_gcns[ix](x, edge_index, edge_attr)
+                
+                x = to_dense_batch(x, batch)[0]
+                x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+                
+                x = self.norms_up_gcn[ix](x)
+                
                 xg = xs[-1].transpose(1, 2).flatten(0, 1).transpose(1, 2)
                 
                 xg, _ = self.grus[ix](xg)
@@ -1612,11 +1612,19 @@ class GCNUNet_psi(nn.Module):
                 xg = xg.reshape(batch_size, ind, sites, channels * 2).transpose(2, 3).transpose(1, 2)
                 
                 x = torch.cat([x, xg, self.att_blocks[ix](x, xs[-1])], dim = 1)
+            else:
+                xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+                xg = self.up_gcns[ix](xg, edge_index, edge_attr)
+                
+                xg = to_dense_batch(xg, batch)[0]
+                xg = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+                
+                xg = self.norms_up_gcn[ix](xg)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
             
-        x = torch.cat([x, xs[0]], dim = 1)
+        x = torch.cat([x, xs[0], xg], dim = 1)
         
         # separate out the populations (assumes equi-sampled, fix later)
         # down sample global features via 1x1 convolution
@@ -1719,14 +1727,14 @@ class GCNUNet_theta(nn.Module):
             if ix != len(up_channels) - 1:
                 self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
             
-            in_channels = up_channels[ix] * 2
+            in_channels = up_channels[ix] * 3
             
         in_channels = 16
         
-        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 1, pooling = None)
-        self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1], in_channels + in_channels // 2 + up_channels[-1], batch_first = True, bidirectional = True)
+        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1] * 2, ), in_channels + in_channels // 2 + up_channels[-1] * 2, 1, pooling = None)
+        self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1] * 2, in_channels + in_channels // 2 + up_channels[-1] * 2, batch_first = True, bidirectional = True)
         
-        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 3, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1] * 2) * 3, 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
@@ -1779,21 +1787,21 @@ class GCNUNet_theta(nn.Module):
             
             batch_size, channels, ind, sites = x.shape
             
-            x = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            x = self.up_gcns[ix](x, edge_index, edge_attr)
+            xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
+            xg = self.down_gcns[ix](xg, edge_index, edge_attr)
             
-            x = to_dense_batch(x, batch)[0]
-            x = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
+            xg = to_dense_batch(xg, batch)[0]
+            xg = x.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
-            x = self.norms_up_gcn[ix](x)
+            xg = self.norms_down_gcn[ix](xg)
             
             if ix != len(self.up) - 1:
-                x = torch.cat([x, self.att_blocks[ix](x, xs[-1])], dim = 1)
+                x = torch.cat([x, self.att_blocks[ix](x, xs[-1]), xg], dim = 1)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
             
-        x = torch.cat([x, xs[0]], dim = 1)
+        x = torch.cat([x, xs[0], xg], dim = 1)
         
         # separate out the populations (assumes equi-sampled, fix later)
         # down sample global features via 1x1 convolution
