@@ -1473,8 +1473,7 @@ class GCNEqRegressor(nn.Module):
         return self.out(x)
 
 # in this version of the net we'll replace the Attention block with a GRU unit
-# that's all!
-# so some new parameters added in but not too many!
+
 class GCNUNet_psi(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
                      pred_pop = 1, use_final_att = True, 
@@ -1532,10 +1531,10 @@ class GCNUNet_psi(nn.Module):
             self.norms_up_gcn.append(nn.InstanceNorm2d(up_channels[ix]))
 
             if ix != len(up_channels) - 1:
-                #self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
-                self.att_blocks.append(nn.GRU(up_channels[ix], up_channels[ix], batch_first = True, bidirectional = True))
+                self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
+                self.grus.append(nn.GRU(up_channels[ix], up_channels[ix], batch_first = True, bidirectional = True))
             
-            in_channels = up_channels[ix] * 3
+            in_channels = up_channels[ix] * 4
             
         in_channels = 16
         
@@ -1606,12 +1605,12 @@ class GCNUNet_psi(nn.Module):
             if ix != len(self.up) - 1:
                 xg = xs[-1].transpose(1, 2).flatten(0, 1).transpose(1, 2)
                 
-                xg, _ = self.att_blocks[ix](xg)
+                xg, _ = self.grus[ix](xg)
                 del _
                 
                 xg = xg.reshape(batch_size, ind, sites, channels * 2).transpose(2, 3).transpose(1, 2)
                 
-                x = torch.cat([x, xg], dim = 1)
+                x = torch.cat([x, xg, self.att_blocks[ix](x, xs[-1])], dim = 1)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())
