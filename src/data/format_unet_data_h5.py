@@ -107,25 +107,29 @@ class Formatter(object):
             
             #print(x.shape, y.shape)
             
-            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
-                continue
+            if not return_indices:
+                if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
+                    continue
             
-            if self.pop_sizes[0] >= self.pop_size:
-                replace = False
+                if self.pop_sizes[0] >= self.pop_size:
+                    replace = False
+                else:
+                    replace = True
+                
+                x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size, replace = replace))
+                
+                if self.pop_sizes[1] >= self.pop_size:
+                    replace = False
+                else:
+                    replace = True
+                
+                x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
+                
+                x1 = x[x1_indices, :]
+                x2 = x[x2_indices, :]
             else:
-                replace = True
-            
-            x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size, replace = replace))
-            
-            if self.pop_sizes[1] >= self.pop_size:
-                replace = False
-            else:
-                replace = True
-            
-            x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
-            
-            x1 = x[x1_indices, :]
-            x2 = x[x2_indices, :]
+                x1 = x[:self.pop_size,:]
+                x2 = x[self.pop_size:,:]
             
             if continuous:
                 x1 = make_continuous(x1)
@@ -134,20 +138,20 @@ class Formatter(object):
             if self.y is not None:
                 y1 = y[x1_indices, :]
                 y2 = y[x2_indices, :]
+             
+            
+                indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
+                if len(indices) == 0:
+                    continue
                 
-            indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
-            if len(indices) == 0:
-                continue
-            
-            six = np.random.choice(indices)
-            
-            if np.sum(y[:,six:six + self.n_sites]) == 0:
-                continue
-            
-            x1 = x1[:,six:six + self.n_sites]
-            x2 = x2[:,six:six + self.n_sites]
-            
-            if self.y is not None:
+                six = np.random.choice(indices)
+                
+                if np.sum(y[:,six:six + self.n_sites]) == 0:
+                    continue
+                
+                x1 = x1[:,six:six + self.n_sites]
+                x2 = x2[:,six:six + self.n_sites]
+
                 y1 = y1[:,six:six + self.n_sites]
                 y2 = y2[:,six:six + self.n_sites]
             

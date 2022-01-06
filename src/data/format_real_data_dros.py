@@ -45,14 +45,34 @@ def main():
 
     # configure MPI
     comm = MPI.COMM_WORLD
+    
+    pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
+    out_shape = tuple(list(map(int, args.out_shape.split(','))))
+    
+    pop_size = out_shape[1]  
 
     if comm.rank == 0:
         ifile = np.load(args.ifile)
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
+        
+        # do the upsampling across all sites
+        if pop_sizes[0] >= pop_size:
+            replace = False
+        else:
+            replace = True
+        
+        x1_indices = list(np.random.choice(range(pop_sizes[0]), pop_size, replace = replace))
+        
+        if pop_sizes[1] >= pop_size:
+            replace = False
+        else:
+            replace = True
+        
+        x2_indices = list(np.random.choice(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]), pop_size))
         positions = ifile['positions']
 
-        X = np.vstack((pop1_x, pop2_x))
+        X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
 
         n_files = X.shape[1] - 64
         print(n_files)
@@ -69,9 +89,6 @@ def main():
 
     print('{}: got data...'.format(comm.rank))
     comm.Barrier()
-
-    pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
-    out_shape = tuple(list(map(int, args.out_shape.split(','))))
 
     chunk_size = int(args.chunk_size)
 
