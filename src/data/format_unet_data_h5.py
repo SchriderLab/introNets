@@ -101,7 +101,9 @@ class Formatter(object):
         
         for k in range(len(self.x)):
             x = self.x[k]
-            y = self.y[k]
+            
+            if self.y is not None:
+                y = self.y[k]
             
             #print(x.shape, y.shape)
             
@@ -129,9 +131,10 @@ class Formatter(object):
                 x1 = make_continuous(x1)
                 x2 = make_continuous(x2)
             
-            y1 = y[x1_indices, :]
-            y2 = y[x2_indices, :]
-            
+            if self.y is not None:
+                y1 = y[x1_indices, :]
+                y2 = y[x2_indices, :]
+                
             indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
             if len(indices) == 0:
                 continue
@@ -144,9 +147,9 @@ class Formatter(object):
             x1 = x1[:,six:six + self.n_sites]
             x2 = x2[:,six:six + self.n_sites]
             
-            y1 = y1[:,six:six + self.n_sites]
-            y2 = y2[:,six:six + self.n_sites]
-            
+            if self.y is not None:
+                y1 = y1[:,six:six + self.n_sites]
+                y2 = y2[:,six:six + self.n_sites]
             
             if self.sorting == "seriate_match":
                 x1, ix1 = seriate_x(x1)
@@ -159,24 +162,28 @@ class Formatter(object):
                 x2 = x2[j,:]
                 x2_indices = [x2_indices[u] for u in j]
                 
-                y1 = y1[ix1, :]
-                y2 = y2[j, :]
+                if self.y is not None:
+                    y1 = y1[ix1, :]
+                    y2 = y2[j, :]
             
             x = np.array([x1, x2])
-            y = np.array([y1, y2])
             
-            if self.pop:
-                if self.pop == "0":
-                    y = np.expand_dims(y[0])
-                else:
-                    y = np.expand_dims(y[1])
+            if self.y is not None:
+                y = np.array([y1, y2])
+            
+            if self.y is not None:
+                if self.pop:
+                    if self.pop == "0":
+                        y = np.expand_dims(y[0])
+                    else:
+                        y = np.expand_dims(y[1])
+                        
+                Y.append(y)
             
             X.append(x)
-            Y.append(y)
-
 
         if return_indices:
-            return X[0], Y[0], (x1_indices, x2_indices)
+            return X[0], (x1_indices, x2_indices)
             
         #print(len(X), len(Y))
         return X, Y
