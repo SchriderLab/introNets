@@ -1535,7 +1535,7 @@ class GCNUNet_psi(nn.Module):
                 #self.att_blocks.append(Attention_block(up_channels[ix], up_channels[ix], up_channels[ix] // 2))
                 self.att_blocks.append(nn.GRU(up_channels[ix], up_channels[ix], batch_first = True, bidirectional = True))
             
-            in_channels = up_channels[ix] * 2
+            in_channels = up_channels[ix] * 3
             
         in_channels = 16
         
