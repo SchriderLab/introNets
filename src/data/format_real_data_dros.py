@@ -61,11 +61,13 @@ def main():
         X = None
         positions = None
 
+    print('{}: getting data...'.format(comm.rank))
     comm.Barrier()
 
     X = comm.bcast(X, root=0)
     positions = comm.bcast(positions, root=0)
 
+    print('{}: got data...'.format(comm.rank))
     comm.Barrier()
 
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
@@ -90,7 +92,7 @@ def main():
 
             f = Formatter([x], None, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, y, i1 = f.format(True)
+            x, i1 = f.format(True)
 
             comm.send([x, p, i1], dest=0)
 
