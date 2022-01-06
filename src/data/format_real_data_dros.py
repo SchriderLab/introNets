@@ -56,8 +56,6 @@ def main():
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
         
-        print(pop1_x.shape, pop2_x.shape)
-        
         # do the upsampling across all sites
         if pop_sizes[0] >= pop_size:
             replace = False
@@ -71,7 +69,7 @@ def main():
         else:
             replace = True
         
-        x2_indices = list(np.random.choice(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]), pop_size))
+        x2_indices = list(np.random.choice(range(pop_sizes[0]), pop_size, replace = replace))
         positions = ifile['positions']
 
         X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
@@ -120,6 +118,8 @@ def main():
         positions = None
 
         ofile = h5py.File(args.ofile, 'w')
+        ofile.create_dataset('x1_indices', data = np.array(x1_indices, dtype = np.int32))
+        ofile.create_dataset('x2_indices', data = np.array(x1_indices, dtype = np.int32))
 
         n_received = 0
         current_chunk = 0
