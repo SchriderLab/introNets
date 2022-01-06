@@ -56,6 +56,8 @@ def main():
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
         
+        print(pop1_x.shape, pop2_x.shape)
+        
         # do the upsampling across all sites
         if pop_sizes[0] >= pop_size:
             replace = False
