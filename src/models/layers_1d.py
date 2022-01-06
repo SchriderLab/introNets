@@ -1787,19 +1787,13 @@ class GCNUNet_theta(nn.Module):
             
             batch_size, channels, ind, sites = x.shape
             
-            print(x.shape)
-            
             xg = torch.flatten(x.transpose(1, 2), 2, 3).flatten(0, 1)
-            print(xg.shape)
-            
-            xg = self.down_gcns[ix](xg, edge_index, edge_attr)
-            
-            print(xg.shape)
-            
+            xg = self.up_gcns[ix](xg, edge_index, edge_attr)
+
             xg = to_dense_batch(xg, batch)[0]
             xg = xg.reshape(batch_size, ind, channels, sites).transpose(1, 2)
             
-            xg = self.norms_down_gcn[ix](xg)
+            xg = self.norms_up_gcn[ix](xg)
             
             if ix != len(self.up) - 1:
                 x = torch.cat([x, self.att_blocks[ix](x, xs[-1]), xg], dim = 1)
