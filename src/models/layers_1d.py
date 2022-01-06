@@ -1498,6 +1498,7 @@ class GCNUNet_psi(nn.Module):
         self.norms_down_gcn = nn.ModuleList()
         
         self.att_blocks = nn.ModuleList()
+        self.grus = nn.ModuleList()
         
         in_channels = 16
         res_channels = [16, 32, 64]
