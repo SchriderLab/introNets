@@ -81,13 +81,11 @@ def main():
         X = None
         positions = None
 
-    print('{}: getting data...'.format(comm.rank))
     comm.Barrier()
 
     X = comm.bcast(X, root=0)
     positions = comm.bcast(positions, root=0)
 
-    print('{}: got data...'.format(comm.rank))
     comm.Barrier()
 
     chunk_size = int(args.chunk_size)
@@ -132,8 +130,6 @@ def main():
             x, p, ix = comm.recv(source=MPI.ANY_SOURCE)
 
             n_received += 1
-            
-            print(n_received)
 
             X.append(x)
             P.append(p)
@@ -149,7 +145,7 @@ def main():
                     ofile.create_dataset('{0}/i1'.format(current_chunk), data = np.array([u[0] for u in indices[-chunk_size:]], dtype = np.uint8), compression = 'lzf')
                     ofile.create_dataset('{0}/i2'.format(current_chunk), data = np.array([u[1] for u in indices[-chunk_size:]], dtype = np.uint8), compression = 'lzf')
 
-                logging.debug('0: wrote chunk {0}'.format(current_chunk))
+                logging.info('0: wrote chunk {0}'.format(current_chunk))
 
                 current_chunk += 1
 
