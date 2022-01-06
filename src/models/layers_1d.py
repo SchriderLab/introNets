@@ -1538,7 +1538,7 @@ class GCNUNet_theta(nn.Module):
         self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1], ), in_channels + in_channels // 2 + up_channels[-1], 1, pooling = None)
         self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1], in_channels + in_channels // 2 + up_channels[-1], batch_first = True, bidirectional = True)
         
-        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 2, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1]) * 3, 1, 1, 1, bias = False)
         
         self.out_down1 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
         self.out_down2 = nn.Conv2d(in_channels + up_channels[-1], in_channels // 8, 1, 1)
