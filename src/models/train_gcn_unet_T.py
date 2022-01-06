@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
-from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta, GCNUNet_delta, GCNUNet_eps, GCNUNet_theta
+from layers_1d import GGRUCNet, GATCNet, GATRelateCNet, GATRelateCNetV2, GCNConvNet_beta, GCNUNet_delta, GCNUNet_eps, GCNUNet_theta, GCNUNet_psi
 from data_loaders import GCNDataGeneratorH5
 import glob
 from scipy.special import expit
@@ -159,6 +159,9 @@ def main():
         model = GCNUNet_delta()
     elif args.net == "theta":
         model = GCNUNet_theta()
+    elif args.net == "psi":
+        model = GCNUNet_psi()
+        
     print(model)
     d_model = count_parameters(model)
     
