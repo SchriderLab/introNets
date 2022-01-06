@@ -69,7 +69,7 @@ def main():
         else:
             replace = True
         
-        x2_indices = list(np.random.choice(range(pop_sizes[0]), pop_size, replace = replace))
+        x2_indices = list(np.random.choice(range(pop_sizes[1]), pop_size, replace = replace))
         positions = ifile['positions']
 
         X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
