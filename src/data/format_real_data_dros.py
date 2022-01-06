@@ -90,7 +90,7 @@ def main():
 
             p = positions[ix:ix + 64]
 
-            f = Formatter([x], None, sorting = args.sorting, pop = args.pop, 
+            f = Formatter([x], None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
             x, i1 = f.format(True)
 
