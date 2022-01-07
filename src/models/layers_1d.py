@@ -1796,7 +1796,7 @@ class GCNUNet_theta(nn.Module):
             xg = self.norms_up_gcn[ix](xg)
             
             if ix != len(self.up) - 1:
-                x = torch.cat([x, self.att_blocks[ix](x, xs[-1]), xg], dim = 1)
+                x = torch.cat([x, xs[-1], xg], dim = 1)
             
             if return_intermediates:
                 xs_up.append(x.detach().clone())

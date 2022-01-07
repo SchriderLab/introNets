@@ -113,7 +113,7 @@ def parse_args():
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--tag", default = "test")
     
-    parser.add_argument("--decay_lr", action = "store_true")
+    parser.add_argument("--decay_lr_epoch", default = "20")
     
     parser.add_argument("--net", default = "delta")
     args = parser.parse_args()
@@ -182,8 +182,10 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr = float(args.lr))
     early_count = 0
     
-    decayRate = 0.99
+    decayRate = 0.97
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
+    
+    decay_lr_epoch = int(args.decay_lr_epoch)
     
     history = dict()
     history['loss'] = []
@@ -293,7 +295,7 @@ def main():
 
         generator.reset_keys(True)
         
-        if args.decay_lr:
+        if ix >= decay_lr_epoch - 1:
             lr_scheduler.step()
         
         df = pd.DataFrame(history)
