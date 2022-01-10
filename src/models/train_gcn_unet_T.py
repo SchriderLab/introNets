@@ -158,7 +158,7 @@ def main():
     elif args.net == "delta":
         model = GCNUNet_delta()
     elif args.net == "theta":
-        model = GCNUNet_theta()
+        model = GCNUNet_theta(sites = int(args.n_sites))
     elif args.net == "psi":
         model = GCNUNet_psi()
         
