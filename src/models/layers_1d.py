@@ -1731,13 +1731,13 @@ class GCNUNet_theta(nn.Module):
             
         in_channels = in_channels_
         
-        self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1] * 2, ), in_channels + in_channels // 2 + up_channels[-1] * 2, 1, pooling = None)
-        self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1] * 2, in_channels + in_channels // 2 + up_channels[-1] * 2, batch_first = True, bidirectional = True)
+        self.pre_out = Res1dBlock((in_channels + 8 + up_channels[-1] * 2, ), in_channels + 8 + up_channels[-1] * 2, 1, pooling = None)
+        self.pre_out_gru = nn.GRU(in_channels + 8 + up_channels[-1] * 2, in_channels + 8 + up_channels[-1] * 2, batch_first = True, bidirectional = True)
         
-        self.out = nn.Conv2d((in_channels + in_channels // 2 + up_channels[-1] * 2) * 3, 1, 1, 1, bias = False)
+        self.out = nn.Conv2d((in_channels + 8 + up_channels[-1] * 2) * 3, 1, 1, 1, bias = False)
         
-        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1] * 2, in_channels // 8, 1, 1)
-        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1] * 2, in_channels // 8, 1, 1)
+        self.out_down1 = nn.Conv2d(in_channels + up_channels[-1] * 2, 4, 1, 1)
+        self.out_down2 = nn.Conv2d(in_channels + up_channels[-1] * 2, 4, 1, 1)
         
     def forward(self, x, edge_index, edge_attr, batch, return_intermediates = False):
         batch_size, channels, ind, sites = x.shape
