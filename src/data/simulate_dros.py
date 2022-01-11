@@ -218,11 +218,15 @@ def main():
                 else:
                     cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
                 
+                cmd = "echo '{0}' && {0}".format(cmd)
                 print('simulating via the recommended parameters...')
                 sys.stdout.flush()
             
                 fout = os.path.join(odir, 'mig.msOut')
                 os.system(slurm_cmd.format(fout, cmd))
+                
+                print(cmd)
+                print(slurm_cmd.format(fout, cmd))
                 
                 # make some perturbed versions of the sims
                 P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
