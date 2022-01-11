@@ -223,7 +223,9 @@ def main():
                 sys.stdout.flush()
             
                 fout = os.path.join(odir, 'mig.msOut')
-                os.system(slurm_cmd.format(fout, cmd))
+                
+                if not args.debug:
+                    os.system(slurm_cmd.format(fout, cmd))
                 
                 print(cmd)
                 print(slurm_cmd.format(fout, cmd))
