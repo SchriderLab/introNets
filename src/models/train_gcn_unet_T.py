@@ -114,6 +114,7 @@ def parse_args():
     parser.add_argument("--tag", default = "test")
     
     parser.add_argument("--decay_lr_epoch", default = "20")
+    parser.add_argument("--in_channels", default = "16")
     
     parser.add_argument("--net", default = "delta")
     args = parser.parse_args()
@@ -158,7 +159,7 @@ def main():
     elif args.net == "delta":
         model = GCNUNet_delta()
     elif args.net == "theta":
-        model = GCNUNet_theta(sites = int(args.n_sites))
+        model = GCNUNet_theta(sites = int(args.n_sites), in_channels_ = int(args.in_channels))
     elif args.net == "psi":
         model = GCNUNet_psi()
         

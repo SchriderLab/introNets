@@ -1670,7 +1670,7 @@ class GCNUNet_psi(nn.Module):
     
 class GCNUNet_theta(nn.Module):
     def __init__(self, n_layers = 3, sites = 128, 
-                     pred_pop = 1, use_final_att = True, 
+                     pred_pop = 1, use_final_att = True, in_channels_ = 16,
                      gcn_act = 'softmax', use_final_conv = True, edge_dim = 12, dilation = False):
         super(GCNUNet_theta, self).__init__()
         
@@ -1693,9 +1693,9 @@ class GCNUNet_theta(nn.Module):
         
         self.att_blocks = nn.ModuleList()
         
-        in_channels = 16
-        res_channels = [16, 32, 64]
-        up_channels = [64, 32, 16]
+        in_channels = in_channels_
+        res_channels = [in_channels * 2, in_channels * 4, in_channels * 8]
+        up_channels = [in_channels * 8, in_channels * 4, in_channels * 2]
         
         n_sites = sites
         
@@ -1729,7 +1729,7 @@ class GCNUNet_theta(nn.Module):
             
             in_channels = up_channels[ix] * 3
             
-        in_channels = 16
+        in_channels = in_channels_
         
         self.pre_out = Res1dBlock((in_channels + in_channels // 2 + up_channels[-1] * 2, ), in_channels + in_channels // 2 + up_channels[-1] * 2, 1, pooling = None)
         self.pre_out_gru = nn.GRU(in_channels + in_channels // 2 + up_channels[-1] * 2, in_channels + in_channels // 2 + up_channels[-1] * 2, batch_first = True, bidirectional = True)
