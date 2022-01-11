@@ -1694,8 +1694,8 @@ class GCNUNet_theta(nn.Module):
         self.att_blocks = nn.ModuleList()
         
         in_channels = in_channels_
-        res_channels = [in_channels * 2, in_channels * 4, in_channels * 8]
-        up_channels = [in_channels * 8, in_channels * 4, in_channels * 2]
+        res_channels = [in_channels, in_channels * 2, in_channels * 4]
+        up_channels = [in_channels * 4, in_channels * 2, in_channels]
         
         n_sites = sites
         
