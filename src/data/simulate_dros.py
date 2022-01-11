@@ -153,6 +153,7 @@ def parse_args():
     parser.add_argument("--direction", default = "ba")
 
     parser.add_argument("--sample", action = "store_true")
+    parser.add_argument("--debug", action = "store_true")
     # ${args}
 
     parser.add_argument("--odir", default = "None")
@@ -187,7 +188,13 @@ def main():
     p = list(itertools.product(rho, migTime, migProb))
     counter = 0
     
-    for ix in range(df.shape[0]):
+    if args.debug:
+        n = 10
+        K = 1
+    else:
+        K = df.shape[0]
+    
+    for ix in range(K):
         for p_ in p:
             # simulate the selected parameters
             rho, migTime, migProb = p_
