@@ -200,9 +200,9 @@ def main():
                 os.system('mkdir -p {}'.format(odir))
             
                 if (args.direction == 'ba') or (args.direction == 'ab'):
-                    writeTbsFile(np.concatenate([P, np.random.randint(0, 2**14, size = (P.shape[0], 3))]), os.path.join(odir, 'mig.tbs'))
+                    writeTbsFile(np.concatenate([P, np.random.randint(0, 2**14, size = (P.shape[0], 3))], axis = 1), os.path.join(odir, 'mig.tbs'))
                 else:
-                    writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))]), os.path.join(odir, 'mig.tbs'))
+                    writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
                     
                 if args.direction == 'ba':
                     cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs')
