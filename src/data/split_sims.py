@@ -46,8 +46,12 @@ def main():
         
         P = params[0]
         
-        migTime = P[-4]
-        T = P[-7]
+        if len(P) == 16:
+            migTime = P[-4]
+            T = P[-7]
+        else:
+            migTime = P[-2]
+            T = P[-5]
 
         v = int(np.round((migTime / T) * 100))
 
