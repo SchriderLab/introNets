@@ -47,7 +47,7 @@ def main():
         P = params[0]
         
         migTime = P[-1]
-        T = P[-4]
+        T = P[-7]
 
         v = int(np.round((migTime / T) * 100))
 
