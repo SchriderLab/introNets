@@ -54,7 +54,7 @@ def main():
         
         y_means.append(np.mean(y))
 
-    print(np.mean(y_means))
+    print((1 - np.mean(y_means)) / np.mean(y_means))
     # ${code_blocks}
 
 if __name__ == '__main__':
