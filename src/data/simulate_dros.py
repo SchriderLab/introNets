@@ -205,7 +205,7 @@ def main():
             
             if ll > -2000:
                 # replace mean migTime with a normal distribution around it
-                migTime = np.random.normal(migTimeMean, migTimeStds[migTimeMean], (P.shape[0], 1))
+                migTime = np.random.normal(migTimeMean, migTimeStds[migTimeMean], (P.shape[0],))
                 # filter negative values
                 migTime[np.where(migTime < 0.)] = migTimeMean
                 
