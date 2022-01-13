@@ -182,10 +182,12 @@ def main():
     n = int(args.n_samples)
     
     rho = [0.1, 0.25, 0.2, 0.3]
-    migTime = [0.1, 0.2, 0.3, 0.01]
+    migTimeMeans = [0.1, 0.2, 0.3, 0.01, 0.05]
+    migTimeStds = dict(zip(migTimeMeans, list(np.array(migTimeMeans) / 10)))
+    
     migProb = [0.1, 0.2, 0.05]
     
-    p = list(itertools.product(rho, migTime, migProb))
+    p = list(itertools.product(rho, migTimeMeans, migProb))
     counter = 0
     
     if args.debug:
@@ -197,10 +199,19 @@ def main():
     for ix in range(K):
         for p_ in p:
             # simulate the selected parameters
-            rho, migTime, migProb = p_
+            rho, migTimeMean, migProb = p_
             
-            P, ll = parameters_df(df, ix, rho, migTime, migProb, n)
+            P, ll = parameters_df(df, ix, rho, migTimeMean, migProb, n)
+            
             if ll > -2000:
+                # replace mean migTime with a normal distribution around it
+                migTime = np.random.normal(migTimeMean, migTimeStds[migTimeMean], (P.shape[0], 1))
+                # filter negative values
+                migTime[np.where(migTime < 0.)] = migTimeMean
+                
+                P[:,-1] = migTime
+                P[:,-3] = migTime
+                
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                 counter += 1
                 
@@ -212,11 +223,11 @@ def main():
                     writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
                     
                 if args.direction == 'ba':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 elif args.direction == 'ab':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 else:
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 
                 cmd = "echo '{0}' && {0}".format(cmd)
                 print('simulating via the recommended parameters...')
@@ -248,11 +259,11 @@ def main():
                             writeTbsFile(np.concatenate([x[:,:-3], np.random.randint(0, 2**14, size = (x.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
                     
                         if args.direction == 'ba':
-                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                         elif args.direction == 'ab':
-                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                         else:
-                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                         cmd = "echo '{0}' && {0}".format(cmd)
                         print('simulating via the recommended parameters...')
                         sys.stdout.flush()
