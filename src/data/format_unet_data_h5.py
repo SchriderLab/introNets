@@ -95,7 +95,7 @@ class Formatter(object):
         self.pop = pop
         
     # return a list of the desired array shapes
-    def format(self, return_indices = False, continuous = False):
+    def format(self, return_indices = False, continuous = False, zero = False):
         X = []
         Y = []
         
@@ -148,8 +148,9 @@ class Formatter(object):
                 
                 six = np.random.choice(indices)
                 
-                if np.sum(y[:,six:six + self.n_sites]) == 0:
-                    continue
+                if not zero:
+                    if np.sum(y[:,six:six + self.n_sites]) == 0:
+                        continue
                 
                 x1 = x1[:,six:six + self.n_sites]
                 x2 = x2[:,six:six + self.n_sites]
@@ -210,6 +211,7 @@ def parse_args():
     parser.add_argument("--out_shape", default = "2,128,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
+    parser.add_argument("--zero", action = "store_true")
     
     parser.add_argument("--pop", choices = ["0", "1"], help = "only return y values for one pop?")
 
@@ -256,13 +258,13 @@ def main():
                 ancFile = os.path.join(idir, 'out.anc')
                 
                 x, y, _ = load_data(msFile, ancFile)
-            
+                
             if args.densify:
                 x, y = remove_singletons(x, y)
             
             f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, y = f.format()
+            x, y = f.format(zero = args.zero)
         
             comm.send([x, y], dest = 0)
             
