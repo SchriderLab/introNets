@@ -142,9 +142,12 @@ class Formatter(object):
                 y1 = y[x1_indices, :]
                 y2 = y[x2_indices, :]
              
-                indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
-                if len(indices) == 0:
-                    continue
+                if not zero:
+                    indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
+                    if len(indices) == 0:
+                        continue
+                else:
+                    indices = list(range(x1.shape[1] - self.n_sites))
                 
                 six = np.random.choice(indices)
                 
@@ -192,7 +195,6 @@ class Formatter(object):
         if return_indices:
             return X[0], (x1_indices, x2_indices)
             
-        #print(len(X), len(Y))
         return X, Y
             
             
@@ -236,8 +238,6 @@ def main():
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*')))]
     chunk_size = int(args.chunk_size)
-    
-    #print(idirs)
     
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
@@ -296,9 +296,6 @@ def main():
                 current_chunk += 1
                 
         ofile.close()
-            
-
-    # ${code_blocks}
 
 if __name__ == '__main__':
     main()
