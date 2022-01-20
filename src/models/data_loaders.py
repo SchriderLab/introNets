@@ -1101,7 +1101,7 @@ class DisDataGenerator(object):
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
         
 class H5DisDataGenerator_i2(object):
-    def __init__(self, ifiles, n_samples = 3000, n_samples_val = 200, chunk_size = 4, batch_size = 32):
+    def __init__(self, ifiles, n_samples = 12000, n_samples_val = 200, chunk_size = 4, batch_size = 32):
         # ifiles is a dictionary pointing to the file names where h5 files corresponding to the class are
         # how many classes / keys?
         self.n_classes = len(ifiles.keys())
