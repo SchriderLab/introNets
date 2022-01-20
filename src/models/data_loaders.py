@@ -1165,6 +1165,9 @@ class H5DisDataGenerator_i2(object):
                 X1.append(np.expand_dims(x1, axis = 1))
                 X2.append(np.expand_dims(x2, axis = 1))
                 
+        if len(X1) == 0:
+            return None, None, None
+        
         X1 = np.vstack(X1)
         X2 = np.vstack(X2)
         
