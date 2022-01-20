@@ -214,3 +214,5 @@ def main():
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
     
+if __name__ == '__main__':
+    main()
