@@ -120,7 +120,7 @@ def main():
         accuracies = []
 
         ij = 0
-        while not generator.done:
+        for ij in range(generator.length):
             optimizer.zero_grad()
             x1, x2, y = generator.get_batch()
             
@@ -159,9 +159,9 @@ def main():
 
         val_losses = []
         val_accs = []
-        while not generator.done_val:
+        for ij in range(generator.val_length):
             with torch.no_grad():
-                x1, x2, y = generator.get_val_batch()
+                x1, x2, y = generator.get_batch(True)
                 
                 if x1 is None:
                     break

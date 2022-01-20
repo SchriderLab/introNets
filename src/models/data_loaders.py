@@ -1168,6 +1168,11 @@ class H5DisDataGenerator_i2(object):
         X1 = np.vstack(X1)
         X2 = np.vstack(X2)
         
+        if val:
+            self.ix_val += 1
+        else:
+            self.ix += 1
+        
         return torch.FloatTensor(X1), torch.FloatTensor(X2), torch.LongIndex(Y)
 
 class H5DisDataGenerator(object):
