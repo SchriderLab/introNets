@@ -1156,7 +1156,7 @@ class H5DisDataGenerator_i2(object):
                 self.ix_val += 1
             
             for k, u in keys:
-                x = np.array(self.ifiles[c][k][u]['x_0'], astype = np.float32)
+                x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
                 
                 x1 = x[:,0,:,:]
                 x2 = x[:,1,:,:]
