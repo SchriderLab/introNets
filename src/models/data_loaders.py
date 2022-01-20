@@ -1173,7 +1173,7 @@ class H5DisDataGenerator_i2(object):
         else:
             self.ix += 1
         
-        return torch.FloatTensor(X1), torch.FloatTensor(X2), torch.LongIndex(Y)
+        return torch.FloatTensor(X1), torch.FloatTensor(X2), torch.LongTensor(Y)
 
 class H5DisDataGenerator(object):
     def __init__(self, ifile, idir, n_chunks = 8):
