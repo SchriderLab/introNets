@@ -564,7 +564,7 @@ class BasicConv2d(nn.Module):
         return F.relu(x, inplace=True)
 
 class PermInvariantClassifier(nn.Module):
-    def __init__(self, h1 = 20, h2 = 14):
+    def __init__(self, n_classes = 3):
         super(PermInvariantClassifier, self).__init__()
         
         # (N, C, H, W) for pop1
@@ -575,9 +575,9 @@ class PermInvariantClassifier(nn.Module):
         self.n2 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
                                 nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
         
-        self.out = nn.Sequential(nn.Linear(8192, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
+        self.out = nn.Sequential(nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
-                                 nn.Linear(4096, 2), nn.LogSoftmax(dim = -1))
+                                 nn.Linear(4096, n_classes), nn.LogSoftmax(dim = -1))
         
         return
     
@@ -588,9 +588,7 @@ class PermInvariantClassifier(nn.Module):
         x = torch.cat((x1, x2), dim = 2)
         x = torch.mean(x, dim = 2)
         
-        x = torch.flatten(x, 1)
-        print(x.shape)
-        
+        x = torch.flatten(x, 1)        
         x = self.out(x)
         
         return x
