@@ -568,12 +568,12 @@ class PermInvariantClassifier(nn.Module):
         super(PermInvariantClassifier, self).__init__()
         
         # (N, C, H, W) for pop1
-        self.n1 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
-                                nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
+        self.n1 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
+                                nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
         
         # (N, C, H, W) for pop2
-        self.n2 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
-                                nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 2), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
+        self.n2 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
+                                nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
         
         self.out = nn.Sequential(nn.Linear(16384, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
@@ -589,7 +589,7 @@ class PermInvariantClassifier(nn.Module):
         x = torch.mean(x, dim = 2)
         
         x = torch.flatten(x, 1)
-        #print(x.shape)
+        print(x.shape)
         
         x = self.out(x)
         
