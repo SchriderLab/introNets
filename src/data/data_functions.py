@@ -160,7 +160,7 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         Y1.append(pop1_y)
         Y2.append(pop2_y)
         
-    return X1, X2, Y1, Y2, params
+    return X1[:-1], X2[:-1], Y1[:-1], Y2[:-1], params[:-1]
         
 if __name__ == '__main__':
     idir = sys.argv[1]

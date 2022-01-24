@@ -65,9 +65,6 @@ def main():
             except:
                 continue
             
-            print([u.shape for u in x1])
-            print([u.shape for u in x2])
-            
             X1.extend(x1)
             X2.extend(x2)
             P.extend(p)
