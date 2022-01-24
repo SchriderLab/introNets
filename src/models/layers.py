@@ -874,6 +874,8 @@ class ResNetClassifier(nn.Module):
         
     def forward(self, x):
         x = self.net(x)
+        print(x.shape)
+        
         x = x.view(-1, 1024)
         
         x = self.out(x)

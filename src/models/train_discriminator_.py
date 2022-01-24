@@ -141,7 +141,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = ResNetClassifier()
+    model = PermInvariantClassifier()
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -177,15 +177,17 @@ def main():
         ij = 0
         for ij in range(generator.length):
             optimizer.zero_grad()
-            x, y = generator.get_batch()
+            x1, x2, y = generator.get_batch_dual()
             
-            if x is None:
+            if x1 is None:
                 break
 
-            x = x.to(device)
+            x1 = x1.to(device)
+            x2 = x2.to(device)
+            
             y = y.to(device)
 
-            y_pred = model(x)
+            y_pred = model(x1, x2)
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -217,17 +219,17 @@ def main():
         val_accs = []
         for ij in range(generator.val_length):
             with torch.no_grad():
-                x, y = generator.get_batch(True)
+                x1, x2, y = generator.get_batch_dual(True)
                 
-                if x is None:
+                if x1 is None:
                     break
 
-                x = x.to(device)
-                y = y.to(device)
+                x1 = x1.to(device)
+                x2 = x2.to(device)
                 
                 y = y.to(device)
-    
-                y_pred = model(x)
+
+                y_pred = model(x1, x2)
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
@@ -237,7 +239,7 @@ def main():
                 y_pred = np.argmax(y_pred, axis=1)
                 
                 Y.extend(y)
-                Y_pred.extend(y_pred)
+                Y_pred.extend(y)
 
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y, y_pred))
