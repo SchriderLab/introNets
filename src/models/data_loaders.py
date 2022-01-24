@@ -1108,15 +1108,17 @@ class H5DisDataGenerator_i3(object):
         self.classes = sorted(ifiles.keys())
         
         # make a dictionary of the file objects to read
-        self.ifiles = dict(zip(self.classes, [[h5py.File(ifiles[u][k], 'r') for k in range(len(ifiles[u]))] for u in self.classes]))
+        self.ifiles = dict(zip(self.classes, [h5py.File(ifiles[u][0], 'r') for u in self.classes]))
         
-        self.train_keys = dict(zip(self.classes, [[list(self.ifiles[u][k]['train'].keys()) for k in range(len(ifiles[u]))] for u in self.classes]))
-        self.val_keys = dict(zip(self.classes, [[list(self.ifiles[u][k]['val'].keys()) for k in range(len(ifiles[u]))] for u in self.classes]))
+        self.train_keys = dict(zip(self.classes, [list(self.ifiles[u][0]['train'].keys()) for u in self.classes]))
+        self.val_keys = dict(zip(self.classes, [list(self.ifiles[u][0]['val'].keys()) for u in self.classes]))
         
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
         
         self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
         self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
+        
+        self.on_epoch_end()
         
     def on_epoch_end(self):
         self.ix = 0
@@ -1137,8 +1139,8 @@ class H5DisDataGenerator_i3(object):
                 keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
                 self.ix_val += 1
             
-            for k, u in keys:
-                x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
+            for u in keys:
+                x = np.array(self.ifiles[c][0][u]['x_0'], dtype = np.float32)
 
                 Y.extend([self.classes.index(c) for j in range(x.shape[0])])
                 X.append(x)
