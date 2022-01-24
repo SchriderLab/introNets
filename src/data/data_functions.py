@@ -91,7 +91,7 @@ def load_data(msFile, ancFile):
         
     return X, Y, P
 
-def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_pop_size = 32):
+def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_pop_size = 32):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
     msFile = open(msFile, 'r')
 
@@ -134,6 +134,9 @@ def load_data_dros(msFile, ancFile, n_sites = 128, up_sample = False, up_sample_
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
                     
+        if x.shape[1] < n_sites + 1:
+            continue
+        
         ii = np.random.choice(range(x.shape[1] - n_sites))
         
         if len(y.shape) > 1:
