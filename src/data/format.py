@@ -21,7 +21,7 @@ def parse_args():
     
     parser.add_argument("--ofile", default = "None", help = "hdf5 file for pre-chunked data to go into")
     
-    parser.add_argument("--n_replicates", default = "500000", help = "the number of simulation replicates to include in the output file")
+    parser.add_argument("--n_replicates", default = "100000", help = "the number of simulation replicates to include in the output file")
     parser.add_argument("--n_replicates_val", default = "10000", help = "the number of simulation replicates to include for validation")
     
     parser.add_argument("--chunk_size", default = "4")
@@ -59,7 +59,7 @@ def main():
         anc_file = os.path.join(idir, 'out.anc')
         ms_file = os.path.join(idir, 'mig.msOut')
         
-        if os.path.exists(anc_file) and os.path.exists(ms_file):
+        if os.path.exists(ms_file):
             try:
                 x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
             except:
