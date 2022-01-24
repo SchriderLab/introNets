@@ -577,7 +577,7 @@ class PermInvariantClassifier(nn.Module):
         
         self.down = nn.MaxPool2d((1, 2))
         
-        self.out = nn.Sequential(nn.Linear(16384, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
+        self.out = nn.Sequential(nn.Linear(7936, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, n_classes), nn.LogSoftmax(dim = -1))
         
@@ -591,7 +591,7 @@ class PermInvariantClassifier(nn.Module):
         x = torch.mean(x, dim = 2)
         
         x = torch.flatten(x, 1)
-        print(x.shape)
+        #print(x.shape)
         
         x = self.out(x)
         
