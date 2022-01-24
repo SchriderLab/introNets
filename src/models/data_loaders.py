@@ -1110,8 +1110,8 @@ class H5DisDataGenerator_i3(object):
         # make a dictionary of the file objects to read
         self.ifiles = dict(zip(self.classes, [h5py.File(ifiles[u][0], 'r') for u in self.classes]))
         
-        self.train_keys = dict(zip(self.classes, [list(self.ifiles[u][0]['train'].keys()) for u in self.classes]))
-        self.val_keys = dict(zip(self.classes, [list(self.ifiles[u][0]['val'].keys()) for u in self.classes]))
+        self.train_keys = dict(zip(self.classes, [list(self.ifiles[u]['train'].keys()) for u in self.classes]))
+        self.val_keys = dict(zip(self.classes, [list(self.ifiles[u]['val'].keys()) for u in self.classes]))
         
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
         
@@ -1126,36 +1126,6 @@ class H5DisDataGenerator_i3(object):
         
         for c in self.classes:
             random.shuffle(self.train_keys[c])
-        
-    def get_batch(self, val = False):
-        X = []
-        Y = []
-        
-        for c in self.classes:
-            if not val:
-                keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
-                self.ix += 1
-            else:
-                keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
-                self.ix_val += 1
-            
-            for u in keys:
-                x = np.array(self.ifiles[c][0][u]['x_0'], dtype = np.float32)
-
-                Y.extend([self.classes.index(c) for j in range(x.shape[0])])
-                X.append(x)
-                
-        if len(X) == 0:
-            return None, None
-        
-        X = np.vstack(X)
-        
-        if val:
-            self.ix_val += 1
-        else:
-            self.ix += 1
-        
-        return torch.FloatTensor(X), torch.LongTensor(Y)
     
     def get_batch_dual(self, val = False):
         X1 = []
@@ -1170,9 +1140,9 @@ class H5DisDataGenerator_i3(object):
                 keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
                 self.ix_val += 1
             
-            for k, u in keys:
-                x1 = np.array(self.ifiles[c][k][u]['x2'], dtype = np.float32)
-                x2 = np.array(self.ifiles[c][k][u]['x1'], dtype = np.float32)
+            for u in keys:
+                x1 = np.array(self.ifiles[c][u]['x2'], dtype = np.float32)
+                x2 = np.array(self.ifiles[c][u]['x1'], dtype = np.float32)
                 
                 Y.extend([self.classes.index(c) for j in range(x1.shape[0])])
                 X1.append(np.expand_dims(x1, axis = 1))
