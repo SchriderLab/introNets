@@ -575,6 +575,8 @@ class PermInvariantClassifier(nn.Module):
         self.n2 = nn.Sequential(nn.Conv2d(1, 32, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(32), nn.ReLU(),
                                 nn.Conv2d(32, 64, kernel_size = (1, 5), padding = (0, 0), stride = 1), nn.BatchNorm2d(64), nn.ReLU())
         
+        self.down = nn.MaxPool2d((1, 2))
+        
         self.out = nn.Sequential(nn.Linear(16384, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, 4096), nn.BatchNorm1d(4096), nn.ReLU(), nn.Dropout(0.5),
                                  nn.Linear(4096, n_classes), nn.LogSoftmax(dim = -1))
@@ -582,8 +584,8 @@ class PermInvariantClassifier(nn.Module):
         return
     
     def forward(self, x1, x2):
-        x1 = self.n1(x1)
-        x2 = self.n2(x2)
+        x1 = self.down(self.n1(x1))
+        x2 = self.down(self.n2(x2))
         
         x = torch.cat((x1, x2), dim = 2)
         x = torch.mean(x, dim = 2)
