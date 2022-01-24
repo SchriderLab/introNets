@@ -17,7 +17,7 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import PermInvariantClassifier
+from layers import PermInvariantClassifier, ResNetClassifier
 from data_loaders import H5DisDataGenerator, DisDataGenerator, H5DisDataGenerator_i2
 import h5py
 
@@ -86,7 +86,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = PermInvariantClassifier()
+    model = ResNetClassifier()
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)

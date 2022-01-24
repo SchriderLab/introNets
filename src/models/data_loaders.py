@@ -1143,6 +1143,37 @@ class H5DisDataGenerator_i2(object):
             random.shuffle(self.train_keys[c])
         
     def get_batch(self, val = False):
+        X = []
+        Y = []
+        
+        for c in self.classes:
+            if not val:
+                keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
+                self.ix += 1
+            else:
+                keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
+                self.ix_val += 1
+            
+            for k, u in keys:
+                x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
+
+                
+                Y.extend([self.classes.index(c) for j in range(x1.shape[0])])
+                X.append(x)
+                
+        if len(X) == 0:
+            return None, None, None
+        
+        X = np.vstack(X)
+        
+        if val:
+            self.ix_val += 1
+        else:
+            self.ix += 1
+        
+        return torch.FloatTensor(X), torch.LongTensor(Y)
+    
+    def get_batch_dual(self, val = False):
         X1 = []
         X2 = []
         Y = []
