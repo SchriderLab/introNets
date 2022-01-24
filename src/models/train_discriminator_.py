@@ -159,7 +159,7 @@ def main():
         val_accs = []
         for ij in range(generator.val_length):
             with torch.no_grad():
-                x, y = generator.get_batch()
+                x, y = generator.get_batch(True)
                 
                 if x is None:
                     break
