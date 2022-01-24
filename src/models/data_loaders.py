@@ -1141,8 +1141,12 @@ class H5DisDataGenerator_i3(object):
                 self.ix_val += 1
             
             for u in keys:
-                x1 = np.array(self.ifiles[c][u]['x2'], dtype = np.float32)
-                x2 = np.array(self.ifiles[c][u]['x1'], dtype = np.float32)
+                if not val:
+                    x1 = np.array(self.ifiles[c]['train'][u]['x2'], dtype = np.float32)
+                    x2 = np.array(self.ifiles[c]['train'][u]['x1'], dtype = np.float32)
+                else:
+                    x1 = np.array(self.ifiles[c]['val'][u]['x2'], dtype = np.float32)
+                    x2 = np.array(self.ifiles[c]['val'][u]['x1'], dtype = np.float32)
                 
                 Y.extend([self.classes.index(c) for j in range(x1.shape[0])])
                 X1.append(np.expand_dims(x1, axis = 1))
