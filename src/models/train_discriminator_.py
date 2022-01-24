@@ -18,7 +18,7 @@ import torch.distributed as dist
 import copy
 
 from layers import PermInvariantClassifier, ResNetClassifier
-from data_loaders import H5DisDataGenerator, DisDataGenerator, H5DisDataGenerator_i2
+from data_loaders import H5DisDataGenerator, DisDataGenerator, H5DisDataGenerator_i3
 import h5py
 
 import numpy as np
@@ -134,7 +134,7 @@ def main():
         ifiles[c] = glob.glob(os.path.join(args.idir, '{}/*.hdf5'.format(c)))
 
     logging.info('reading data keys...')
-    generator = H5DisDataGenerator_i2(ifiles)
+    generator = H5DisDataGenerator_i3(ifiles)
 
     logging.info('creating model...')
     # ${code_blocks}

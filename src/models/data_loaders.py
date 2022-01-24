@@ -1099,6 +1099,95 @@ class DisDataGenerator(object):
             y.append(1)
             
         return torch.FloatTensor(np.expand_dims(np.concatenate(X1), axis = 1)), torch.FloatTensor(np.expand_dims(np.concatenate(X2), axis = 1)), torch.LongTensor(y)
+    
+class H5DisDataGenerator_i3(object):
+    def __init__(self, ifiles, n_samples = 12000, n_samples_val = 200, chunk_size = 4, batch_size = 32):
+        # ifiles is a dictionary pointing to the file names where h5 files corresponding to the class are
+        # how many classes / keys?
+        self.n_classes = len(ifiles.keys())
+        self.classes = sorted(ifiles.keys())
+        
+        # make a dictionary of the file objects to read
+        self.ifiles = dict(zip(self.classes, [[h5py.File(ifiles[u][k], 'r') for k in range(len(ifiles[u]))] for u in self.classes]))
+        
+        self.train_keys = dict(zip(self.classes, [[list(self.ifiles[u][k]['train'].keys()) for k in range(len(ifiles[u]))] for u in self.classes]))
+        self.val_keys = dict(zip(self.classes, [[list(self.ifiles[u][k]['val'].keys()) for k in range(len(ifiles[u]))] for u in self.classes]))
+        
+        self.n_per_class = (batch_size // chunk_size) // self.n_classes
+        
+        self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
+        self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
+        
+    def on_epoch_end(self):
+        self.ix = 0
+        self.ix_val = 0
+        
+        for c in self.classes:
+            random.shuffle(self.train_keys[c])
+        
+    def get_batch(self, val = False):
+        X = []
+        Y = []
+        
+        for c in self.classes:
+            if not val:
+                keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
+                self.ix += 1
+            else:
+                keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
+                self.ix_val += 1
+            
+            for k, u in keys:
+                x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
+
+                Y.extend([self.classes.index(c) for j in range(x.shape[0])])
+                X.append(x)
+                
+        if len(X) == 0:
+            return None, None
+        
+        X = np.vstack(X)
+        
+        if val:
+            self.ix_val += 1
+        else:
+            self.ix += 1
+        
+        return torch.FloatTensor(X), torch.LongTensor(Y)
+    
+    def get_batch_dual(self, val = False):
+        X1 = []
+        X2 = []
+        Y = []
+        
+        for c in self.classes:
+            if not val:
+                keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
+                self.ix += 1
+            else:
+                keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
+                self.ix_val += 1
+            
+            for k, u in keys:
+                x1 = np.array(self.ifiles[c][k][u]['x2'], dtype = np.float32)
+                x2 = np.array(self.ifiles[c][k][u]['x1'], dtype = np.float32)
+                
+                Y.extend([self.classes.index(c) for j in range(x1.shape[0])])
+                X1.append(np.expand_dims(x1, axis = 1))
+                X2.append(np.expand_dims(x2, axis = 1))
+                
+        if len(X1) == 0:
+            return None, None, None
+        
+        X1 = np.vstack(X1)
+        X2 = np.vstack(X2)
+        
+        if val:
+            self.ix_val += 1
+        else:
+            self.ix += 1
+        
+        return torch.FloatTensor(X1), torch.FloatTensor(X2), torch.LongTensor(Y)
         
 class H5DisDataGenerator_i2(object):
     def __init__(self, ifiles, n_samples = 12000, n_samples_val = 200, chunk_size = 4, batch_size = 32):
