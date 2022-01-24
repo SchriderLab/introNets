@@ -237,7 +237,7 @@ def main():
                 y_pred = np.argmax(y_pred, axis=1)
                 
                 Y.extend(y)
-                Y_pred.extend(y)
+                Y_pred.extend(y_pred)
 
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y, y_pred))
