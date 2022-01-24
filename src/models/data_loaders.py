@@ -1158,7 +1158,7 @@ class H5DisDataGenerator_i2(object):
                 x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
 
                 
-                Y.extend([self.classes.index(c) for j in range(x1.shape[0])])
+                Y.extend([self.classes.index(c) for j in range(x.shape[0])])
                 X.append(x)
                 
         if len(X) == 0:

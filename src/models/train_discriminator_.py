@@ -122,17 +122,15 @@ def main():
         ij = 0
         for ij in range(generator.length):
             optimizer.zero_grad()
-            x1, x2, y = generator.get_batch()
+            x, y = generator.get_batch()
             
-            if x1 is None:
+            if x is None:
                 break
 
-            x1 = x1.to(device)
-            x2 = x2.to(device)
-            
+            x = x.to(device)
             y = y.to(device)
 
-            y_pred = model(x1, x2)
+            y_pred = model(x)
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -161,17 +159,17 @@ def main():
         val_accs = []
         for ij in range(generator.val_length):
             with torch.no_grad():
-                x1, x2, y = generator.get_batch(True)
+                x, y = generator.get_batch()
                 
-                if x1 is None:
+                if x is None:
                     break
 
-                x1 = x1.to(device)
-                x2 = x2.to(device)
+                x = x.to(device)
+                y = y.to(device)
                 
                 y = y.to(device)
     
-                y_pred = model(x1, x2)
+                y_pred = model(x)
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
