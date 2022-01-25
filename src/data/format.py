@@ -90,8 +90,8 @@ def main():
                 del P[-chunk_size:]
                 
                 logging.info('writing chunk {} to training set...'.format(ix))
-                ofile.create_dataset('train/{}/x_0'.format(ix), data = np.array(x, dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('train/{}/p'.format(ix), data = p, compression = 'lzf')
+                ofile.create_dataset('val/{}/x_0'.format(ix), data = np.array(x, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('val/{}/p'.format(ix), data = p, compression = 'lzf')
                 
                 ix_val += 1
                 
