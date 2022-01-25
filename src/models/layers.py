@@ -51,7 +51,7 @@ class LSTMClassifier(nn.Module):
 
 
     def forward(self, x):
-        self.hidden = self.init_hidden(x.size(-2))
+        self.hidden = self.init_hidden(x.size(0))
         self.hidden = (self.hidden[0].to(x.device), self.hidden[1].to(x.device))
 
         outputs, (ht, ct) = self.lstm(x, self.hidden)
