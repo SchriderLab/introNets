@@ -76,14 +76,14 @@ class LexStyleNet(nn.Module):
         in_channels = h
         out_channels = [48, 96, 128]
         for ix in range(n_layers):
-            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 3, padding = 1), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
+            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 5, padding = 2), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
             
             in_channels = copy.copy(out_channels[ix])
             
             w = w // 2
         
         
-        features = 2
+        features = 4
         
         self.out_size = out_channels[-1] * features
         self.out = nn.Sequential(nn.Linear(self.out_size, self.out_size // 2), nn.LayerNorm((self.out_size // 2,)), nn.ReLU(), 
@@ -97,8 +97,10 @@ class LexStyleNet(nn.Module):
         
         xm = x.mean(dim = -1)
         xs = x.std(dim = -1)
+        xmax = x.max(dim = -1)
+        xmin = x.min(dim = -1)
         
-        x = torch.cat([xm, xs], dim = -1)
+        x = torch.cat([xm, xs, xmax, xmin], dim = -1)
         
         return self.out(x)
         
