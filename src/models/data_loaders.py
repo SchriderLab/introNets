@@ -1149,7 +1149,7 @@ class H5DisDataGenerator_i3(object):
                 X.append(x)
                 
         if len(X) == 0:
-            return None, None, None
+            return None, None
         
         X = np.vstack(X)
         
