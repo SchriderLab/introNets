@@ -123,6 +123,20 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     plt.savefig(filename)
     plt.close()
 
+from prettytable import PrettyTable
+
+def count_parameters(model):
+    table = PrettyTable(["Modules", "Parameters"])
+    total_params = 0
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad: continue
+        param = parameter.numel()
+        table.add_row([name, param])
+        total_params+=param
+    print(table)
+    print(f"Total Trainable Params: {total_params}")
+    return total_params
+
 def main():
     args = parse_args()
     
@@ -147,6 +161,9 @@ def main():
         model = model.to(device)
     else:
         model = model.to(device)
+        
+    print(model)
+    d_model = count_parameters(model)
         
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
@@ -235,7 +252,7 @@ def main():
                 y_pred = np.argmax(y_pred, axis=1)
                 
                 Y.extend(y)
-                Y_pred.extend(y)
+                Y_pred.extend(y_pred)
 
                 # append metrics for this epoch
                 val_accs.append(accuracy_score(y, y_pred))
