@@ -76,7 +76,7 @@ class LexStyleNet(nn.Module):
         in_channels = h
         out_channels = [48, 72, 96, 128]
         for ix in range(n_layers):
-            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels, 3, padding = 1), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
+            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 3, padding = 1), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
             
             in_channels = copy.copy(out_channels[ix])
             
@@ -89,15 +89,11 @@ class LexStyleNet(nn.Module):
                                  nn.Linear(1024, 3), nn.LogSoftmax(dim = -1)) 
         
     def forward(self, x):
-        print(x.shape)
-        
         for ix in range(len(self.convs)):
             x = self.convs[ix](x)
             x = self.down(x)
             
         x = x.view(-1, self.out_size)
-        
-        print(x.shape)
         
         return self.out(x)
         
