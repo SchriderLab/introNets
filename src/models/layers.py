@@ -85,8 +85,8 @@ class LexStyleNet(nn.Module):
         self.out_size = out_channels[-1] * w
         
         self.out = nn.Sequential(nn.Linear(self.out_size, 4096), nn.LayerNorm((4096,)), nn.ReLU(), 
-                                 nn.Linear(2048, 1024), nn.LayerNorm((1024,)), nn.ReLU(),
-                                 nn.Linear(1024, 3), nn.LogSoftmax(dim = -1)) 
+                                 nn.Linear(4096, 2048), nn.LayerNorm((2048,)), nn.ReLU(),
+                                 nn.Linear(2048, 3), nn.LogSoftmax(dim = -1)) 
         
     def forward(self, x):
         for ix in range(len(self.convs)):
