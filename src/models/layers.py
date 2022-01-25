@@ -29,6 +29,44 @@ InceptionOutputs.__annotations__ = {'logits': Tensor, 'aux_logits': Optional[Ten
 _InceptionOutputs = InceptionOutputs
 #from torch_geometric.utils import to_dense_batch
 
+class LSTMClassifier(nn.Module):
+
+    def __init__(self, vocab_size = 2, input_dim = 34, hidden_dim = 512, output_size = 3):
+
+        super(LSTMClassifier, self).__init__()
+
+        self.hidden_dim = hidden_dim
+
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = 1)
+
+        self.hidden2out = nn.Linear(hidden_dim, output_size)
+        self.softmax = nn.LogSoftmax(dim = -1)
+
+        self.dropout_layer = nn.Dropout(p=0.2)
+
+
+    def init_hidden(self, batch_size):
+        return(autograd.Variable(torch.randn(1, batch_size, self.hidden_dim)),
+                        autograd.Variable(torch.randn(1, batch_size, self.hidden_dim)))
+
+
+    def forward(self, x):
+        self.hidden = self.init_hidden(x.size(-2))
+        self.hidden = (self.hidden[0].to(x.device), self.hidden[1].to(x.device))
+
+        outputs, (ht, ct) = self.lstm(x, self.hidden)
+
+        # ht is the last hidden state of the sequences
+        # ht = (1 x batch_size x hidden_dim)
+        # ht[-1] = (batch_size x hidden_dim)
+        output = self.dropout_layer(ht[-1])
+        output = self.hidden2out(output)
+        output = self.softmax(output)
+
+        return output
+        
+        
+
 class GCNUNet_i1(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8, layer_type = 'gat'):
         super(GCNUNet_i1, self).__init__()
@@ -885,42 +923,6 @@ class ResNetClassifier(nn.Module):
         x = self.out(x)
         
         return x
-
-class LSTMClassifier(nn.Module):
-
-    def __init__(self, vocab_size = 2, input_dim = 32, hidden_dim = 128, output_size = 2):
-
-        super(LSTMClassifier, self).__init__()
-
-        self.hidden_dim = hidden_dim
-
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = 1)
-
-        self.hidden2out = nn.Linear(hidden_dim, output_size)
-        self.softmax = nn.LogSoftmax(dim = -1)
-
-        self.dropout_layer = nn.Dropout(p=0.2)
-
-
-    def init_hidden(self, batch_size):
-        return(autograd.Variable(torch.randn(1, batch_size, self.hidden_dim)),
-                        autograd.Variable(torch.randn(1, batch_size, self.hidden_dim)))
-
-
-    def forward(self, x):
-        self.hidden = self.init_hidden(x.size(-2))
-        self.hidden = (self.hidden[0].to(x.device), self.hidden[1].to(x.device))
-
-        outputs, (ht, ct) = self.lstm(x, self.hidden)
-
-        # ht is the last hidden state of the sequences
-        # ht = (1 x batch_size x hidden_dim)
-        # ht[-1] = (batch_size x hidden_dim)
-        output = self.dropout_layer(ht[-1])
-        output = self.hidden2out(output)
-        output = self.softmax(output)
-
-        return output
     
 class VGGBlock(nn.Module):
     def __init__(self, in_channels, middle_channels, out_channels):
