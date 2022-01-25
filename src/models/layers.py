@@ -91,7 +91,7 @@ class LexStyleNet(nn.Module):
         
     def forward(self, x):
         for ix in range(len(self.convs)):
-            x = self.convs(x)
+            x = self.convs[ix](x)
             x = self.down(x)
             
         x = x.view(-1, self.out_size)
