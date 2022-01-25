@@ -60,10 +60,8 @@ def main():
         ms_file = os.path.join(idir, 'mig.msOut')
         
         if os.path.exists(ms_file):
-            try:
-                x, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
-            except:
-                continue
+            
+            x, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
             
             X.extend(x)
             P.extend(p)
