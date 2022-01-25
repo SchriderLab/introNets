@@ -74,7 +74,7 @@ class LexStyleNet(nn.Module):
         self.down = nn.MaxPool1d(2)
         
         in_channels = h
-        out_channels = [8, 17, 34]
+        out_channels = [48, 96, 128]
         for ix in range(n_layers):
             self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 3, padding = 1), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
             
@@ -83,19 +83,22 @@ class LexStyleNet(nn.Module):
             w = w // 2
         
         
-        #self.conv_out = nn.Sequential(nn.Conv1d(out_channels[-1], 8), nn.InstanceNorm1d(8))
+        features = 2
         
-        self.out_size = out_channels[-1] * w
-        self.out = nn.Sequential(nn.Linear(self.out_size, self.out_size), nn.LayerNorm((self.out_size,)), nn.ReLU(), 
-                                 nn.Linear(self.out_size, 1024), nn.LayerNorm((1024,)), nn.ReLU(),
-                                 nn.Linear(1024, 3), nn.LogSoftmax(dim = -1)) 
+        self.out_size = out_channels[-1] * features
+        self.out = nn.Sequential(nn.Linear(self.out_size, self.out_size // 2), nn.LayerNorm((self.out_size // 2,)), nn.ReLU(), 
+                                 nn.Linear(self.out_size // 2, self.out_size // 4), nn.LayerNorm((self.out_size // 4,)), nn.ReLU(),
+                                 nn.Linear(self.out_size // 4, 3), nn.LogSoftmax(dim = -1)) 
         
     def forward(self, x):
         for ix in range(len(self.convs)):
             x = self.convs[ix](x)
             x = self.down(x)
-            
-        x = x.view(-1, self.out_size)
+        
+        xm = x.mean(dim = -1)
+        xs = x.std(dim = -1)
+        
+        x = torch.cat([xm, xs], dim = -1)
         
         return self.out(x)
         
