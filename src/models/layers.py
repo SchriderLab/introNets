@@ -97,8 +97,8 @@ class LexStyleNet(nn.Module):
         
         xm = x.mean(dim = -1)
         xs = x.std(dim = -1)
-        xmax = x.max(dim = -1)
-        xmin = x.min(dim = -1)
+        xmax = x.max(dim = -1)[0]
+        xmin = x.min(dim = -1)[0]
         
         x = torch.cat([xm, xs, xmax, xmin], dim = -1)
         
