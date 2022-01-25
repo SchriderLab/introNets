@@ -66,7 +66,7 @@ class LSTMClassifier(nn.Module):
         return output
         
 class LexStyleNet(nn.Module):
-    def __init__(self, h = 34, w = 508, n_layers = 4):
+    def __init__(self, h = 34, w = 508, n_layers = 3):
         super(LexStyleNet, self).__init__()
 
         self.convs = nn.ModuleList()
@@ -74,7 +74,7 @@ class LexStyleNet(nn.Module):
         self.down = nn.MaxPool1d(2)
         
         in_channels = h
-        out_channels = [48, 72, 96, 128]
+        out_channels = [8, 17, 34]
         for ix in range(n_layers):
             self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 3, padding = 1), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
             
