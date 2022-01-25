@@ -17,7 +17,7 @@ import torch.nn.functional as F
 import torch.distributed as dist
 import copy
 
-from layers import PermInvariantClassifier, ResNetClassifier
+from layers import PermInvariantClassifier, ResNetClassifier, LSTMClassifier
 from data_loaders import H5DisDataGenerator, DisDataGenerator, H5DisDataGenerator_i3
 import h5py
 
@@ -141,7 +141,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = PermInvariantClassifier()
+    model = LSTMClassifier()
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -177,17 +177,15 @@ def main():
         ij = 0
         for ij in range(generator.length):
             optimizer.zero_grad()
-            x1, x2, y = generator.get_batch_dual()
+            x, y = generator.get_batch()
             
-            if x1 is None:
+            if x is None:
                 break
 
-            x1 = x1.to(device)
-            x2 = x2.to(device)
+            x = x.to(device)
             
             y = y.to(device)
-
-            y_pred = model(x1, x2)
+            y_pred = model(x)
 
             loss = criterion(y_pred, y) # ${loss_change}
             loss.backward()
@@ -219,17 +217,15 @@ def main():
         val_accs = []
         for ij in range(generator.val_length):
             with torch.no_grad():
-                x1, x2, y = generator.get_batch_dual(True)
+                x, y = generator.get_batch(True)
                 
-                if x1 is None:
+                if x is None:
                     break
 
-                x1 = x1.to(device)
-                x2 = x2.to(device)
+                x = x.to(device)
                 
                 y = y.to(device)
-
-                y_pred = model(x1, x2)
+                y_pred = model(x)
 
                 loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
