@@ -37,7 +37,7 @@ class LSTMClassifier(nn.Module):
 
         self.hidden_dim = hidden_dim
 
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = 1)
+        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = 1, batch_first = True)
 
         self.hidden2out = nn.Linear(hidden_dim, output_size)
         self.softmax = nn.LogSoftmax(dim = -1)
