@@ -37,7 +37,7 @@ class LSTMClassifier(nn.Module):
 
         self.hidden_dim = hidden_dim
 
-        self.lstm = nn.LSTM(input_dim, hidden_dim, num_layers = 1, batch_first = True)
+        self.lstm = nn.GRU(input_dim, hidden_dim, num_layers = 1, batch_first = True)
 
         self.hidden2out = nn.Linear(hidden_dim, output_size)
         self.softmax = nn.LogSoftmax(dim = -1)
@@ -65,7 +65,40 @@ class LSTMClassifier(nn.Module):
 
         return output
         
+class LexStyleNet(nn.Module):
+    def __init__(self, h = 34, w = 508, n_layers = 4):
+        super(LexStyleNet, self).__init__()
+
+        self.convs = nn.ModuleList()
         
+        self.down = nn.MaxPool1d(2)
+        
+        in_channels = h
+        out_channels = h * 2
+        for ix in range(len(n_layers)):
+            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels, 3, padding = 1), nn.InstanceNorm2d(out_channels), nn.ReLU(), nn.Dropout2d(0.1)))
+            
+            in_channels = copy.copy(out_channels)
+            out_channels *= 2
+            
+            w = w // 2
+        
+        self.out_size = out_channels * w
+        
+        self.out = nn.Sequential(nn.Linear(self.out_size, 2048), nn.LayerNorm((2048,)), nn.ReLU(), 
+                                 nn.Linear(2048, 1024), nn.LayerNorm((1024,)), nn.ReLU(),
+                                 nn.Linear(1024, 3), nn.LogSoftmax(dim = -1)) 
+        
+    def forward(self, x):
+        for ix in range(self.convs):
+            x = self.convs(x)
+            x = self.down(x)
+            
+        x = x.view(-1, self.out_size)
+        
+        
+            
+            
 
 class GCNUNet_i1(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8, layer_type = 'gat'):
