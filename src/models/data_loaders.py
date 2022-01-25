@@ -1151,7 +1151,7 @@ class H5DisDataGenerator_i3(object):
         if len(X) == 0:
             return None, None, None
         
-        X = np.vstack(X)
+        X = np.vstack(X).transpose(0, 2, 1)
         
         return torch.FloatTensor(X), torch.LongTensor(Y)
                 
