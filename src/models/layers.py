@@ -75,7 +75,7 @@ class LexStyleNet(nn.Module):
         
         in_channels = h
         out_channels = h * 2
-        for ix in range(len(n_layers)):
+        for ix in range(n_layers):
             self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels, 3, padding = 1), nn.InstanceNorm2d(out_channels), nn.ReLU(), nn.Dropout2d(0.1)))
             
             in_channels = copy.copy(out_channels)
@@ -96,8 +96,8 @@ class LexStyleNet(nn.Module):
             
         x = x.view(-1, self.out_size)
         
+        return self.out(x)
         
-            
             
 
 class GCNUNet_i1(nn.Module):
