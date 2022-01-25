@@ -4,6 +4,8 @@ import os
 import argparse
 import logging
 
+import numpy as np
+
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -36,12 +38,13 @@ def main():
     args = parse_args()
 
     logging.info('reading .msOut files...')
-    segs = os.popen('cat {} | grep segites'.format(os.path.join(args.idir, '*/*.msOut'))).read()
+    segs = os.popen('cat {} | grep segsites'.format(os.path.join(args.idir, '*/*.msOut'))).read()
     
     segs = segs.split('\n')[:-1]
-    n_sites = [int(u.split(':')[-1]) for u in segs]
     
-    print('max sites: {}'.format(max(n_sites)))
+    n_sites = [int(u.split(':')[-1]) for u in segs]
+    print(np.max(n_sites))
+    
 
 if __name__ == '__main__':
     main()
