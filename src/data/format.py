@@ -25,6 +25,7 @@ def parse_args():
     parser.add_argument("--n_replicates_val", default = "10000", help = "the number of simulation replicates to include for validation")
     
     parser.add_argument("--chunk_size", default = "4")
+    parser.add_argument("--n_sites", default = "508")
     
     args = parser.parse_args()
 
@@ -48,8 +49,7 @@ def main():
     n_train = int(args.n_replicates)
     n_val = int(args.n_replicates_val)
     
-    X1 = []
-    X2 = []
+    X = []
     P = []
     
     ix = 0
@@ -61,46 +61,39 @@ def main():
         
         if os.path.exists(ms_file):
             try:
-                x1, x2, y1, y2, p = load_data_dros(ms_file, anc_file)
+                x, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
             except:
                 continue
             
-            X1.extend(x1)
-            X2.extend(x2)
+            X.extend(x)
             P.extend(p)
             
-        while len(X1) > chunk_size * 2:
+        while len(X) > chunk_size * 2:
             if ix * chunk_size < n_train:
                 # training
-                x1 = np.array(X1[-chunk_size:])
-                x2 = np.array(X2[-chunk_size:])
+                x = np.array(X[-chunk_size:])
                 p = np.array(P[-chunk_size:])
                 
-                del X1[-chunk_size:]
-                del X2[-chunk_size:]
+                del X[-chunk_size:]
                 del P[-chunk_size:]
                 
                 logging.info('writing chunk {} to training set...'.format(ix))
-                ofile.create_dataset('train/{}/x1'.format(ix), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('train/{}/x2'.format(ix), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('train/{}/x_0'.format(ix), data = np.array(x, dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('train/{}/p'.format(ix), data = p, compression = 'lzf')
                 
                 ix += 1
             
             if ix_val * chunk_size < n_val:
-                # validation
-                x1 = np.array(X1[-chunk_size:])
-                x2 = np.array(X2[-chunk_size:])
+                # training
+                x = np.array(X[-chunk_size:])
                 p = np.array(P[-chunk_size:])
                 
-                del X1[-chunk_size:]
-                del X2[-chunk_size:]
+                del X[-chunk_size:]
                 del P[-chunk_size:]
                 
-                logging.info('writing chunk {} to validation set...'.format(ix_val))
-                ofile.create_dataset('val/{}/x1'.format(ix_val), data = np.array(x1, dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('val/{}/x2'.format(ix_val), data = np.array(x2, dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('val/{}/p'.format(ix_val), data = p, compression = 'lzf')
+                logging.info('writing chunk {} to training set...'.format(ix))
+                ofile.create_dataset('train/{}/x_0'.format(ix), data = np.array(x, dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('train/{}/p'.format(ix), data = p, compression = 'lzf')
                 
                 ix_val += 1
                 

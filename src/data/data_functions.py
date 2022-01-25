@@ -116,12 +116,7 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
     else:
         anc_lines = None
         
-    X1 = []
-    X2 = []
-    
-    Y1 = []
-    Y2 = []
-
+    X = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
 
@@ -134,33 +129,13 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
                     
-        if x.shape[1] < n_sites + 1:
-            continue
+        n = x.shape[1]
         
-        ii = np.random.choice(range(x.shape[1] - n_sites))
+        x = np.pad(x, ((0, 0), (0, n - n_sites)))
+        X.append(x)
         
-        # destroy the perfect information regarding
-        # which allele is the ancestral one
-        for k in range(x.shape[1]):
-            if np.sum(x[:,k]) > 17:
-                x[:,k] = 1 - x[:,k]
-            elif np.sum(x[:,k]) == 17:
-                if np.random.choice([0, 1]) == 0:
-                    x[:,k] = 1 - x[:,k]
-    
-        pop1_x = x[:20, ii:ii + n_sites]
-        pop2_x = x[20:, ii:ii + n_sites]
-
-        pop1_y = y[:20, ii:ii + n_sites]
-        pop2_y = y[20:, ii:ii + n_sites]
         
-        X1.append(pop1_x)
-        X2.append(pop2_x)
-        
-        Y1.append(pop1_y)
-        Y2.append(pop2_y)
-        
-    return X1[:-1], X2[:-1], Y1[:-1], Y2[:-1], params[:-1]
+    return X, params[:-1]
         
 if __name__ == '__main__':
     idir = sys.argv[1]
