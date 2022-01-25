@@ -131,7 +131,7 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
                     
         n = x.shape[1]
         
-        x = np.pad(x, ((0, 0), (0, n - n_sites)))
+        x = np.pad(x, ((0, 0), (0, n_sites - n)))
         X.append(x)
         
         
