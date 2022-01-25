@@ -85,6 +85,8 @@ class LexStyleNet(nn.Module):
         
         features = 4
         
+        self.pre_out = nn.Conv1d(out_channels[-1], out_channels[-1], 5, padding = 2)
+        
         self.out_size = out_channels[-1] * features
         self.out = nn.Sequential(nn.Linear(self.out_size, self.out_size // 2), nn.LayerNorm((self.out_size // 2,)), nn.ReLU(), 
                                  nn.Linear(self.out_size // 2, self.out_size // 4), nn.LayerNorm((self.out_size // 4,)), nn.ReLU(),
@@ -94,6 +96,8 @@ class LexStyleNet(nn.Module):
         for ix in range(len(self.convs)):
             x = self.convs[ix](x)
             x = self.down(x)
+        
+        x = self.pre_out(x)
         
         xm = x.mean(dim = -1)
         xs = x.std(dim = -1)
