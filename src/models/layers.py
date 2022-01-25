@@ -90,11 +90,15 @@ class LexStyleNet(nn.Module):
                                  nn.Linear(1024, 3), nn.LogSoftmax(dim = -1)) 
         
     def forward(self, x):
+        print(x.shape)
+        
         for ix in range(len(self.convs)):
             x = self.convs[ix](x)
             x = self.down(x)
             
         x = x.view(-1, self.out_size)
+        
+        print(x.shape)
         
         return self.out(x)
         
