@@ -188,7 +188,7 @@ def main():
     
     for ix in range(df.shape[0]):
         for j in range(int(args.n_jobs)):
-            P, ll = parameters_df(df, ix, 0., 0., 0., n)
+            P, ll = parameters_df(df, ix, 1., 0., 0., n)
             
             if ll > -2000:
                 # replace mean migTime and the rest with a uniformly random distribution around it
@@ -200,7 +200,7 @@ def main():
                 P[:,-1] = migTime
                 P[:,-3] = migTime
                 
-                P[:, 1] = rho
+                P[:, 1] = P[:,0] / rho
                 P[:,-2] = migProb
                 
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
