@@ -147,13 +147,15 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--n_samples", default = "1000")
-    parser.add_argument("--n_jobs", default = "1")
+    parser.add_argument("--n_jobs", default = "5")
     
     parser.add_argument("--ifile", default = "None")
     parser.add_argument("--direction", default = "ba")
 
     parser.add_argument("--sample", action = "store_true")
     parser.add_argument("--debug", action = "store_true")
+    
+    parser.add_argument("--migTime", default = "None")
     # ${args}
 
     parser.add_argument("--odir", default = "None")
@@ -181,36 +183,25 @@ def main():
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=8G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
-    rho = [0.1, 0.25, 0.2, 0.3]
-    migTimeMeans = [0.1, 0.2, 0.3, 0.01, 0.05]
-    migTimeStds = dict(zip(migTimeMeans, list(np.array(migTimeMeans) / 10)))
-    
-    migProb = [0.1, 0.2, 0.05]
-    
-    p = list(itertools.product(rho, migTimeMeans, migProb))
     counter = 0
     
-    if args.debug:
-        n = 10
-        K = 1
-    else:
-        K = df.shape[0]
     
-    for ix in range(K):
-        for p_ in p:
-            # simulate the selected parameters
-            rho, migTimeMean, migProb = p_
-            
-            P, ll = parameters_df(df, ix, rho, migTimeMean, migProb, n)
+    for ix in range(df.shape[0]):
+        for j in range(int(args.n_jobs)):
+            P, ll = parameters_df(df, ix, 0., 0., 0., n)
             
             if ll > -2000:
-                # replace mean migTime with a normal distribution around it
-                migTime = np.random.normal(migTimeMean, migTimeStds[migTimeMean], (P.shape[0],))
-                # filter negative values
-                migTime[np.where(migTime < 0.)] = migTimeMean
+                # replace mean migTime and the rest with a uniformly random distribution around it
+                migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
+                migProb = 1 - np.random.uniform(0., 0.5, (P.shape[0], ))
+                rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
+                
                 
                 P[:,-1] = migTime
                 P[:,-3] = migTime
+                
+                P[:, 1] = rho
+                P[:,-2] = migProb
                 
                 odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
                 counter += 1
@@ -223,11 +214,11 @@ def main():
                     writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
                     
                 if args.direction == 'ba':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 elif args.direction == 'ab':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 else:
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), N_SITES, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                 
                 cmd = "echo '{0}' && {0}".format(cmd)
                 print('simulating via the recommended parameters...')
@@ -243,7 +234,7 @@ def main():
                 
                 # make some perturbed versions of the sims
                 P_ = P[0,[0, 1, 2, 3, 4, 5, 8, 10, 11]]
-
+    
                 if args.sample:
                     for ij in range(2):
                         x = simulate(normalize(P_) + np.random.normal(0., 0.05, size = P_.shape), n)
