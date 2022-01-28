@@ -27,6 +27,8 @@ def parse_args():
     parser.add_argument("--chunk_size", default = "4")
     parser.add_argument("--n_sites", default = "508")
     
+    parser.add_argument("--filter_zeros", action = "store_true")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -61,7 +63,17 @@ def main():
         
         if os.path.exists(ms_file):
             
-            x, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
+            x, y, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
+            
+            if args.filter_zeros:
+                x = np.array(x)
+                y = np.array(y)
+                
+                y = y.sum(axis = -1).sum(axis = -1)
+                
+                x = x[np.where(y != 0)]
+                
+                x = list(x)
             
             X.extend(x)
             P.extend(p)
@@ -89,7 +101,7 @@ def main():
                 del X[-chunk_size:]
                 del P[-chunk_size:]
                 
-                logging.info('writing chunk {} to training set...'.format(ix))
+                logging.info('writing chunk {} to validation set...'.format(ix))
                 ofile.create_dataset('val/{}/x_0'.format(ix), data = np.array(x, dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('val/{}/p'.format(ix), data = p, compression = 'lzf')
                 
