@@ -63,18 +63,8 @@ def main():
         
         if os.path.exists(ms_file):
             
-            x, y, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites))
-            
-            if args.filter_zeros:
-                x = np.array(x)
-                y = np.array(y)
+            x, y, p = load_data_dros(ms_file, anc_file, n_sites = int(args.n_sites), filter_zeros = args.filter_zeros)
                 
-                y = y.sum(axis = -1).sum(axis = -1)
-                
-                x = x[np.where(y != 0)]
-                
-                x = list(x)
-            
             X.extend(x)
             P.extend(p)
             

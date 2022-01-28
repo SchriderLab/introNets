@@ -91,7 +91,7 @@ def load_data(msFile, ancFile):
         
     return X, Y, P
 
-def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_pop_size = 32):
+def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_pop_size = 32, filter_zeros = False):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
     msFile = open(msFile, 'r')
 
@@ -101,7 +101,7 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
     except:
         ancFile = None
 
-    ms_lines = msFile.readlines()[:-1]
+    ms_lines = msFile.readlines()
 
     if ancFile is not None:
         idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
@@ -135,10 +135,15 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         x = np.pad(x, ((0, 0), (0, n_sites - n)))
         y = np.pad(y, ((0, 0), (0, n_sites - n)))
         
-        X.append(x)
-        Y.append(y)
+        if filter_zeros:
+            if np.sum(y) > 0:
+                X.append(x)
+                Y.append(y)
+        else:
+            X.append(x)
+            Y.append(y)
         
-    return X[:-1], Y[:-1], params[:-1]
+    return X, Y, params
         
 if __name__ == '__main__':
     idir = sys.argv[1]
