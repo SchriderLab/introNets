@@ -117,6 +117,7 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         anc_lines = None
         
     X = []
+    Y = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
 
@@ -132,10 +133,12 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         n = x.shape[1]
         
         x = np.pad(x, ((0, 0), (0, n_sites - n)))
+        y = np.pad(y, ((0, 0), (0, n_sites - n)))
+        
         X.append(x)
+        Y.append(y)
         
-        
-    return X[:-1], params[:-1]
+    return X[:-1], Y[:-1], params[:-1]
         
 if __name__ == '__main__':
     idir = sys.argv[1]
