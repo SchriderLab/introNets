@@ -73,6 +73,8 @@ def main():
         positions = ifile['positions']
 
         X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
+        
+        shape = X.shape
 
         n_files = X.shape[1] - 64
         print(n_files)
@@ -119,6 +121,7 @@ def main():
         ofile = h5py.File(args.ofile, 'w')
         ofile.create_dataset('x1_indices', data = np.array(x1_indices, dtype = np.int32))
         ofile.create_dataset('x2_indices', data = np.array(x2_indices, dtype = np.int32))
+        ofile.create_dataset('shape', data = np.array(shape, dtype = np.int32))
 
         n_received = 0
         current_chunk = 0
