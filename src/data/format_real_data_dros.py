@@ -144,7 +144,7 @@ def main():
             while len(X) >= chunk_size:
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/positions'.format(current_chunk), data = np.array(P[-chunk_size:], dtype = np.int64), compression = 'lzf')
-                ofile.create_dataset('{0}/pi', data = np.array(Pi[-chunk_size:], dtype = np.int64), compression = 'lzf')
+                ofile.create_dataset('{0}/pi'.format(current_chunk), data = np.array(Pi[-chunk_size:], dtype = np.int64), compression = 'lzf')
 
                 if not args.split:
                     ofile.create_dataset('{0}/indices'.format(current_chunk), data = np.array(indices[-chunk_size:], dtype = np.uint8), compression = 'lzf')
@@ -168,7 +168,7 @@ def main():
                                  compression='lzf')
             ofile.create_dataset('{0}/positions'.format(current_chunk), data=np.array(P, dtype=np.int64),
                                  compression='lzf')
-            ofile.create_dataset('{0}/pi', data = np.array(Pi, dtype = np.int64), compression = 'lzf')
+            ofile.create_dataset('{0}/pi'.format(current_chunk), data = np.array(Pi, dtype = np.int64), compression = 'lzf')
             
             if not args.split:
                 ofile.create_dataset('{0}/indices'.format(current_chunk), data = np.array(indices[-chunk_size:], dtype = np.uint8), compression = 'lzf')
