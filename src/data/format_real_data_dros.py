@@ -104,12 +104,13 @@ def main():
                         x[:, k] = 1 - x[:, k]
 
             p = positions[ix:ix + 64]
+            pi = range(ix, ix + 64)
 
             f = Formatter([x], None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
             x, i1 = f.format(True)
 
-            comm.send([x, p, i1], dest=0)
+            comm.send([x, p, pi, i1], dest=0)
 
     else:
         X = None
@@ -117,27 +118,30 @@ def main():
 
         ofile = h5py.File(args.ofile, 'w')
         ofile.create_dataset('x1_indices', data = np.array(x1_indices, dtype = np.int32))
-        ofile.create_dataset('x2_indices', data = np.array(x1_indices, dtype = np.int32))
+        ofile.create_dataset('x2_indices', data = np.array(x2_indices, dtype = np.int32))
 
         n_received = 0
         current_chunk = 0
 
         X = []
         P = []
+        Pi = []
         indices = []
 
         while n_received < n_files:
-            x, p, ix = comm.recv(source=MPI.ANY_SOURCE)
+            x, p, pi, ix = comm.recv(source=MPI.ANY_SOURCE)
 
             n_received += 1
 
             X.append(x)
             P.append(p)
+            Pi.append(pi)
             indices.append(ix)
 
             while len(X) >= chunk_size:
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/positions'.format(current_chunk), data = np.array(P[-chunk_size:], dtype = np.int64), compression = 'lzf')
+                ofile.create_dataset('{0}/pi', data = np.array(Pi[-chunk_size:], dtype = np.int64), compression = 'lzf')
 
                 if not args.split:
                     ofile.create_dataset('{0}/indices'.format(current_chunk), data = np.array(indices[-chunk_size:], dtype = np.uint8), compression = 'lzf')
@@ -151,6 +155,7 @@ def main():
 
                 del X[-chunk_size:]
                 del P[-chunk_size:]
+                del Pi[-chunk_size:]
                 del indices[-chunk_size:]
 
                 ofile.flush()
@@ -160,6 +165,8 @@ def main():
                                  compression='lzf')
             ofile.create_dataset('{0}/positions'.format(current_chunk), data=np.array(P, dtype=np.int64),
                                  compression='lzf')
+            ofile.create_dataset('{0}/pi', data = np.array(Pi, dtype = np.int64), compression = 'lzf')
+            
             if not args.split:
                 ofile.create_dataset('{0}/indices'.format(current_chunk), data = np.array(indices[-chunk_size:], dtype = np.uint8), compression = 'lzf')
             else:
