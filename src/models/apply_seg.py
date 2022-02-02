@@ -131,9 +131,10 @@ def main():
     
     shape = tuple(ifile['shape'])
     print(shape)
+    l = shape[-1]
     
-    Y = np.zeros(shape, dtype = np.float32)
-    count = np.zeros(shape, dtype = np.float32)
+    Y = np.zeros((32, l), dtype = np.float32)
+    count = np.zeros((32, l), dtype = np.float32)
     
     x1_indices = np.array(ifile['x1_indices'])
     x2_indices = np.array(ifile['x2_indices'])
@@ -150,8 +151,8 @@ def main():
         with torch.no_grad():
             x = torch.FloatTensor(X).to(device)
 
-            y_pred = model(x)
-            y_pred = y_pred.detach().cpu().numpy()
+            y_pred = torch.squeeze(model(x))
+            y_pred = expit(y_pred.detach().cpu().numpy())
             
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
@@ -159,13 +160,9 @@ def main():
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
                 
-                print(indices.shape)
-                print(i1, i2)
-                
                 # reorder the matrices
-                y_pred[k,0,:] = y_pred[k,0,i1]
-                y_pred[k,1,:] = y_pred[k,1,i2]
-                
+                y_pred[k,:,:] = y_pred[k,i2,:]
+
                 Y[:,ip] += np.vstack([y_pred[:,0,:], y_pred[:,1,:]])
                 count[:,ip] += 1
     
