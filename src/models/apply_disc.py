@@ -114,8 +114,7 @@ def main():
 
     logging.info('creating model...')
     # ${code_blocks}
-    device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
-    device = torch.device(device_strings[0])
+    device = torch.device('cuda')
 
     model = LexStyleNet()
     model = model.to(device)
