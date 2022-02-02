@@ -163,7 +163,7 @@ def main():
                 # reorder the matrices
                 y_pred[k,:,:] = y_pred[k,i2,:]
 
-                Y[:,ip] += np.vstack([y_pred[:,0,:], y_pred[:,1,:]])
+                Y[:,ip] += y_pred[k,:,:]
                 count[:,ip] += 1
     
     ix = list(np.where(np.sum(count, axis = 0) != 0)[0])
