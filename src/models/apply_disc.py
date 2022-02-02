@@ -102,12 +102,6 @@ def parse_args():
     else:
         logging.basicConfig(level=logging.INFO)
 
-    if args.odir != "None":
-        if not os.path.exists(args.odir):
-            os.system('mkdir -p {}'.format(args.odir))
-            logging.debug('root: made output directory {0}'.format(args.odir))
-    # ${odir_del_block}
-
     return args
 
 def main():
