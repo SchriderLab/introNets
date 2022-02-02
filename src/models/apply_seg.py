@@ -154,7 +154,7 @@ def main():
             y_pred = y_pred.detach().cpu().numpy()
             
             # add the predictions to the overall genome-wide prediction
-            for k in range(y_pred.shape):
+            for k in range(y_pred.shape[0]):
                 ip = indices_[k]
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
@@ -163,7 +163,7 @@ def main():
                 y_pred[k,0,:] = y_pred[k,0,i1]
                 y_pred[k,1,:] = y_pred[k,1,i2]
                 
-                Y[:,ip] += y_pred
+                Y[:,ip] += np.vstack([y_pred[:,0,:], y_pred[:,1,:]])
                 count[:,ip] += 1
     
     ix = list(np.where(np.sum(count, axis = 0) != 0)[0])
