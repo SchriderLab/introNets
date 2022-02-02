@@ -140,6 +140,11 @@ def main():
     x2_indices = np.array(ifile['x2_indices'])
     
     for key in keys:
+        try:
+            int(key)
+        except:
+            continue
+        
         logging.info('working on key {}...'.format(key))
         
         X = np.array(ifile[key]['x_0'])
