@@ -135,8 +135,10 @@ def main():
     X = []
     P = []
     for c in chunks(ix, 508):
-        X.append(X_[:,c])
-        P.append([c[0], c[-1]])
+        if len(c) == 508:
+            X.append(X_[:,c])
+            
+            P.append([c[0], c[-1]])
         
     del X_
     X = np.array(X, dtype = np.uint8)
