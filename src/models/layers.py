@@ -71,45 +71,32 @@ class LexStyleNet(nn.Module):
 
         self.convs = nn.ModuleList()
         
-        self.down = nn.MaxPool1d(2)
+        self.down = nn.AvgPool1d(2)
         
         in_channels = h
-        out_channels = [48, 96, 128]
+        out_channels = [256, 128, 128]
         for ix in range(n_layers):
-            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 5, padding = 2), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.1)))
+            self.convs.append(nn.Sequential(nn.Conv1d(in_channels, out_channels[ix], 2), nn.InstanceNorm1d(out_channels[ix]), nn.ReLU(), nn.Dropout(0.25)))
             
             in_channels = copy.copy(out_channels[ix])
             
             w = w // 2
         
+        features = 3
         
-        features = 4
-        
-        self.pre_out = nn.Conv1d(out_channels[-1], out_channels[-1], 5, padding = 2)
-        
-        self.out_size = out_channels[-1] * features
-        self.out = nn.Sequential(nn.Linear(self.out_size, self.out_size // 2), nn.LayerNorm((self.out_size // 2,)), nn.ReLU(), 
-                                 nn.Linear(self.out_size // 2, self.out_size // 4), nn.LayerNorm((self.out_size // 4,)), nn.ReLU(),
-                                 nn.Linear(self.out_size // 4, 3), nn.LogSoftmax(dim = -1)) 
-        
+        self.out_size = 8064
+        self.out = nn.Sequential(nn.Linear(128, 128), nn.LayerNorm((128,)), nn.ReLU(),
+                                 nn.Linear(128, 3))
     def forward(self, x):
         for ix in range(len(self.convs)):
             x = self.convs[ix](x)
             x = self.down(x)
         
-        x = self.pre_out(x)
-        
-        xm = x.mean(dim = -1)
-        xs = x.std(dim = -1)
-        xmax = x.max(dim = -1)[0]
-        xmin = x.min(dim = -1)[0]
-        
-        x = torch.cat([xm, xs, xmax, xmin], dim = -1)
+        x = x.mean(dim = -1)
+        x = x.view(-1, 128)
         
         return self.out(x)
         
-            
-
 class GCNUNet_i1(nn.Module):
     def __init__(self, in_channels = 256, n_classes = 1, n_features = 256, n_layers = 8, layer_type = 'gat'):
         super(GCNUNet_i1, self).__init__()
