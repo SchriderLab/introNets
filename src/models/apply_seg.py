@@ -159,6 +159,9 @@ def main():
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
                 
+                print(indices.shape)
+                print(i1, i2)
+                
                 # reorder the matrices
                 y_pred[k,0,:] = y_pred[k,0,i1]
                 y_pred[k,1,:] = y_pred[k,1,i2]
