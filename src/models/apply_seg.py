@@ -130,6 +130,8 @@ def main():
     keys = list(ifile.keys())
     
     shape = tuple(ifile['shape'])
+    print(shape)
+    
     Y = np.zeros(shape, dtype = np.float32)
     count = np.zeros(shape, dtype = np.float32)
     
@@ -137,6 +139,8 @@ def main():
     x2_indices = np.array(ifile['x2_indices'])
     
     for key in keys:
+        logging.info('working on key {}...'.format(key))
+        
         X = np.array(ifile[key]['x_0'])
         indices = np.array(ifile[key]['indices'])
         indices_ = np.array(ifile[key]['pi'])
@@ -144,7 +148,7 @@ def main():
         
         # let's forward the whole batch through segmentation
         with torch.no_grad():
-            x = X.to(device)
+            x = torch.FloatTensor(X).to(device)
 
             y_pred = model(x)
             y_pred = y_pred.detach().cpu().numpy()
