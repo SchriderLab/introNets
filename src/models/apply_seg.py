@@ -92,6 +92,7 @@ def parse_args():
     parser.add_argument("--keys", default = "None")
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--n_samples", default = "100")
+    parser.add_argument("--ofile", default = "test.npz")
     
     args = parser.parse_args()
 
@@ -164,7 +165,7 @@ def main():
     ix = list(np.where(np.sum(count, axis = 0) != 0)[0])
     Y = Y[:, ix] / count[:, ix]
     
-    np.savez(args.ofile, Y = Y)
+    np.savez(args.ofile, Y = Y, x1i = x1_indices, x2i = x2_indices)
                 
             
     
