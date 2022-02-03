@@ -111,19 +111,29 @@ class Formatter(object):
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                     continue
             
-                if self.pop_sizes[0] >= self.pop_size:
-                    replace = False
-                else:
+                # upsample the populations if need be
+                x1_indices = range(self.pop_sizes[0])
+                n = self.pop_size - self.pop_sizes[0]
+                
+                if n > self.pop_sizes[0]:
                     replace = True
-                
-                x1_indices = list(np.random.choice(range(self.pop_sizes[0]), self.pop_size, replace = replace))
-                
-                if self.pop_sizes[1] >= self.pop_size:
-                    replace = False
                 else:
-                    replace = True
+                    replace = False
                 
-                x2_indices = list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), self.pop_size))
+                if n > 0:
+                    x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
+                
+                # upsample the second pop (again if needed)
+                x2_indices = range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1])
+                n = self.pop_size - self.pop_sizes[1]
+                
+                if n > self.pop_sizes[1]:
+                    replace = True
+                else:
+                    replace = False
+                
+                if n > 0:
+                    x2_indices = x2_indices + list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), n, replace = replace))
                 
                 x1 = x[x1_indices, :]
                 x2 = x[x2_indices, :]
