@@ -112,7 +112,7 @@ class Formatter(object):
                     continue
             
                 # upsample the populations if need be
-                x1_indices = range(self.pop_sizes[0])
+                x1_indices = list(range(self.pop_sizes[0]))
                 n = self.pop_size - self.pop_sizes[0]
                 
                 if n > self.pop_sizes[0]:
@@ -124,7 +124,7 @@ class Formatter(object):
                     x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
                 
                 # upsample the second pop (again if needed)
-                x2_indices = range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1])
+                x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
                 n = self.pop_size - self.pop_sizes[1]
                 
                 if n > self.pop_sizes[1]:
