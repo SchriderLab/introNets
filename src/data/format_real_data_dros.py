@@ -56,20 +56,29 @@ def main():
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
         
-        # do the upsampling across all sites
-        if pop_sizes[0] >= pop_size:
-            replace = False
-        else:
+        # upsample the populations if need be
+        x1_indices = list(range(pop_sizes[0]))
+        n = pop_size - pop_sizes[0]
+        
+        if n > pop_sizes[0]:
             replace = True
-        
-        x1_indices = list(np.random.choice(range(pop_sizes[0]), pop_size, replace = replace))
-        
-        if pop_sizes[1] >= pop_size:
-            replace = False
         else:
-            replace = True
+            replace = False
         
-        x2_indices = list(np.random.choice(range(pop_sizes[1]), pop_size, replace = replace))
+        if n > 0:
+            x1_indices = x1_indices + list(np.random.choice(range(pop_sizes[0]), n, replace = replace))
+        
+        # upsample the second pop (again if needed)
+        x2_indices = list(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]))
+        n = pop_size - pop_sizes[1]
+        
+        if n > pop_sizes[1]:
+            replace = True
+        else:
+            replace = False
+        
+        if n > 0:
+            x2_indices = x2_indices + list(np.random.choice(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]), n, replace = replace))
         positions = ifile['positions']
 
         X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
@@ -168,7 +177,8 @@ def main():
                                  compression='lzf')
             ofile.create_dataset('{0}/positions'.format(current_chunk), data=np.array(P, dtype=np.int64),
                                  compression='lzf')
-            ofile.create_dataset('{0}/pi'.format(current_chunk), data = np.array(Pi, dtype = np.int64), compression = 'lzf')
+            ofile.create_dataset('{0}/pi'.format(current_chunk), data = np.array(Pi, dtype = np.int64), 
+                                 compression = 'lzf')
             
             if not args.split:
                 ofile.create_dataset('{0}/indices'.format(current_chunk), data = np.array(indices[-chunk_size:], dtype = np.uint8), compression = 'lzf')
