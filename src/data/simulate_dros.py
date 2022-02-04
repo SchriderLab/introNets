@@ -59,10 +59,17 @@ def parameters(n, sample = False):
 
     return p
 
+# DADI (Dan's favorite)
 def parameters_df(df, ix, thetaOverRho, migTime, migProb, n):
-    u = 3.5e-9
+    #u = 3.5e-9
+    u = 5.0e-9
     L = 10000
     
+    # Isolation, migration model
+    # estimated with DADI (default)
+    # nu1 and nu2 (before)
+    # nu1_0 and nu2_0 (after split)
+    # migration rates (Nref_m12, Nref_m21)
     ll, aic, Nref, nu1_0, nu2_0, nu1, nu2, T, Nref_m12, Nref_m21 = df[ix]
     
     nu1_0 /= Nref
