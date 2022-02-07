@@ -110,7 +110,7 @@ class Formatter(object):
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
                     continue
-            
+                
                 # upsample the populations if need be
                 x1_indices = list(range(self.pop_sizes[0]))
                 n = self.pop_size - self.pop_sizes[0]
