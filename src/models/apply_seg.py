@@ -159,11 +159,15 @@ def main():
             y_pred = torch.squeeze(model(x))
             y_pred = expit(y_pred.detach().cpu().numpy())
             
+            
+            
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
                 ip = indices_[k]
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
+                
+                i2 = np.argsort(i2)
                 
                 # reorder the matrices
                 y_pred[k,:,:] = y_pred[k,i2,:]
