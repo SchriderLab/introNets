@@ -72,9 +72,6 @@ def main():
         # upsample the second pop (again if needed)
         x2_indices = list(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]))
         
-        pop1_x = x[x1_indices,:]
-        pop2_x = x[x2_indices,:]
-        
         n = pop_size - pop_sizes[0]
         
         if n > pop_sizes[0]:
@@ -96,7 +93,7 @@ def main():
             x2_indices = x2_indices + list(np.random.choice(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]), n, replace = replace))
         positions = ifile['positions']
 
-        X = np.vstack((pop1_x[x1_indices,:], pop2_x[x2_indices,:]))
+        X = np.vstack((x[x1_indices,:], x[x2_indices,:]))
         
         shape = X.shape
 
