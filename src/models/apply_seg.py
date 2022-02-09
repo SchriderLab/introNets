@@ -161,22 +161,24 @@ def main():
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
                 ip = indices_[k]
-                print(ip)
+                #print(ip)
                 
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
                 
                 i2 = np.argsort(i2)
                 
-                # reorder the matrices
+                # reorder the matrix
                 y_pred[k,:,:] = y_pred[k,i2,:]
-                
+            
+                """
                 fig, axes = plt.subplots(nrows = 3)
                 axes[0].imshow(x[k,0,:,:])
                 axes[1].imshow(x[k,1,:,:])
                 axes[2].imshow(y_pred[k])
                 plt.show()
-
+                """
+                
                 Y[:,ip] += y_pred[k,:,:]
                 count[:,ip] += 1
     
