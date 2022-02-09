@@ -7,9 +7,6 @@ Created on Tue Feb  1 16:21:13 2022
 """
 
 # -*- coding: utf-8 -*-
-import matplotlib
-matplotlib.use('Agg')
-
 import matplotlib.pyplot as plt
 import numpy as np
 import logging
@@ -157,13 +154,15 @@ def main():
             x = torch.FloatTensor(X).to(device)
 
             y_pred = torch.squeeze(model(x))
-            y_pred = expit(y_pred.detach().cpu().numpy())
+            y_pred = y_pred.detach().cpu().numpy()
             
-            
+            x = x.detach().cpu().numpy()
             
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
                 ip = indices_[k]
+                print(ip)
+                
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
                 
@@ -171,6 +170,12 @@ def main():
                 
                 # reorder the matrices
                 y_pred[k,:,:] = y_pred[k,i2,:]
+                
+                fig, axes = plt.subplots(nrows = 3)
+                axes[0].imshow(x[k,0,:,:])
+                axes[1].imshow(x[k,1,:,:])
+                axes[2].imshow(y_pred[k])
+                plt.show()
 
                 Y[:,ip] += y_pred[k,:,:]
                 count[:,ip] += 1
@@ -178,7 +183,7 @@ def main():
     ix = list(np.where(np.sum(count, axis = 0) != 0)[0])
     Y = Y[:, ix] / count[:, ix]
     
-    np.savez(args.ofile, Y = Y, x1i = x1_indices, x2i = x2_indices)
+    np.savez(args.ofile, Y = expit(Y), x1i = x1_indices, x2i = x2_indices)
                 
             
     
