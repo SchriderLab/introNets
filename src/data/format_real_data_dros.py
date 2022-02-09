@@ -56,8 +56,25 @@ def main():
         pop1_x = ifile['simMatrix'].T
         pop2_x = ifile['sechMatrix'].T
         
+        x = np.vstack([pop1_x, pop2_x])
+        
+        # destroy the perfect information regarding
+        # which allele is the ancestral one
+        for k in range(x.shape[1]):
+            if np.sum(x[:, k]) > 17:
+                x[:, k] = 1 - x[:, k]
+            elif np.sum(x[:, k]) == 17:
+                if np.random.choice([0, 1]) == 0:
+                    x[:, k] = 1 - x[:, k]
+        
         # upsample the populations if need be
         x1_indices = list(range(pop_sizes[0]))
+        # upsample the second pop (again if needed)
+        x2_indices = list(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]))
+        
+        pop1_x = x[x1_indices,:]
+        pop2_x = x[x2_indices,:]
+        
         n = pop_size - pop_sizes[0]
         
         if n > pop_sizes[0]:
@@ -68,8 +85,6 @@ def main():
         if n > 0:
             x1_indices = x1_indices + list(np.random.choice(range(pop_sizes[0]), n, replace = replace))
         
-        # upsample the second pop (again if needed)
-        x2_indices = list(range(pop_sizes[0], pop_sizes[0] + pop_sizes[1]))
         n = pop_size - pop_sizes[1]
         
         if n > pop_sizes[1]:
@@ -104,15 +119,6 @@ def main():
     if comm.rank != 0:
         for ix in range(comm.rank - 1, X.shape[1] - 64, comm.size - 1):
             x = X[:,ix:ix + 64]
-
-            # destroy the perfect information regarding
-            # which allele is the ancestral one
-            for k in range(x.shape[1]):
-                if np.sum(x[:, k]) > 17:
-                    x[:, k] = 1 - x[:, k]
-                elif np.sum(x[:, k]) == 17:
-                    if np.random.choice([0, 1]) == 0:
-                        x[:, k] = 1 - x[:, k]
 
             p = positions[ix:ix + 64]
             pi = range(ix, ix + 64)
