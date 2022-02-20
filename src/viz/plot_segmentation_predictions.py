@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -135,9 +135,12 @@ def main():
             y_pred = y_pred.detach().cpu().numpy()
             
             print(x.shape, y.shape, y_pred.shape)
+            # (4, 2, 32, 64), (4, 1, 32, 64), (4, 32, 64)
             
             Y.extend(y.flatten())
-            Y_pred.extend(expit(y_pred.flatten()))
+            
+            # here are the Platt scaling terms learned from a single run of src/models/calibrate_probability.py
+            Y_pred.extend(expit(y_pred.flatten() * 1.1138 - 1.3514))
             
             for k in range(x.shape[0]):
                 
@@ -163,9 +166,39 @@ def main():
                 im = ax4.imshow(expit(y_pred[k,:,:]))
                 fig.colorbar(im, ax = ax4)
                 
+                
+                
                 plt.savefig(os.path.join(args.odir, '{0:04d}_pred.png'.format(counter)), dpi = 100)
                 counter += 1
                 plt.close()
+                
+    # what probability bin do they fall in?
+    p_bins = np.linspace(0., 1., 15)
+    p = np.diff(p_bins) / 2. + p_bins[:-1]
+    
+    # count whether or not we find a positive label here
+    count_pos = np.zeros(len(p_bins) - 1, dtype = np.float32)
+    count_neg = np.zeros(len(p_bins) - 1, dtype = np.float32)
+    
+    Y = np.array(Y)
+    Y_pred = np.array(Y_pred)
+    
+    Y_pred_bin = np.digitize(Y_pred, p_bins)
+    for k in range(len(Y)):
+        if Y[k] == 0:
+            count_neg[Y_pred_bin[k] - 1] += 1
+        else:
+            count_pos[Y_pred_bin[k] - 1] += 1
+    
+    count = count_pos / (count_neg + count_pos)
+    
+    plt.scatter(p, count)
+    plt.plot([0, 1], [0, 1])
+    plt.show()
+    
+    
+    # bin the probabilities
+    
                 
     cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.png'), ['native', 'introgressed'])
 
