@@ -6,6 +6,51 @@ Created on Tue Feb  1 16:21:13 2022
 @author: kilgoretrout
 """
 
+from typing import Tuple
+
+import torch
+import torch.nn as nn
+from torch.nn.functional import conv2d
+
+import matplotlib
+matplotlib.use('Agg')
+
+def gaussian(window_size, sigma):
+    def gauss_fcn(x):
+        return -(x - window_size // 2)**2 / float(2 * sigma**2)
+    gauss = torch.stack(
+        [torch.exp(torch.tensor(gauss_fcn(x))) for x in range(window_size)])
+    return gauss / gauss.max()
+
+
+def get_gaussian_kernel(ksize: int, sigma: float) -> torch.Tensor:
+    r"""Function that returns Gaussian filter coefficients.
+
+    Args:
+        ksize (int): filter size. It should be odd and positive.
+        sigma (float): gaussian standard deviation.
+
+    Returns:
+        Tensor: 1D tensor with gaussian filter coefficients.
+
+    Shape:
+        - Output: :math:`(ksize,)`
+
+    Examples::
+
+        >>> tgm.image.get_gaussian_kernel(3, 2.5)
+        tensor([0.3243, 0.3513, 0.3243])
+
+        >>> tgm.image.get_gaussian_kernel(5, 1.5)
+        tensor([0.1201, 0.2339, 0.2921, 0.2339, 0.1201])
+    """
+    if not isinstance(ksize, int) or ksize % 2 == 0 or ksize <= 0:
+        raise TypeError("ksize must be an odd positive integer. Got {}"
+                        .format(ksize))
+    window_1d: torch.Tensor = gaussian(ksize, sigma)
+    
+    return window_1d
+
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
@@ -90,6 +135,7 @@ def parse_args():
     parser.add_argument("--odir", default = "None")
     parser.add_argument("--n_samples", default = "100")
     parser.add_argument("--ofile", default = "test.npz")
+    parser.add_argument("--sigma", default = "5")
     
     args = parser.parse_args()
 
@@ -106,6 +152,8 @@ def parse_args():
     # ${odir_del_block}
 
     return args
+
+from scipy.ndimage import gaussian_filter1d
 
 def main():
     args = parse_args()
@@ -131,10 +179,19 @@ def main():
     l = shape[-1]
     
     Y = np.zeros((32, l), dtype = np.float32)
-    count = np.zeros((32, l), dtype = np.float32)
-    
+    count = np.zeros((1, l), dtype = np.float32)
+        
     x1_indices = np.array(ifile['x1_indices'])
     x2_indices = np.array(ifile['x2_indices'])
+    
+    G = gaussian(64, int(args.sigma))
+    Gn = G.detach().cpu().numpy()
+    
+    plt.plot(Gn)
+    plt.savefig('gauss_view.png', dpi = 100)
+    plt.close()
+    
+    G = G.view(1, 1, 64)
     
     for key in keys:
         try:
@@ -154,6 +211,8 @@ def main():
             x = torch.FloatTensor(X).to(device)
 
             y_pred = torch.squeeze(model(x))
+            y_pred = y_pred * G
+            
             y_pred = y_pred.detach().cpu().numpy()
             
             x = x.detach().cpu().numpy()
@@ -161,28 +220,34 @@ def main():
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
                 ip = indices_[k]
+                
                 #print(ip)
                 
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
                 
+                #print(i2, np.argsort(i2))
+                
                 i2 = np.argsort(i2)
                 
                 # reorder the matrix
                 y_pred[k,:,:] = y_pred[k,i2,:]
+                #y_pred = gaussian_filter1d(y_pred, 1)
             
                 """
                 fig, axes = plt.subplots(nrows = 3)
                 axes[0].imshow(x[k,0,:,:])
                 axes[1].imshow(x[k,1,:,:])
-                axes[2].imshow(y_pred[k])
+                im = axes[2].imshow(expit(y_pred[k]), vmin = 0., vmax = 1.)
+                
+                fig.colorbar(im, ax = axes[2])
                 plt.show()
                 """
                 
                 Y[:,ip] += y_pred[k,:,:]
-                count[:,ip] += 1
+                count[:,ip] += Gn.reshape(1, 64)
     
-    ix = list(np.where(np.sum(count, axis = 0) != 0)[0])
+    ix = list(np.where(np.sum(count, axis = 0) >= 1)[0])
     Y = Y[:, ix] / count[:, ix]
     
     np.savez(args.ofile, Y = expit(Y), x1i = x1_indices, x2i = x2_indices)
