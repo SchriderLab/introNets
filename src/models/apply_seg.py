@@ -136,6 +136,7 @@ def parse_args():
     parser.add_argument("--n_samples", default = "100")
     parser.add_argument("--ofile", default = "test.npz")
     parser.add_argument("--sigma", default = "5")
+    parser.add_argument("--n", default = "128")
     
     args = parser.parse_args()
 
@@ -184,14 +185,14 @@ def main():
     x1_indices = np.array(ifile['x1_indices'])
     x2_indices = np.array(ifile['x2_indices'])
     
-    G = gaussian(64, int(args.sigma))
+    G = gaussian(int(args.n), int(args.sigma))
     Gn = G.detach().cpu().numpy()
     
     plt.plot(Gn)
     plt.savefig('gauss_view.png', dpi = 100)
     plt.close()
     
-    G = G.view(1, 1, 64)
+    G = G.view(1, 1, int(args.n))
     
     for key in keys:
         try:
