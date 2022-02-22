@@ -49,6 +49,8 @@ def main():
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
     
+    w_size = out_shape[-1]
+    
     pop_size = out_shape[1]  
 
     if comm.rank == 0:
@@ -97,7 +99,7 @@ def main():
         
         shape = X.shape
 
-        n_files = X.shape[1] - 64
+        n_files = X.shape[1] - w_size
         print(n_files)
 
     else:
@@ -114,11 +116,11 @@ def main():
     chunk_size = int(args.chunk_size)
 
     if comm.rank != 0:
-        for ix in range(comm.rank - 1, X.shape[1] - 64, comm.size - 1):
-            x = X[:,ix:ix + 64]
+        for ix in range(comm.rank - 1, X.shape[1] - w_size, comm.size - 1):
+            x = X[:,ix:ix + w_size]
 
-            p = positions[ix:ix + 64]
-            pi = range(ix, ix + 64)
+            p = positions[ix:ix + w_size]
+            pi = range(ix, ix + w_size)
 
             f = Formatter([x], None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
