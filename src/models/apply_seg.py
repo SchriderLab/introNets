@@ -251,7 +251,7 @@ def main():
     ix = list(np.where(np.sum(count, axis = 0) >= 1)[0])
     Y = Y[:, ix] / count[:, ix]
     
-    np.savez(args.ofile, Y = expit(Y), x1i = x1_indices, x2i = x2_indices)
+    np.savez(args.ofile, Y = expit(Y * 1.1138 - 1.3514), x1i = x1_indices, x2i = x2_indices)
                 
             
     
