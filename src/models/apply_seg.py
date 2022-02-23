@@ -212,7 +212,9 @@ def main():
             x = torch.FloatTensor(X).to(device)
 
             y_pred = torch.squeeze(model(x))
-            y_pred = y_pred * G
+            
+            # platt scale and apply Gaussian
+            y_pred = (y_pred * 1.1138 - 1.3514) * G
             
             y_pred = y_pred.detach().cpu().numpy()
             
@@ -251,7 +253,7 @@ def main():
     ix = list(np.where(np.sum(count, axis = 0) >= 1)[0])
     Y = Y[:, ix] / count[:, ix]
     
-    np.savez(args.ofile, Y = expit(Y * 1.1138 - 1.3514), x1i = x1_indices, x2i = x2_indices)
+    np.savez(args.ofile, Y = expit(Y), x1i = x1_indices, x2i = x2_indices)
                 
             
     
