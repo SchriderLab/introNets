@@ -192,7 +192,7 @@ def main():
     plt.savefig('gauss_view.png', dpi = 100)
     plt.close()
     
-    G = G.view(1, 1, int(args.n))
+    G = G.view(1, 1, int(args.n)).to(device)
     
     for key in keys:
         try:
@@ -246,7 +246,7 @@ def main():
                 """
                 
                 Y[:,ip] += y_pred[k,:,:]
-                count[:,ip] += Gn.reshape(1, 64)
+                count[:,ip] += Gn.reshape(1, int(args.n))
     
     ix = list(np.where(np.sum(count, axis = 0) >= 1)[0])
     Y = Y[:, ix] / count[:, ix]
