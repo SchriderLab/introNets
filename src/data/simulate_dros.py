@@ -200,7 +200,7 @@ def main():
             if ll > -2000:
                 # replace mean migTime and the rest with a uniformly random distribution around it
                 migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
-                migProb = 1 - np.random.uniform(0., 0.5, (P.shape[0], ))
+                migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
                 rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
                 
                 P[:,-1] = migTime
