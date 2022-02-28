@@ -18,6 +18,14 @@ from scipy.spatial.distance import squareform
 
 import time
 import itertools
+
+
+"""
+example usage:
+sbatch -n 24 --mem=64G -t 2-00:00:00 --wrap "mpirun python3 src/data/format_unet_data_h5.py 
+--idir /pine/scr/d/d/ddray/dros_sims_i4/BA --idir_relate /pine/scr/d/d/ddray/dros_sims_i4/BA_relate 
+--ofile /pine/scr/d/d/ddray/dros_sims_i4/BA_relate.hdf5"
+"""
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -66,8 +74,11 @@ def main():
     
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(anc_files), comm.size - 1):
-            ifile = os.path.join(idir, '{}.npz'.format(anc_files[ix].split('/')[-1].split('.')[0]))
-            ifile = np.load(ifile)
+            try:
+                ifile = os.path.join(idir, '{}.npz'.format(anc_files[ix].split('/')[-1].split('.')[0]))
+                ifile = np.load(ifile)
+            except:
+                continue
             
             x = ifile['x']
             y = ifile['y']
