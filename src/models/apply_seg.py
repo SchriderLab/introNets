@@ -214,28 +214,25 @@ def main():
             y_pred = torch.squeeze(model(x))
             
             # platt scale and apply Gaussian
-            y_pred = (y_pred * 1.1138 - 1.3514) * G
+            
+            # sims i3 line:
+            # y_pred = (y_pred * 1.1138 - 1.3514) * G
+            y_pred = (y_pred * 1.1495 - 1.0224) * G
             
             y_pred = y_pred.detach().cpu().numpy()
-            
             x = x.detach().cpu().numpy()
             
             # add the predictions to the overall genome-wide prediction
             for k in range(y_pred.shape[0]):
                 ip = indices_[k]
                 
-                #print(ip)
-                
                 i1 = list(indices[k][0])
                 i2 = list(indices[k][1])
-                
-                #print(i2, np.argsort(i2))
                 
                 i2 = np.argsort(i2)
                 
                 # reorder the matrix
                 y_pred[k,:,:] = y_pred[k,i2,:]
-                #y_pred = gaussian_filter1d(y_pred, 1)
             
                 """
                 fig, axes = plt.subplots(nrows = 3)
