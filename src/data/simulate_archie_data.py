@@ -62,7 +62,7 @@ def main():
     
     T = 5e-4
     R = 4e-4
-    A = 1
+    A = 1 - 0.02
     L = 50000
     
     for ix in range(int(args.n_jobs)):
