@@ -195,9 +195,9 @@ class Formatter(object):
             if self.y is not None:
                 if self.pop:
                     if self.pop == "0":
-                        y = np.expand_dims(y[0])
+                        y = np.expand_dims(y[0], axis = 0)
                     else:
-                        y = np.expand_dims(y[1])
+                        y = np.expand_dims(y[1], axis = 0)
                         
                 Y.append(y)
             
