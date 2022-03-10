@@ -104,8 +104,6 @@ class Formatter(object):
             
             if self.y is not None:
                 y = self.y[k]
-                
-            print(x.shape, y.shape)
             
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
@@ -152,20 +150,21 @@ class Formatter(object):
                 y1 = y[x1_indices, :]
                 y2 = y[x2_indices, :]
              
+                if self.pop == 0:
+                    yi = y1
+                elif self.pop == 1:
+                    yi = y2
+                else:
+                    yi = np.concatenate([y1, y2], axis = 0)
+             
                 if not zero:
-                    indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(y2, axis = 0) > 0)[0])))
+                    indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(yi, axis = 0) > 0)[0])))
                     if len(indices) == 0:
                         continue
                 else:
                     indices = list(range(x1.shape[1] - self.n_sites))
                 
-                print(len(indices))
-                
                 six = np.random.choice(indices)
-                
-                if not zero:
-                    if np.sum(y[:,six:six + self.n_sites]) == 0:
-                        continue
                 
                 x1 = x1[:,six:six + self.n_sites]
                 x2 = x2[:,six:six + self.n_sites]
