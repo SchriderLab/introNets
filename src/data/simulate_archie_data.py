@@ -66,14 +66,13 @@ def main():
     L = 50000
     
     for ix in range(int(args.n_jobs)):
-        odir = os.path.join(args.odir, '{0:04d}')
+        odir = os.path.join(args.odir, '{0:04d}'.format(ix))
         os.system('mkdir -p {}'.format(odir))
         
         cmd = "cd %s; %s 202 %d -T -t %d -r %d %d -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 %d -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1| tail -n1" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A)
         print(cmd)
         
         scmd = slurm_cmd.format(cmd)
-        
         os.system(scmd)
         
 if __name__ == '__main__':
