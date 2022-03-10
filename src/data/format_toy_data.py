@@ -63,8 +63,8 @@ def main():
     if comm.rank == 0:
         ofile = h5py.File(args.ofile, 'w')
 
-    ms_files = sorted(glob.glob(os.path.join(args.odir, '*.ms.gz')))
-    log_files = sorted(glob.glob(os.path.join(args.odir, '*log.gz')))
+    ms_files = sorted(glob.glob(os.path.join(args.idir, '*.ms.gz')))
+    log_files = sorted(glob.glob(os.path.join(args.idir, '*log.gz')))
     
     chunk_size = int(args.chunk_size)
     
