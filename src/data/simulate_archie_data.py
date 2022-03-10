@@ -60,10 +60,11 @@ def main():
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=8G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
-    T = 5e-4
-    R = 4e-4
-    A = 1 - 0.02
     L = 50000
+    
+    T = 5e-4 * L
+    R = 4e-4 * L
+    A = 1 - 0.02
     
     for ix in range(int(args.n_jobs)):
         odir = os.path.join(args.odir, '{0:04d}'.format(ix))
