@@ -36,8 +36,8 @@ def parse_args():
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--sorting", default = "seriate_match")
     
-    parser.add_argument("--pop_sizes", default = "32,32")
-    parser.add_argument("--out_shape", default = "2,32,128")
+    parser.add_argument("--pop_sizes", default = "64,64")
+    parser.add_argument("--out_shape", default = "2,64,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     parser.add_argument("--zero", action = "store_true")
