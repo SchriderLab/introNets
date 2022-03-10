@@ -104,6 +104,8 @@ class Formatter(object):
             
             if self.y is not None:
                 y = self.y[k]
+                
+            print(x.shape, y.shape)
             
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
