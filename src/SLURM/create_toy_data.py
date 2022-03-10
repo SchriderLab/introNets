@@ -15,7 +15,7 @@ def parse_args():
     parser.add_argument("--n_replicates", default = "100")
 
     # simulation SLiM script
-    parser.add_argument("--slim_file", default = "src/SLiM/introg.slim")
+    parser.add_argument("--slim_file", default = "src/SLiM/introg_bidirectional.slim")
 
     # parameters for the simulation
     parser.add_argument("--st", default = "4")
