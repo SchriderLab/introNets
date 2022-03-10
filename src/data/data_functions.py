@@ -4,7 +4,79 @@ import numpy as np
 import sys
 
 from seriate import seriate
+import gzip
 from scipy.spatial.distance import pdist
+
+
+def binary_digitizer(x, breaks):
+    #x is all pos of seg sites
+    #breaks are the introgression breakpoints, as a list of lists like [[1,4], [22,57], [121,144]....]
+    #output is a numpy vector with zero for all pos not in introgression and one for all points in introgression
+    flat_breaks = np.array(breaks).flatten()
+    lenx = len(x)
+    lzero, rzero = np.zeros(lenx), np.zeros(lenx)
+    dg_l = np.digitize(x, flat_breaks, right=False)
+    dg_r = np.digitize(x, flat_breaks, right=True)
+    lzero[dg_l % 2 > 0] = 1
+    rzero[dg_r % 2 > 0] = 1
+    return np.array([lzero, rzero]).max(axis=0)
+
+def get_gz_file(filename, splitchar = 'NA', buffered = False):
+    if not buffered:
+        if splitchar == 'NA':
+            return [i.strip().split() for i in gzip.open(filename, 'rt')]
+        else: return [i.strip().split(splitchar) for i in gzip.open(filename, 'rt')]
+    else:
+        if splitchar == 'NA':
+            return (i.strip().split() for i in gzip.open(filename, 'rt'))
+        else: return (i.strip().split(splitchar) for i in gzip.open(filename, 'rt'))
+
+def load_data_slim(msfile, introgressfile, nindv):
+    ig = list(get_gz_file(introgressfile))
+    igD = {}
+    for x in ig:
+        if x[0] == 'Begin':
+            n = int(x[-1])
+            igD[n] = {}
+        if x[0] == 'genome':
+            if len(x) > 2:
+                igD[n][int(x[1].replace(":", ""))] = [tuple(map(int,i.split('-'))) for i in x[-1].split(',')]
+            else:  igD[n][int(x[1].replace(":", ""))] = []           #print(n,x)
+    #pprint.pprint(igD)
+    g = list(get_gz_file(msfile))
+    loc_len = 10000.
+    #print(loc_len)
+    k = [idx for idx,i in enumerate(g) if len(i) > 0 and i[0].startswith('//')]
+    #print(k)
+    f, pos, target = [], [], []
+    for gdx,i in enumerate(k):
+        L = g[i+3:i+3+nindv]
+        p = [jj for jj in g[i+2][1:]]
+        q = []
+        kdx = 1
+        for i in L:
+            i = [int(j) for j in i[0]]
+
+            i = np.array(i, dtype=np.int8)
+            q.append(i)
+
+        q = np.array(q)
+
+        q = q.astype("int8")
+        f.append(np.array(q))
+        pos_int = np.array(p, dtype='float')
+
+        pos.append(pos_int)
+
+        mask_mat = []
+        breakD = igD[gdx]
+        for indv in range(len(breakD)):
+            mask = binary_digitizer(pos_int, breakD[indv])
+            mask_mat.append(mask)
+
+        target.append(np.array(mask_mat, dtype='int8'))
+    
+    return f, pos, target, igD
 
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')

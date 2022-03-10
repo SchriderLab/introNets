@@ -1,0 +1,101 @@
+// Keywords: tracking introgressed haplotypes
+
+initialize()
+{
+	defineConstant("subpopCount", 2);
+	defineConstant("subpopSize", 500);	
+
+	initializeMutationRate(1e-5);
+	initializeMutationType("m1", 0.5, "f", 0.0);// introduced mutation
+	initializeMutationType("m2", 0.5, "f", 0.0);// introduced mutation
+	initializeMutationType("m3", 0.5, "f", 0.0);// normal mutation
+	initializeGenomicElementType("g1", m3, 1.0);
+	initializeGenomicElement(g1, 0, physLen-1);
+	initializeRecombinationRate(1e-5);
+	
+	//defineConstant("burnTime", 20*subpopSize);
+	//defineConstant("simEndTime", burnTime+subpopSize);
+	//defineConstant("splitTime", simEndTime-subpopSize);
+	//rMigTime = rdunif(1, 0, simEndTime-splitTime-1);
+	//defineConstant("migTime", simEndTime-rMigTime);
+	
+	defineConstant("burnTime", 20*subpopSize);
+	defineConstant("simEndTime", burnTime+(4*subpopSize)); //split time will be equal to burnTime, which is 4*subpopSize gen ago
+	defineConstant("splitTime", burnTime);
+	rMigTime = rdunif(1, 0, 1*subpopSize); //introgression between 0 gen ago and 1*subpopSize gen ago
+	defineConstant("migTime", simEndTime-rMigTime);
+	
+	rMigProb = runif(1, 0.1, 1.0); //changed, I assume this increase prob of mig
+	cat("burnTime: " + burnTime + "\n");
+	cat("splitTime: " + splitTime + "\n");
+	cat("migTime: " + migTime + "\n");
+	cat("simEndTime: " + simEndTime + "\n");
+	cat("donorPop: " + donorPop + "\n");
+	
+	if (donorPop == 1)
+	{
+		defineConstant("migProb12", rMigProb);
+		defineConstant("migProb21", 0);
+	}
+	else if (donorPop == 2)
+	{
+		defineConstant("migProb12", 0);
+		defineConstant("migProb21", rMigProb);
+	}
+	else
+	{
+		defineConstant("migProb12", 0);
+		defineConstant("migProb21", 0);
+	}
+	cat("migProbs: " + migProb12 + ", " + migProb21 + "\n");
+}
+
+s1 1000
+{
+
+	sim.addSubpopSplit("p2", subpopSize, p1);
+	p1.setMigrationRates(p2, 0);
+	p2.setMigrationRates(p1, 0);
+}
+
+s2 2000
+{
+	p1.genomes.addNewMutation(m1, 0.0, 0:(physLen-1));
+	p2.genomes.addNewMutation(m2, 0.0, 0:(physLen-1));
+	p1.setMigrationRates(p2, migProb21);
+	p2.setMigrationRates(p1, migProb12);
+}
+
+s3 2000
+{
+	p1.setMigrationRates(p2, 0);
+	p2.setMigrationRates(p1, 0);
+}
+
+s4 3000 late()
+{
+	cat("Sampling at generation " + sim.generation + "\n");
+	cat("Emitting fixations\n");
+	sim.outputFixedMutations();
+	cat("Done with fixations\n");
+	pop1SampGenomes = sample(p1.genomes, sampleSizePerSubpop);
+	pop2SampGenomes = sample(p2.genomes, sampleSizePerSubpop);
+	fullSamp = c(pop1SampGenomes, pop2SampGenomes);
+	fullSamp.output();
+	cat("Done emitting sample\n");
+	sim.simulationFinished();
+}
+
+1 {
+	// save this run's identifier, used to save and restore
+	defineConstant("simID", getSeed());
+	
+	// set up our subpop
+	sim.addSubpop("p1", subpopSize);
+
+	//schedule our events
+	sim.rescheduleScriptBlock(s1, start=splitTime, end=splitTime);
+	sim.rescheduleScriptBlock(s2, start=migTime, end=migTime);
+	sim.rescheduleScriptBlock(s3, start=migTime+1, end=migTime+1);
+	sim.rescheduleScriptBlock(s4, start=simEndTime, end=simEndTime);
+}
