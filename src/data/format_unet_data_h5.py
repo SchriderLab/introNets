@@ -150,9 +150,9 @@ class Formatter(object):
                 y1 = y[x1_indices, :]
                 y2 = y[x2_indices, :]
              
-                if self.pop == 0:
+                if self.pop == "0":
                     yi = y1
-                elif self.pop == 1:
+                elif self.pop == "1":
                     yi = y2
                 else:
                     yi = np.concatenate([y1, y2], axis = 0)
@@ -196,7 +196,7 @@ class Formatter(object):
                 if self.pop:
                     if self.pop == "0":
                         y = np.expand_dims(y[0], axis = 0)
-                    else:
+                    elif self.pop == "1":
                         y = np.expand_dims(y[1], axis = 0)
                         
                 Y.append(y)
