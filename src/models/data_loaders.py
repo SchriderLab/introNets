@@ -967,9 +967,6 @@ class H5UDataGenerator(object):
             x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
             
-            if (self.pred_pop == 0) or (self.pred_pop == 1):
-                y = np.expand_dims(y[:,self.pred_pop,:,:], 1)
-            
             X.append(x)
             Y.append(y)
             
