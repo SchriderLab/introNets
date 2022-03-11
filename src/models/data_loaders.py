@@ -9,10 +9,7 @@ import random
 import torch
 import os, sys
 
-from torch.utils.data import Dataset
-from torch_geometric.data import Data
 import glob
-from sparsenn.models.gcn.topologies import knn_1d
 
 from scipy.spatial.distance import squareform
 
@@ -20,8 +17,6 @@ from data_functions import load_data_dros
 import pickle
 from sklearn.neighbors import kneighbors_graph
 
-import networkx as nx
-import dgl
 
 class DGLH5DataGenerator(object):
     def __init__(self, ifile, batch_size = 16, chunk_size = 4):
@@ -919,6 +914,9 @@ class H5UDataGenerator(object):
             del self.keys[:n_val]
             
         self.ifile = ifile
+        
+        self.chunk_size = chunk_size
+        self.batch_size = batch_size
             
         self.length = len(self.keys) // (batch_size // chunk_size)
         self.val_length = len(self.val_keys) // (batch_size // chunk_size)
@@ -930,6 +928,10 @@ class H5UDataGenerator(object):
         self.ix = 0
         self.ix_val = 0
             
+    def define_lengths(self):
+        self.length = len(self.keys) // (self.batch_size // self.chunk_size)
+        self.val_length = len(self.val_keys) // (self.batch_size // self.chunk_size)
+        
     def get_batch(self):
         X = []
         Y = []
@@ -937,10 +939,6 @@ class H5UDataGenerator(object):
         for key in self.keys[self.ix : self.ix + self.n_per]:
             x = np.array(self.ifile[key]['x_0'])
             y = np.array(self.ifile[key]['y'])
-            
-            if (self.pred_pop == 0) or (self.pred_pop == 1):
-                y = np.expand_dims(y[:,self.pred_pop,:,:], 1)
-                
             
             X.append(x)
             Y.append(y)
@@ -1110,13 +1108,22 @@ class H5DisDataGenerator_i3(object):
         # make a dictionary of the file objects to read
         self.ifiles = dict(zip(self.classes, [h5py.File(ifiles[u][0], 'r') for u in self.classes]))
         
+        print(self.ifiles)
+        
         self.train_keys = dict(zip(self.classes, [list(self.ifiles[u]['train'].keys()) for u in self.classes]))
         self.val_keys = dict(zip(self.classes, [list(self.ifiles[u]['val'].keys()) for u in self.classes]))
         
+        print([len(self.train_keys[u]) for u in self.classes])
+        print([len(self.val_keys[u]) for u in self.classes])
+        
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
+        print(self.n_per_class)
+        
         
         self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
         self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
+        
+        print(self.length, self.val_length)
         
         self.on_epoch_end()
         
@@ -1134,10 +1141,8 @@ class H5DisDataGenerator_i3(object):
         for c in self.classes:
             if not val:
                 keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
-                self.ix += 1
             else:
                 keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
-                self.ix_val += 1
             
             for u in keys:
                 if not val:
@@ -1148,6 +1153,12 @@ class H5DisDataGenerator_i3(object):
                 Y.extend([self.classes.index(c) for j in range(x.shape[0])])
                 X.append(x)
                 
+                
+        if not val:
+            self.ix += 1
+        else:
+            self.ix_val += 1
+            
         if len(X) == 0:
             return None, None
         
