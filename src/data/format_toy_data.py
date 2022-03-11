@@ -42,7 +42,7 @@ def parse_args():
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     parser.add_argument("--zero", action = "store_true")
     
-    parser.add_argument("--pop", choices = ["0", "1"], help = "only return y values for one pop?")
+    parser.add_argument("--pop", default = "0", help = "only return y values for one pop?")
 
     args = parser.parse_args()
 
