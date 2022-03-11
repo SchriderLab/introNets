@@ -70,7 +70,9 @@ def main():
         odir = os.path.join(args.odir, '{0:04d}'.format(ix))
         os.system('mkdir -p {}'.format(odir))
         
-        cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A)
+        seeds = np.random.randint(0, 2**14, size = (3,))
+        
+        cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
         print(cmd)
         
         out_file = os.path.join(args.odir, '{0:04d}.log'.format(ix))
