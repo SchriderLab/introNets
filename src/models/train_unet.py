@@ -68,8 +68,7 @@ def parse_args():
     
     # for AO to BF we had: 
     parser.add_argument("--pos_weight", default = "8.379942663085659")
-    
-    # ${args}
+    parser.add_argument("--n_classes", default = "1")
 
     parser.add_argument("--odir", default = "training_output")
     parser.add_argument("--ofile", default = "None")
@@ -97,9 +96,7 @@ def main():
     device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
     device = torch.device(device_strings[0])
 
-    model = NestedUNetV2(1, 2)
-    
-    
+    model = NestedUNetV2(int(args.n_classes), 2)
     if len(device_strings) > 1:
         model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
         model = model.to(device)
@@ -134,7 +131,6 @@ def main():
     history['epoch'] = []
     history['loss'] = []
     history['val_loss'] = []
-    # ${define_extra_history}
     
     # for plotting
     os.system('mkdir -p {}'.format(os.path.join(args.odir, '{}_plots'.format(args.tag))))
