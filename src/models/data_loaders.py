@@ -970,6 +970,8 @@ class H5UDataGenerator(object):
             X.append(x)
             Y.append(y)
             
+        Y = np.concatenate(Y)
+            
         self.ix_val += self.n_per
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y)
         
