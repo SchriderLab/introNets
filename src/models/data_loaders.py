@@ -951,7 +951,7 @@ class H5UDataGenerator(object):
         Y = Y * (1 - ey) + 0.5 * ey
             
         self.ix += self.n_per
-        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y)
     
     def on_epoch_end(self):
         self.ix = 0
@@ -971,7 +971,7 @@ class H5UDataGenerator(object):
             Y.append(y)
             
         self.ix_val += self.n_per
-        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(np.concatenate(Y))
+        return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y)
         
 class DisDataGenerator(object):
     def __init__(self, idir_sims, idir_real, batch_size = 64):
