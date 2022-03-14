@@ -7,6 +7,49 @@ from seriate import seriate
 import gzip
 from scipy.spatial.distance import pdist
 
+# finds the middle component of a list (if there are an even number of entries, then returns the first of the middle two)
+def findMiddle(input_list):
+    middle = float(len(input_list))/2
+    if middle % 2 != 0:
+        return input_list[int(middle - .5)]
+    else:
+        return (input_list[int(middle)], input_list[int(middle-1)])[0]
+    
+# Gets all possible windows over a predictor image with a particular window size
+def get_windows(x, ipos, wsize = 500):
+    # positions of polymorphisms
+    ipos = list(ipos)
+
+    indices = range(x.shape[1])
+    # get the middle index
+    middle_index = findMiddle(indices)
+
+    # get the indices for the x-axis of a predictor image of 128 SNPs
+    indices = range(middle_index - 64, middle_index + 64)
+    sets = []
+
+    # for these indices, get as many unique windows (of the specified size) as possible that include these positions
+    for ix in indices:
+        p = set([u for u in ipos if (u >= ipos[ix] - wsize) and (u <= ipos[ix])])
+
+        if p not in sets:
+            sets.append(p)
+
+        p = set([u for u in ipos if (u >= ipos[ix]) and (u <= ipos[ix] + wsize)])
+
+        if p not in sets:
+            sets.append(p)
+
+    # sort
+    sets = [sorted(list(u)) for u in sets]
+    sets = sorted(sets, key = lambda u: u[0])
+
+    ret = []
+
+    for s in sets:
+        ret.append([ipos.index(u) for u in s])
+
+    return ret, indices
 
 def binary_digitizer(x, breaks):
     #x is all pos of seg sites
@@ -107,7 +150,7 @@ def split(word):
 ######
 # generic function for msmodified
 # ----------------
-def load_data(msFile, ancFile):
+def load_data(msFile, ancFile, leave_out_last = False):
     msFile = open(msFile, 'r')
 
     # no migration case
@@ -117,6 +160,9 @@ def load_data(msFile, ancFile):
         ancFile = None
 
     ms_lines = msFile.readlines()
+
+    if leave_out_last:
+        ms_lines = ms_lines[:-1]
 
     if ancFile is not None:
         idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
