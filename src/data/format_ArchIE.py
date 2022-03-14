@@ -140,9 +140,6 @@ def main():
 
             n_recieved += 1
 
-            if n_recieved % 10 == 0:
-                logging.info('0: recieved {0} simulations'.format(n_recieved))
-
             features.append(f)
 
             while len(features) >= batch_size:
