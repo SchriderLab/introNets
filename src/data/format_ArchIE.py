@@ -92,6 +92,16 @@ def main():
     args = parse_args()
 
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
+    idirs_ = []
+    for idir in idirs:
+        ms = os.path.join(idir, 'mig.msOut')
+        anc = os.path.join(idir, 'out.ADMIXED.anc')
+        
+        if os.path.exists(ms) and os.path.exists(anc):
+            idirs_.append(idir)
+    
+    idirs = idirs_
+    
     n_per_dir = int(args.n_per_dir)
     
     n_sims = len(idirs) * n_per_dir
