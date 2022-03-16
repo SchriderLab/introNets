@@ -146,6 +146,8 @@ def main():
             optimizer.zero_grad()
             x, y = generator.get_batch()
             
+            y = torch.squeeze(y)
+            
             x = x.to(device)
             y = y.to(device)
 
@@ -175,13 +177,15 @@ def main():
         for step in range(vl):
             with torch.no_grad():
                 x, y = generator.get_val_batch()
+                
+                y = torch.squeeze(y)
 
                 x = x.to(device)
                 y = y.to(device)
         
                 y_pred = model(x)
 
-                loss = criterion(y_pred, torch.squeeze(y))
+                loss = criterion(y_pred, y)
                 # compute accuracy in CPU with sklearn
                 y_pred = np.round(expit(y_pred.detach().cpu().numpy().flatten()))
                 y = np.round(y.detach().cpu().numpy().flatten())
