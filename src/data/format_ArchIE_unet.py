@@ -122,8 +122,6 @@ def main():
 
             X, Y, P = load_data(ms, anc, leave_out_last = True)
             
-            print(Y[0].shape, X[0].shape)
-            
             # toss out the last two individuals
             for k in range(len(X)):
                 X[k] = X[k][:-2,:]
@@ -134,12 +132,6 @@ def main():
             
             logging.info('formatting data for idir {}...'.format(ix))
             x, y = f.format(zero = args.zero)
-            
-            print('y:')
-            print([u.shape for u in y])
-            
-            print('x:')
-            print([u.shape for u in x])
             
             comm.send([x, y], dest = 0)
     else:
