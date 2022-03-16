@@ -176,6 +176,9 @@ class Formatter(object):
 
                 y1 = y1[:,six:six + self.n_sites]
                 y2 = y2[:,six:six + self.n_sites]
+                
+                if y1.shape[1] != self.n_sites:
+                   continue 
             
             if self.sorting == "seriate_match":
                 x1, ix1 = seriate_x(x1)
@@ -281,8 +284,6 @@ def main():
             f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
             x, y = f.format(zero = args.zero)
-            
-            print([u.shape for u in y])
         
             comm.send([x, y], dest = 0)
     else:
