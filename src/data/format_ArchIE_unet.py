@@ -73,7 +73,7 @@ def parse_args():
     parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,100,128")
+    parser.add_argument("--out_shape", default = "2,112,128")
 
     parser.add_argument("--n_per_dir", default = "100")
     parser.add_argument("--pop_size", default = "100")
@@ -115,8 +115,6 @@ def main():
         
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
-            
-            
             ms = os.path.join(idirs[ix], 'mig.msOut')
             anc = os.path.join(idirs[ix], 'out.anc')
 
