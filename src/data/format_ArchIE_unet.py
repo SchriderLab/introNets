@@ -135,6 +135,12 @@ def main():
             logging.info('formatting data for idir {}...'.format(ix))
             x, y = f.format(zero = args.zero)
             
+            print('y:')
+            print([u.shape for u in y])
+            
+            print('x:')
+            print([u.shape for u in x])
+            
             comm.send([x, y], dest = 0)
     else:
         n_received = 0
