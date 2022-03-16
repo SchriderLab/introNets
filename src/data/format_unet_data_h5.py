@@ -20,6 +20,7 @@ from scipy.spatial.distance import pdist, cdist
 
 from scipy.optimize import linear_sum_assignment
 from scipy.interpolate import interp1d
+from collections import deque
 
 def make_continuous(x):
     x = np.cumsum(x, axis = 1) * 2 * np.pi
@@ -83,8 +84,9 @@ def remove_singletons(x_list, y_list):
 class Formatter(object):
     def __init__(self, x, y, shape = (2, 32, 64), pop_sizes = [150, 156], sorting = None, pop = None):
         # list of x and y arrays
-        self.x = x
-        self.y = y
+        self.x = deque(x)
+        if y is not None:
+            self.y = deque(y)
         
         self.n_pops = shape[0]
         self.pop_size = shape[1]
@@ -99,11 +101,14 @@ class Formatter(object):
         X = []
         Y = []
         
-        for k in range(len(self.x)):
-            x = self.x[k]
+        while len(self.x) > 0:
+            x = self.x.pop()
             
             if self.y is not None:
-                y = self.y[k]
+                y = self.y.pop()
+                
+            if x.shape[1] < self.n_sites:
+                continue
             
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
