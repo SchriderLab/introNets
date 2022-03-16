@@ -121,7 +121,7 @@ def main():
     criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([float(args.pos_weight)]).to(device))
     optimizer = optim.Adam(model.parameters(), lr = 0.001)
     
-    decayRate = 0.96
+    decayRate = 0.99
     lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer = optimizer, gamma=decayRate)
 
     min_val_loss = np.inf

@@ -932,7 +932,7 @@ class H5UDataGenerator(object):
         self.length = len(self.keys) // (self.batch_size // self.chunk_size)
         self.val_length = len(self.val_keys) // (self.batch_size // self.chunk_size)
         
-    def get_batch(self):
+    def get_batch(self, label_smooth = True):
         X = []
         Y = []
         
@@ -945,10 +945,11 @@ class H5UDataGenerator(object):
             
         Y = np.concatenate(Y)
         
-        # label smooth
-        ey = np.random.uniform(0, 0.1, Y.shape)
-        
-        Y = Y * (1 - ey) + 0.5 * ey
+        if label_smooth:
+            # label smooth
+            ey = np.random.uniform(0, 0.05, Y.shape)
+            
+            Y = Y * (1 - ey) + 0.5 * ey
             
         self.ix += self.n_per
         return torch.FloatTensor(np.concatenate(X)), torch.FloatTensor(Y)
