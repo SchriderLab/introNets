@@ -122,6 +122,8 @@ def main():
 
             X, Y, P = load_data(ms, anc, leave_out_last = True)
             
+            print(Y[0].shape, X[0].shape)
+            
             # toss out the last two individuals
             for k in range(len(X)):
                 X[k] = X[k][:-2,:]
