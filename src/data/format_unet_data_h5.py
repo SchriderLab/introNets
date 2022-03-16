@@ -281,6 +281,8 @@ def main():
             f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
             x, y = f.format(zero = args.zero)
+            
+            print([u.shape for u in y])
         
             comm.send([x, y], dest = 0)
     else:
