@@ -77,6 +77,7 @@ def parse_args():
 
     parser.add_argument("--n_per_dir", default = "100")
     parser.add_argument("--pop_size", default = "100")
+    parser.add_argument("--zero", action = "store_true")
 
     args = parser.parse_args()
 
@@ -114,6 +115,8 @@ def main():
         
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
+            
+            
             ms = os.path.join(idirs[ix], 'mig.msOut')
             anc = os.path.join(idirs[ix], 'out.anc')
 
@@ -126,6 +129,8 @@ def main():
 
             f = Formatter(X, Y, sorting = args.sorting, pop = "0", 
                           pop_sizes = pop_sizes, shape = out_shape)
+            
+            logging.info('formatting data for idir {}...'.format(ix))
             x, y = f.format(zero = args.zero)
             
             comm.send([x, y], dest = 0)
