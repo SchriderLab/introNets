@@ -218,7 +218,7 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        lr_scheduler.step()
+        #lr_scheduler.step()
         generator.on_epoch_end()
 
         df = pd.DataFrame(history)

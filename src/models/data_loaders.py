@@ -903,7 +903,7 @@ class GCNDataGenerator(object):
 class H5UDataGenerator(object):
     def __init__(self, ifile, keys = None, 
                  val_prop = 0.05, batch_size = 16, 
-                 chunk_size = 4, pred_pop = 1):
+                 chunk_size = 4, pred_pop = 1, label_noise = 0.01):
         if keys is None:
             self.keys = list(ifile.keys())
             
@@ -917,6 +917,7 @@ class H5UDataGenerator(object):
         
         self.chunk_size = chunk_size
         self.batch_size = batch_size
+        self.label_noise = label_noise
             
         self.length = len(self.keys) // (batch_size // chunk_size)
         self.val_length = len(self.val_keys) // (batch_size // chunk_size)
@@ -947,7 +948,7 @@ class H5UDataGenerator(object):
         
         if label_smooth:
             # label smooth
-            ey = np.random.uniform(0, 0.05, Y.shape)
+            ey = np.random.uniform(0, self.label_noise, Y.shape)
             
             Y = Y * (1 - ey) + 0.5 * ey
             
