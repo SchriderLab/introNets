@@ -35,6 +35,7 @@ def parse_args():
     parser.add_argument("--debug", action = "store_true")
     
     parser.add_argument("--migTime", default = "None")
+    parser.add_argument("--window_size", default = "50000")
     # ${args}
 
     parser.add_argument("--odir", default = "None")
@@ -60,7 +61,7 @@ def main():
     slurm_cmd = 'sbatch -t 1-00:00:00 --mem=8G -o {0} --wrap "{1}"'
     n = int(args.n_samples)
     
-    L = 50000
+    L = int(args.window_size)
     
     T = 5e-4 * L
     R = 4e-4 * L
