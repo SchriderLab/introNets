@@ -63,6 +63,7 @@ def parse_args():
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
 
+    parser.add_argument("--label_noise", default = "0.01")
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
     
@@ -109,7 +110,7 @@ def main():
 
     # define the generator
     print('reading data keys...')
-    generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = int(args.batch_size))
+    generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = int(args.batch_size), label_noise = float(args.label_noise))
     val_keys = generator.val_keys
     
     # save them for later
