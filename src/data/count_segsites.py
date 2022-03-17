@@ -43,7 +43,7 @@ def main():
     segs = segs.split('\n')[:-1]
     
     n_sites = [int(u.split(':')[-1]) for u in segs]
-    print(np.max(n_sites))
+    print(np.max(n_sites)), print(np.min(n_sites))
     
 
 if __name__ == '__main__':
