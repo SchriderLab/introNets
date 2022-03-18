@@ -183,7 +183,7 @@ class Formatter(object):
                    continue 
             
             if self.sorting == "seriate_match":
-                if self.seriate_pop == 0:
+                if self.seriation_pop == 0:
                     x1, ix1 = seriate_x(x1)
                     
                     D = cdist(x1, x2, metric = 'cosine')
