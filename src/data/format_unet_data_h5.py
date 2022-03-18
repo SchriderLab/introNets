@@ -53,7 +53,7 @@ def make_continuous(x):
 def seriate_x(x):
     Dx = pdist(x, metric = 'cosine')
     Dx[np.where(np.isnan(Dx))] = 0.
-    ix = seriate(Dx)
+    ix = seriate(Dx, timeout = 0)
 
     return x[ix], ix
     
