@@ -18,49 +18,6 @@ import time
 import configparser
 import sys
 
-def get_feature_vector(mutation_positions, genotypes, ref_geno, arch):
-    n_samples = len(genotypes[0])
-
-    n_sites = 50000
-
-    ## set up S* stuff -- remove mutations found in reference set
-    t_ref = list(map(list, zip(*ref_geno)))
-    t_geno = list(map(list, zip(*genotypes)))
-    pos_to_remove = set()  # contains indexes to remove
-    s_star_haps = []
-    for idx, hap in enumerate(t_ref):
-        for jdx, site in enumerate(hap):
-            if site == 1:
-                pos_to_remove.add(jdx)
-
-    for idx, hap in enumerate(t_geno):
-        s_star_haps.append([v for i, v in enumerate(hap) if i not in pos_to_remove])
-
-    ret = []
-
-    # individual level
-    for focal_idx in range(0, n_samples):
-        calc_N_ton = N_ton(genotypes, n_samples, focal_idx)
-        dist = distance_vector(genotypes, focal_idx)
-        min_d = [min_dist_ref(genotypes, ref_geno, focal_idx)]
-        ss = [s_star_ind(np.array(s_star_haps), np.array(mutation_positions), focal_idx)]
-        n_priv = [num_private(np.array(s_star_haps), focal_idx)]
-        focal_arch = [row[focal_idx] for row in arch]
-        lab = label(focal_arch, mutation_positions, n_sites, 0.7, 0.3)
-
-        output = calc_N_ton + dist + min_d + ss + n_priv + lab
-        ret.append(output)
-
-    return np.array(ret, dtype = np.float32)
-
-def pad_matrices(features, positions):
-    max_window_size = max([u.shape[0] for u in features])
-
-    features = [np.pad(u, ((0, max_window_size - u.shape[0]), (0, 0), (0, 0)), 'constant') for u in features]
-    positions = [np.pad(u, ((0, max_window_size - u.shape[0]), (0, 0)), 'constant') for u in positions]
-
-    return np.array(features, dtype = np.float32), np.array(positions, dtype = np.uint8)
-
 
 def parse_args():
     # Argument Parser
@@ -126,7 +83,8 @@ def main():
                 Y[k] = Y[k][:-2,:]
 
             f = Formatter(X, Y, sorting = args.sorting, pop = "0", 
-                          pop_sizes = pop_sizes, shape = out_shape)
+                          pop_sizes = pop_sizes, shape = out_shape,
+                          seriation_pop = 1)
             
             logging.info('formatting data for idir {}...'.format(ix))
             x, y = f.format(zero = args.zero)

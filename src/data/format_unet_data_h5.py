@@ -82,12 +82,14 @@ def remove_singletons(x_list, y_list):
     return new_x, new_y
 
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 32, 64), pop_sizes = [150, 156], sorting = None, pop = None):
+    def __init__(self, x, y, shape = (2, 32, 64), pop_sizes = [150, 156], 
+                 sorting = None, pop = None, seriation_pop = 0):
         # list of x and y arrays
         self.x = deque(x)
         if y is not None:
             self.y = deque(y)
         
+        self.seriation_pop = seriation_pop
         self.n_pops = shape[0]
         self.pop_size = shape[1]
         self.n_sites = shape[2]
@@ -181,19 +183,38 @@ class Formatter(object):
                    continue 
             
             if self.sorting == "seriate_match":
-                x1, ix1 = seriate_x(x1)
-                
-                D = cdist(x1, x2, metric = 'cosine')
-                D[np.where(np.isnan(D))] = 0.
-                
-                i, j = linear_sum_assignment(D)
-                
-                x2 = x2[j,:]
-                x2_indices = [x2_indices[u] for u in j]
-                
-                if self.y is not None:
-                    y1 = y1[ix1, :]
-                    y2 = y2[j, :]
+                if self.seriate_pop == 0:
+                    x1, ix1 = seriate_x(x1)
+                    
+                    D = cdist(x1, x2, metric = 'cosine')
+                    D[np.where(np.isnan(D))] = 0.
+                    
+                    i, j = linear_sum_assignment(D)
+                    
+                    x2 = x2[j,:]
+                    
+                    x1_indices = [x1_indices[u] for u in ix1]
+                    x2_indices = [x2_indices[u] for u in j]
+                    
+                    if self.y is not None:
+                        y1 = y1[ix1, :]
+                        y2 = y2[j, :]
+                else:
+                    x2, ix2 = seriate_x(x2)
+                    
+                    D = cdist(x2, x1, metric = 'cosine')
+                    D[np.where(np.isnan(D))] = 0.
+                    
+                    i, j = linear_sum_assignment(D)
+                    
+                    x1 = x1[j,:]
+                    
+                    x1_indices = [x1_indices[u] for u in j]
+                    x2_indices = [x2_indices[u] for u in ix2]
+                    
+                    if self.y is not None:
+                        y1 = y1[j, :]
+                        y2 = y2[ix2, :]
             
             x = np.array([x1, x2])
             
