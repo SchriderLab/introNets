@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,112,128")
+    parser.add_argument("--out_shape", default = "2,104,196")
 
     parser.add_argument("--n_per_dir", default = "100")
     parser.add_argument("--pop_size", default = "100")
@@ -84,7 +84,7 @@ def main():
 
             f = Formatter(X, Y, sorting = args.sorting, pop = "0", 
                           pop_sizes = pop_sizes, shape = out_shape,
-                          seriation_pop = 1)
+                          seriation_pop = 0)
             
             logging.info('formatting data for idir {}...'.format(ix))
             x, y = f.format(zero = args.zero)
