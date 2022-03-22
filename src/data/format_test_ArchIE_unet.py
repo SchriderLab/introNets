@@ -28,11 +28,9 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--idir", default = "None")
-    parser.add_argument("--window_size", default = "128")
     
     parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,104,196")
-    parser.add_argument("--chunk_size", default = "256")
+    parser.add_argument("--out_shape", default = "2,104,128")
     
     parser.add_argument("--step_size", default = "1")
     parser.add_argument("--n_per_dir", default = "100")
@@ -67,11 +65,10 @@ def main():
     
     idirs = idirs_
     
-    window_size = int(args.window_size)
-    
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
-    chunk_size = int(args.chunk_size)
+    
+    window_size = out_shape[-1]
     
     n_per_dir = int(args.n_per_dir)
     n_reps = n_per_dir * len(idirs)
