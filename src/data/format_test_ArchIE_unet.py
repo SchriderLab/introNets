@@ -32,7 +32,7 @@ def parse_args():
     parser.add_argument("--pop_sizes", default = "100,100")
     parser.add_argument("--out_shape", default = "2,104,128")
     
-    parser.add_argument("--step_size", default = "1")
+    parser.add_argument("--step_size", default = "8")
     parser.add_argument("--n_per_dir", default = "100")
 
     parser.add_argument("--ofile", default = "None")
@@ -69,6 +69,7 @@ def main():
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
     
     window_size = out_shape[-1]
+    step_size = int(args.step_size)
     
     n_per_dir = int(args.n_per_dir)
     n_reps = n_per_dir * len(idirs)
@@ -90,11 +91,13 @@ def main():
                 y = Y.pop()
                 p = p.pop()
                 
+                print(x.shape)
+                
                 X_ = []
                 Y_ = []
                 indices = []
                 positions = []
-                for ix in range(x.shape[1] - window_size):
+                for ix in range(0, x.shape[1] - window_size, step_size):
                     pi = range(ix,ix + window_size)
                     
                     x_ = x[:,ix:ix + window_size]
