@@ -31,6 +31,7 @@ def parse_args():
     
     parser.add_argument("--pop_sizes", default = "100,100")
     parser.add_argument("--out_shape", default = "2,104,128")
+    parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--step_size", default = "8")
     parser.add_argument("--n_per_dir", default = "100")
