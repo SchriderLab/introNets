@@ -84,14 +84,14 @@ def main():
             X, Y, P = load_data(ms, anc, leave_out_last = True)
             X = deque(X)
             Y = deque(Y)
-            P = deque(P)
+            del P
             
+            logging.info('formatting data for {}...'.format(idirs[ix]))
             while len(X) > 0: 
                 x = X.pop()
                 y = Y.pop()
-                p = p.pop()
                 
-                print(x.shape)
+                logging.info('have {} windows...'.format(len(range(0, x.shape[1] - window_size, step_size))))
                 
                 X_ = []
                 Y_ = []
