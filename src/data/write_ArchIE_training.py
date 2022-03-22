@@ -43,12 +43,15 @@ def main():
         logging.debug('0: working on key {0} or {1}'.format(keys.index(key) + 1, len(keys)))
 
         features = np.array(ifile[key]['features'])
+        print(features.shape)
 
         ix = np.sum(features, axis = 1)
         features = features[np.where(ix != 0)[0],:]
 
         for ix in range(features.shape[0]):
             f = features[ix]
+            print(f.shape)
+            
             positive += f[-4]
             count += 1
 
