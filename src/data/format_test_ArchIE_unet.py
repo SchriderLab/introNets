@@ -85,6 +85,8 @@ def main():
     
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
+            logging.info('working on {}...'.format(idirs[ix]))
+            
             ms = os.path.join(idirs[ix], 'mig.msOut')
             anc = os.path.join(idirs[ix], 'out.anc')
 
@@ -130,6 +132,7 @@ def main():
 
         while n_received < n_reps:
             x, y, indices, pi = comm.recv(source = MPI.ANY_SOURCE)
+            logging.info('writing set {}...'.format(current_chunk))
             
             ofile.create_dataset('{}/x_0'.format(current_chunk), data = x, compression = 'lzf')
             ofile.create_dataset('{}/y'.format(current_chunk), data = y, compression = 'lzf')
