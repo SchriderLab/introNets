@@ -232,8 +232,10 @@ class Formatter(object):
             
             X.append(x)
 
-        if return_indices:
+        if return_indices and self.y is None:
             return X[0], (x1_indices, x2_indices)
+        else:
+            return X[0], Y[0], (x1_indices, x2_indices)
             
         return X, Y
             
