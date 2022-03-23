@@ -169,7 +169,7 @@ class Formatter(object):
                     if len(indices) == 0:
                         continue
                 else:
-                    indices = list(range(x1.shape[1] - self.n_sites))
+                    indices = list(range(x1.shape[1] - self.n_sites + 1))
                 
                 six = np.random.choice(indices)
                 
