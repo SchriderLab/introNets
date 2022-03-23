@@ -42,7 +42,7 @@ def main():
 
     ii = 0
     while True:
-        logging.debug('0: working on key {}...'.format(ii))
+        logging.info('0: working on key {}...'.format(ii))
         
         try:
             features = np.array(ifile[str(ii)]['features'])
