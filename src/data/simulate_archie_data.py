@@ -68,7 +68,7 @@ def main():
     A = 1 - 0.02
     
     for ix in range(int(args.n_jobs)):
-        odir = os.path.join(args.odir, '{0:04d}'.format(ix))
+        odir = os.path.join(args.odir, '{0:06d}'.format(ix))
         os.system('mkdir -p {}'.format(odir))
         
         seeds = np.random.randint(0, 2**14, size = (3,))
