@@ -61,7 +61,7 @@ def main():
         indices = np.random.choice(range(len(features)), n_samples, replace = False)
 
         for ix in indices:
-            f = features[ix, 0]
+            f = features[ix]
             
             positive += f[-4]
             count += 1
