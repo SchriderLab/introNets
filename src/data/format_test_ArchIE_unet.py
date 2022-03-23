@@ -110,7 +110,7 @@ def main():
                     y_ = y[:,ix:ix + window_size]
                     
                     print(pi[0], pi[-1])
-                    print(x_.shape, y_.shape, y.shape)
+                    print(x_.shape, y_.shape, x.shape, y.shape)
                     
                     f = Formatter([x_], [y_], sorting = args.sorting, pop = 0, 
                                   pop_sizes = pop_sizes, shape = out_shape)
