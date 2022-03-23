@@ -115,6 +115,8 @@ class Formatter(object):
             
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
+                    print(x.shape, y.shape)
+                    
                     print('size mismatch...continuing...')
                     continue
                 
