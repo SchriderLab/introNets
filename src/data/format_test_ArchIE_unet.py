@@ -87,6 +87,8 @@ def main():
             for k in range(len(X)):
                 X[k] = X[k][:-2,:]
                 Y[k] = Y[k][:-2,:]
+                
+                print(X[k].shape, Y[k].shape)
             
             X = deque(X)
             Y = deque(Y)
