@@ -83,6 +83,11 @@ def main():
             anc = os.path.join(idirs[ix], 'out.anc')
 
             X, Y, P = load_data(ms, anc, leave_out_last = True)
+            # toss out the last two individuals
+            for k in range(len(X)):
+                X[k] = X[k][:-2,:]
+                Y[k] = Y[k][:-2,:]
+            
             X = deque(X)
             Y = deque(Y)
             del P
