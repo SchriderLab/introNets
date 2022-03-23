@@ -17,6 +17,7 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--ifile", default = "None")
 
+    parser.add_argument("--downsampling_rate", default = "0.05")
     parser.add_argument("--ofile", default = "None")
     args = parser.parse_args()
 
@@ -38,19 +39,25 @@ def main():
 
     count = 0
     positive = 0
+    
+    dr = float(args.downsampling_rate)
 
     for key in keys:
         logging.debug('0: working on key {0} or {1}'.format(keys.index(key) + 1, len(keys)))
 
         features = np.array(ifile[key]['features'])
-        print(features.shape)
+        features = features[:,0,:,:]
+        features = features.reshape(features.shape[0] * features.shape[1], features.shape[-1])
 
         ix = np.sum(features, axis = 1)
         features = features[np.where(ix != 0)[0],:]
+        
+        n_samples = int(np.round(len(features)*dr))
 
-        for ix in range(features.shape[0]):
-            f = features[ix]
-            print(f.shape)
+        indices = np.random.choice(range(len(features)), n_samples, replace = False)
+
+        for ix in indices:
+            f = features[ix, 0]
             
             positive += f[-4]
             count += 1
