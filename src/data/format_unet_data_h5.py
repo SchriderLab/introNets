@@ -110,10 +110,12 @@ class Formatter(object):
                 y = self.y.pop()
                 
             if x.shape[1] < self.n_sites:
+                print('not enough sites to begin with!...')
                 continue
             
             if not return_indices:
                 if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
+                    print('size mismatch...continuing...')
                     continue
                 
                 # upsample the populations if need be
@@ -180,7 +182,8 @@ class Formatter(object):
                 y2 = y2[:,six:six + self.n_sites]
                 
                 if y1.shape[1] != self.n_sites:
-                   continue 
+                    print('didnt find the correct number of sites in y...')
+                    continue 
             
             if self.sorting == "seriate_match":
                 if self.seriation_pop == 0:
@@ -234,7 +237,7 @@ class Formatter(object):
 
         if return_indices and self.y is None:
             return X[0], (x1_indices, x2_indices)
-        else:
+        elif return_indices:
             return X[0], Y[0], (x1_indices, x2_indices)
             
         return X, Y
