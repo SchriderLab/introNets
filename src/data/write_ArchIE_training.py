@@ -33,8 +33,6 @@ def main():
     args = parse_args()
 
     ifile = h5py.File(args.ifile, 'r')
-    keys = list(ifile.keys())
-
     ofile = open(args.ofile, 'w')
 
     count = 0
@@ -42,10 +40,16 @@ def main():
     
     dr = float(args.downsampling_rate)
 
-    for key in keys:
-        logging.debug('0: working on key {0} or {1}'.format(keys.index(key) + 1, len(keys)))
-
-        features = np.array(ifile[key]['features'])
+    ii = 0
+    while True:
+        logging.debug('0: working on key {}...'.format(ii))
+        
+        try:
+            features = np.array(ifile[str(ii)]['features'])
+        except:
+            break
+        
+        ii += 1
         features = features[:,0,:,:]
         features = features.reshape(features.shape[0] * features.shape[1], features.shape[-1])
 
