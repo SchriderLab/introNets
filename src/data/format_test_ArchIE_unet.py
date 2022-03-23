@@ -104,12 +104,13 @@ def main():
                 indices = []
                 positions = []
                 for ix in range(0, x.shape[1] - window_size, step_size):
-                    pi = range(ix,ix + window_size)
+                    pi = list(range(ix,ix + window_size))
                     
                     x_ = x[:,ix:ix + window_size]
                     y_ = y[:,ix:ix + window_size]
                     
-                    print(x_.shape)
+                    print(pi[0], pi[-1])
+                    print(x_.shape, y_.shape, y.shape)
                     
                     f = Formatter([x_], [y_], sorting = args.sorting, pop = 0, 
                                   pop_sizes = pop_sizes, shape = out_shape)
