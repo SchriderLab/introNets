@@ -54,7 +54,7 @@ def main():
         features = features.reshape(features.shape[0] * features.shape[1], features.shape[-1])
 
         ix = np.sum(features, axis = 1)
-        features = features[np.where(ix != 0)[0],:]
+        features = features[np.where((ix != 0) & (features[:,-2] != 1))[0],:]
         
         n_samples = int(np.round(len(features)*dr))
 
