@@ -237,6 +237,10 @@ class Formatter(object):
             
             X.append(x)
 
+        print([u.shape for u in X])
+        print([u.shape for u in Y])
+
+
         if return_indices and self.y is None:
             return X[0], (x1_indices, x2_indices)
         elif return_indices:
