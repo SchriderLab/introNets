@@ -113,45 +113,39 @@ class Formatter(object):
                 print('not enough sites to begin with!...')
                 continue
             
-            if not return_indices:
-                if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
-                    print(x.shape, y.shape)
-                    
-                    print('size mismatch...continuing...')
-                    continue
+            
+            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
+                print(x.shape, y.shape)
                 
-                # upsample the populations if need be
-                x1_indices = list(range(self.pop_sizes[0]))
-                n = self.pop_size - self.pop_sizes[0]
-                
-                if n > self.pop_sizes[0]:
-                    replace = True
-                else:
-                    replace = False
-                
-                if n > 0:
-                    x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
-                
-                # upsample the second pop (again if needed)
-                x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
-                n = self.pop_size - self.pop_sizes[1]
-                
-                if n > self.pop_sizes[1]:
-                    replace = True
-                else:
-                    replace = False
-                
-                if n > 0:
-                    x2_indices = x2_indices + list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), n, replace = replace))
-                
-                x1 = x[x1_indices, :]
-                x2 = x[x2_indices, :]
+                print('size mismatch...continuing...')
+                continue
+            
+            # upsample the populations if need be
+            x1_indices = list(range(self.pop_sizes[0]))
+            n = self.pop_size - self.pop_sizes[0]
+            
+            if n > self.pop_sizes[0]:
+                replace = True
             else:
-                x1 = x[:self.pop_size,:]
-                x2 = x[self.pop_size:,:]
-                
-                x1_indices = list(range(self.pop_size))
-                x2_indices = list(range(self.pop_size))
+                replace = False
+            
+            if n > 0:
+                x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
+            
+            # upsample the second pop (again if needed)
+            x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
+            n = self.pop_size - self.pop_sizes[1]
+            
+            if n > self.pop_sizes[1]:
+                replace = True
+            else:
+                replace = False
+            
+            if n > 0:
+                x2_indices = x2_indices + list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), n, replace = replace))
+            
+            x1 = x[x1_indices, :]
+            x2 = x[x2_indices, :]
             
             if continuous:
                 x1 = make_continuous(x1)
