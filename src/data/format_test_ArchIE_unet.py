@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
     
     parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,104,128")
+    parser.add_argument("--out_shape", default = "2,104,192")
     parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--step_size", default = "8")
@@ -87,8 +87,6 @@ def main():
             for k in range(len(X)):
                 X[k] = X[k][:-2,:]
                 Y[k] = Y[k][:-2,:]
-                
-                print(X[k].shape, Y[k].shape)
             
             X = deque(X)
             Y = deque(Y)
@@ -110,9 +108,6 @@ def main():
                     
                     x_ = x[:,ix:ix + window_size]
                     y_ = y[:,ix:ix + window_size]
-                    
-                    print(pi[0], pi[-1])
-                    print(x_.shape, y_.shape, x.shape, y.shape)
                     
                     f = Formatter([x_], [y_], sorting = args.sorting, pop = 0, 
                                   pop_sizes = pop_sizes, shape = out_shape)
