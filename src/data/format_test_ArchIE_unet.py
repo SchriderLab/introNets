@@ -82,7 +82,7 @@ def main():
             ms = os.path.join(idirs[ix], 'mig.msOut')
             anc = os.path.join(idirs[ix], 'out.anc')
 
-            X, Y, P = load_data(ms, anc, leave_out_last = True)
+            X, Y, P = load_data(ms, anc)
             # toss out the last two individuals
             for k in range(len(X)):
                 X[k] = X[k][:-2,:]
