@@ -109,7 +109,7 @@ def main():
                     x_ = x[:,ix:ix + window_size]
                     y_ = y[:,ix:ix + window_size]
                     
-                    f = Formatter([x_], [y_], sorting = args.sorting, pop = 0, 
+                    f = Formatter([x_], [y_], sorting = args.sorting, pop = "0", 
                                   pop_sizes = pop_sizes, shape = out_shape)
                     x_, y_, i1 = f.format(return_indices = True, zero = True)
                 
