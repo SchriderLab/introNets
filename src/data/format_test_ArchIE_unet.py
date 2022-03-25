@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
     
     parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,104,192")
+    parser.add_argument("--out_shape", default = "2,112,192")
     parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--step_size", default = "8")
