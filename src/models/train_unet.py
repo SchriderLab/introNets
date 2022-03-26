@@ -63,13 +63,14 @@ def parse_args():
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
 
-    parser.add_argument("--label_noise", default = "0.01")
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
     
     # for AO to BF we had: 
     parser.add_argument("--pos_weight", default = "8.379942663085659")
     parser.add_argument("--n_classes", default = "1")
+    parser.add_argument("--label_smooth", action = "store_true")
+    parser.add_argument("--label_noise", default = "0.01")
 
     parser.add_argument("--odir", default = "training_output")
     parser.add_argument("--ofile", default = "None")
@@ -145,7 +146,7 @@ def main():
 
         for ij in range(l):
             optimizer.zero_grad()
-            x, y = generator.get_batch()
+            x, y = generator.get_batch(label_smooth = args.label_smooth)
             
             y = torch.squeeze(y)
             
