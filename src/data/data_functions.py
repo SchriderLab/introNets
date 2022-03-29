@@ -1,11 +1,16 @@
 import os
 import numpy as np
 
-import sys
-
 from seriate import seriate
 import gzip
 from scipy.spatial.distance import pdist
+
+# writes a space separated .tbs file (text)
+# which contains the demographic parameters for an ms two-population simulation
+def writeTbsFile(params, outFileName):
+    with open(outFileName, "w") as outFile:
+        for paramVec in params:
+            outFile.write(" ".join([str(x) for x in paramVec]) + "\n")
 
 # finds the middle component of a list (if there are an even number of entries, then returns the first of the middle two)
 def findMiddle(input_list):
@@ -16,7 +21,7 @@ def findMiddle(input_list):
         return (input_list[int(middle)], input_list[int(middle-1)])[0]
     
 # Gets all possible windows over a predictor image with a particular window size
-def get_windows(x, ipos, wsize = 500):
+def get_windows(x, ipos, wsize = 50000):
     # positions of polymorphisms
     ipos = list(ipos)
 
@@ -84,13 +89,13 @@ def load_data_slim(msfile, introgressfile, nindv):
         if x[0] == 'genome':
             if len(x) > 2:
                 igD[n][int(x[1].replace(":", ""))] = [tuple(map(int,i.split('-'))) for i in x[-1].split(',')]
-            else:  igD[n][int(x[1].replace(":", ""))] = []           #print(n,x)
-    #pprint.pprint(igD)
+            else:  igD[n][int(x[1].replace(":", ""))] = []           
+    
     g = list(get_gz_file(msfile))
     loc_len = 10000.
-    #print(loc_len)
+
     k = [idx for idx,i in enumerate(g) if len(i) > 0 and i[0].startswith('//')]
-    #print(k)
+
     f, pos, target = [], [], []
     for gdx,i in enumerate(k):
         L = g[i+3:i+3+nindv]
@@ -263,16 +268,6 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         
     return X, Y, params
         
-if __name__ == '__main__':
-    idir = sys.argv[1]
-    
-    ms_file = os.path.join(idir, 'mig.msOut')
-    anc_file = os.path.join(idir, 'anc.out')
-    
-    x1, x2, y1, y2, params = load_data_dros(ms_file, anc_file)
-    
-    print(x1[0].shape)
-    print(x2[0].shape)
-    print(len(x1), len(x2), len(y1), len(y2))
+
     
 
