@@ -4,6 +4,42 @@ import numpy as np
 from seriate import seriate
 import gzip
 from scipy.spatial.distance import pdist
+from calc_stats_ms import N_ton, distance_vector, min_dist_ref, s_star_ind, num_private, label
+
+def get_feature_vector(mutation_positions, genotypes, ref_geno, arch):
+    n_samples = len(genotypes[0])
+
+    n_sites = 50000
+
+    ## set up S* stuff -- remove mutations found in reference set
+    t_ref = list(map(list, zip(*ref_geno)))
+    t_geno = list(map(list, zip(*genotypes)))
+    pos_to_remove = set()  # contains indexes to remove
+    s_star_haps = []
+    for idx, hap in enumerate(t_ref):
+        for jdx, site in enumerate(hap):
+            if site == 1:
+                pos_to_remove.add(jdx)
+
+    for idx, hap in enumerate(t_geno):
+        s_star_haps.append([v for i, v in enumerate(hap) if i not in pos_to_remove])
+
+    ret = []
+
+    # individual level
+    for focal_idx in range(0, n_samples):
+        calc_N_ton = N_ton(genotypes, n_samples, focal_idx)
+        dist = distance_vector(genotypes, focal_idx)
+        min_d = [min_dist_ref(genotypes, ref_geno, focal_idx)]
+        ss = [s_star_ind(np.array(s_star_haps), np.array(mutation_positions), focal_idx)]
+        n_priv = [num_private(np.array(s_star_haps), focal_idx)]
+        focal_arch = [row[focal_idx] for row in arch]
+        lab = label(focal_arch, mutation_positions, n_sites, 0.7, 0.3)
+
+        output = calc_N_ton + dist + min_d + ss + n_priv + lab
+        ret.append(output)
+
+    return np.array(ret, dtype = np.float32)
 
 # writes a space separated .tbs file (text)
 # which contains the demographic parameters for an ms two-population simulation
@@ -20,41 +56,26 @@ def findMiddle(input_list):
     else:
         return (input_list[int(middle)], input_list[int(middle-1)])[0]
     
-# Gets all possible windows over a predictor image with a particular window size
-def get_windows(x, ipos, wsize = 50000):
+# return the indices of positions that fall in sliding windows wsize long
+# and with a step size = step
+def get_windows(ipos, wsize = 50000, step = 10000):
     # positions of polymorphisms
-    ipos = list(ipos)
-
-    indices = range(x.shape[1])
-    # get the middle index
-    middle_index = findMiddle(indices)
-
-    # get the indices for the x-axis of a predictor image of 128 SNPs
-    indices = range(middle_index - 64, middle_index + 64)
-    sets = []
-
-    # for these indices, get as many unique windows (of the specified size) as possible that include these positions
-    for ix in indices:
-        p = set([u for u in ipos if (u >= ipos[ix] - wsize) and (u <= ipos[ix])])
-
-        if p not in sets:
-            sets.append(p)
-
-        p = set([u for u in ipos if (u >= ipos[ix]) and (u <= ipos[ix] + wsize)])
-
-        if p not in sets:
-            sets.append(p)
-
-    # sort
-    sets = [sorted(list(u)) for u in sets]
-    sets = sorted(sets, key = lambda u: u[0])
+    s1, s2 = 0, wsize
+    
+    mp = np.max(ipos)
 
     ret = []
-
-    for s in sets:
-        ret.append([ipos.index(u) for u in s])
-
-    return ret, indices
+    while s2 <= mp:
+        ix = list(np.where((ipos >= s1) & (ipos <= s2))[0])
+        
+        s1 += step
+        s2 += step
+        
+        ret.append(ix)
+        
+    ret.append(ix)
+    
+    return ret
 
 def binary_digitizer(x, breaks):
     #x is all pos of seg sites
