@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument("--ofile", default = "archie_data.hdf5")
     parser.add_argument("--window_size", default = "50000")
     parser.add_argument("--step", default = "10000")
-    parser.add_argument("--n", default = "10e6")
+    parser.add_argument("--n", default = "1e6")
 
     parser.add_argument("--n_per_dir", default = "10")
     parser.add_argument("--pop_size", default = "100")
