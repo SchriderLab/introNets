@@ -122,14 +122,16 @@ def main():
     plt.close()
     
     logging.info('bootstrapping metrics...')
+    
+    Y = np.array(Y)
+    Y_pred = np.array(Y_pred)
+    
     rocs = []
     prs = []
     accs = []
     # bootstrap (take-one-out)
     for k in range(len(indices)):
         ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
-        Y = np.array(Y)
-        Y_pred = np.array(Y_pred)
         
         auroc = roc_auc_score(Y[ix].astype(np.int32), Y_pred[ix])
         aupr = average_precision_score(Y[ix].astype(np.int32), Y_pred[ix])
