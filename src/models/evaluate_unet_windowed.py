@@ -182,6 +182,7 @@ def main():
     
     Y = []
     Y_pred = []
+    indices_ = []
     
     logging.info('predicting...')
     for key in keys:
@@ -242,8 +243,13 @@ def main():
         plt.show()
         """
         
+        # save the indices for take-one-out bootstrapping
+        i1 = len(Y)
+        i2 = i1 + len(y.flatten())
+        
         Y.extend(y_true[:100,:].flatten())
         Y_pred.extend(y_pred[:100,:].flatten())
+        indices_.append((i1, i2))
         
     logging.info('plotting EPS files...')
     # do this for all the examples:
@@ -270,14 +276,16 @@ def main():
     plt.close()
     
     logging.info('bootstrapping metrics...')
+    
+    Y = np.array(Y)
+    Y_pred = np.array(Y_pred)
+    
     rocs = []
     prs = []
     accs = []
     # bootstrap (take-one-out)
     for k in range(len(indices)):
-        ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
-        Y = np.array(Y)
-        Y_pred = np.array(Y_pred)
+        ix = list(set(range(len(Y))).difference(list(range(indices_[k][0], indices_[k][1]))))
         
         auroc = roc_auc_score(Y[ix].astype(np.int32), Y_pred[ix])
         aupr = average_precision_score(Y[ix].astype(np.int32), Y_pred[ix])
