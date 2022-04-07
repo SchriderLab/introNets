@@ -69,7 +69,8 @@ def main():
     Y_pred = []
     indices = []
     
-    for key in keys[:5]:
+    logging.info('predicting...')
+    for key in keys:
         f = np.array(ifile[key]['f'])[:,:,:-4]
         pos = np.array(ifile[key]['pos']).astype(np.int32)
         y = np.array(ifile[key]['y'])
@@ -96,6 +97,7 @@ def main():
         Y_pred.extend(expit(y_pred).flatten())
         indices.append((i1, i2))
         
+    logging.info('plotting EPS files...')
     # do this for all the examples:
     cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
     
@@ -119,10 +121,10 @@ def main():
     plt.savefig(os.path.join(args.odir, 'precision_recall.eps'))
     plt.close()
     
+    logging.info('bootstrapping metrics...')
     rocs = []
     prs = []
     accs = []
-    
     # bootstrap (take-one-out)
     for k in range(len(indices)):
         ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
