@@ -179,9 +179,9 @@ def main():
     
     Y = []
     Y_pred = []
-    for key in keys[:100]:
-        print(key)
-        
+    
+    logging.info('predicting...')
+    for key in keys:
         indices = np.array(ifile[key]['indices'])
         ix = np.array(ifile[key]['ix'])
         x = np.array(ifile[key]['x_0'])
@@ -242,6 +242,8 @@ def main():
         Y.extend(y_true[:100,:].flatten())
         Y_pred.extend(y_pred[:100,:].flatten())
         
+    logging.info('plotting EPS files...')
+    # do this for all the examples:
     cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
     
     precision, recall, thresholds = precision_recall_curve(list(map(int, Y)), Y_pred)
@@ -264,12 +266,27 @@ def main():
     plt.savefig(os.path.join(args.odir, 'precision_recall.eps'))
     plt.close()
     
-    auroc = roc_auc_score(list(map(int, Y)), Y_pred)
-    aupr = average_precision_score(list(map(int, Y)), Y_pred)
-    
-    print('auroc: {}'.format(auroc))
-    print('aupr: {}'.format(aupr))
-    print('accuracy: {}'.format(accuracy_score(list(map(int, Y)), np.round(Y_pred))))
+    logging.info('bootstrapping metrics...')
+    rocs = []
+    prs = []
+    accs = []
+    # bootstrap (take-one-out)
+    for k in range(len(indices)):
+        ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
+        Y = np.array(Y)
+        Y_pred = np.array(Y_pred)
+        
+        auroc = roc_auc_score(Y[ix].astype(np.int32), Y_pred[ix])
+        aupr = average_precision_score(Y[ix].astype(np.int32), Y_pred[ix])
+        acc = accuracy_score(Y[ix].astype(np.int32), np.round(Y_pred[ix]))
+        
+        rocs.append(auroc)
+        prs.append(aupr)
+        accs.append(acc)
+        
+    print('auroc: {0} +- {1}'.format(np.mean(rocs), np.std(rocs) / np.sqrt(len(rocs)) * 1.96))
+    print('aupr: {0} +- {1}'.format(np.mean(prs), np.std(prs) / np.sqrt(len(rocs)) * 1.96))
+    print('accuracy: {0} +- {1}'.format(np.mean(accs), np.std(accs) / np.sqrt(len(rocs)) * 1.96))
         
         
         
