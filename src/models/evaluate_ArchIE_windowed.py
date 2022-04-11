@@ -143,7 +143,7 @@ def main():
         t1 = time.time()
         
         ix = list(np.random.choice(range(len(indices)), 100))
-        ix = [indices[u] for u in ix]
+        ix = [list(range(indices[u])) for u in ix]
         
         ix = [item for sublist in ix for item in sublist]
         
