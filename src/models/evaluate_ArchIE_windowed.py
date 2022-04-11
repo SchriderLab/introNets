@@ -126,9 +126,12 @@ def main():
     Y = np.array(Y)
     Y_pred = np.array(Y_pred)
     
-    rocs = []
-    prs = []
-    accs = []
+    np.savez_compressed(os.path.join(args.odir, 'predictions.npz'), Y = Y, Y_pred = Y_pred)
+    
+    result = dict()
+    result['rocs'] = []
+    result['prs'] = []
+    result['accs'] = []
     # bootstrap (take-one-out)
     for k in range(len(indices)):
         ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
@@ -137,13 +140,13 @@ def main():
         aupr = average_precision_score(Y[ix].astype(np.int32), Y_pred[ix])
         acc = accuracy_score(Y[ix].astype(np.int32), np.round(Y_pred[ix]))
         
-        rocs.append(auroc)
-        prs.append(aupr)
-        accs.append(acc)
+        result['rocs'].append(auroc)
+        result['prs'].append(aupr)
+        result['accs'].append(acc)
         
-    print('auroc: {0} +- {1}'.format(np.mean(rocs), np.std(rocs) / np.sqrt(len(rocs)) * 1.96))
-    print('aupr: {0} +- {1}'.format(np.mean(prs), np.std(prs) / np.sqrt(len(rocs)) * 1.96))
-    print('accuracy: {0} +- {1}'.format(np.mean(accs), np.std(accs) / np.sqrt(len(rocs)) * 1.96))
+    print('auroc: {0} +- {1}'.format(np.mean(result['rocs']), np.std(result['rocs']) / np.sqrt(len(result['rocs'])) * 1.96))
+    print('aupr: {0} +- {1}'.format(np.mean(result['prs']), np.std(result['prs']) / np.sqrt(len(result['rocs'])) * 1.96))
+    print('accuracy: {0} +- {1}'.format(np.mean(result['accs']), np.std(result['accs']) / np.sqrt(len(result['rocs'])) * 1.96))
         
 
 if __name__ == '__main__':
