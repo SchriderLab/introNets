@@ -12,6 +12,8 @@ from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, av
 
 import random
 import matplotlib.pyplot as plt
+import pandas as pd
+import time
 
 def batch_dot(W, x):
     # dot product for a batch of examples
@@ -132,8 +134,11 @@ def main():
     result['rocs'] = []
     result['prs'] = []
     result['accs'] = []
+    result['t'] = []
     # bootstrap (take-one-out)
     for k in range(len(indices)):
+        
+        t1 = time.time()
         ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
         
         auroc = roc_auc_score(Y[ix].astype(np.int32), Y_pred[ix])
@@ -143,6 +148,10 @@ def main():
         result['rocs'].append(auroc)
         result['prs'].append(aupr)
         result['accs'].append(acc)
+        result['t'].append(time.time() - t1)
+        
+        df = pd.DataFrame(result)
+        df.to_csv(os.path.join(args.odir, 'estimates.csv'), index = False)
         
     print('auroc: {0} +- {1}'.format(np.mean(result['rocs']), np.std(result['rocs']) / np.sqrt(len(result['rocs'])) * 1.96))
     print('aupr: {0} +- {1}'.format(np.mean(result['prs']), np.std(result['prs']) / np.sqrt(len(result['rocs'])) * 1.96))
