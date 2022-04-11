@@ -30,6 +30,8 @@ def parse_args():
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--coef", default = "data/archie_coefs.txt")
     parser.add_argument("--ifile", default = "data/ArchIE_windowed_f_i2.hdf5")
+    
+    parser.add_argument("--n", default = "100")
 
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
@@ -72,7 +74,7 @@ def main():
     indices = []
     
     logging.info('predicting...')
-    for key in keys:
+    for key in keys[:5]:
         f = np.array(ifile[key]['f'])[:,:,:-4]
         pos = np.array(ifile[key]['pos']).astype(np.int32)
         y = np.array(ifile[key]['y'])
@@ -135,11 +137,15 @@ def main():
     result['prs'] = []
     result['accs'] = []
     result['t'] = []
-    # bootstrap (take-one-out)
-    for k in range(len(indices)):
-        
+    
+    # bootstrap (choose 100 N times)
+    for k in range(int(args.n)):
         t1 = time.time()
-        ix = list(set(range(len(Y))).difference(list(range(indices[k][0], indices[k][1]))))
+        
+        ix = list(np.random.choice(range(len(indices)), 100))
+        ix = [indices[u] for u in ix]
+        
+        ix = [item for sublist in ix for item in sublist]
         
         auroc = roc_auc_score(Y[ix].astype(np.int32), Y_pred[ix])
         aupr = average_precision_score(Y[ix].astype(np.int32), Y_pred[ix])
