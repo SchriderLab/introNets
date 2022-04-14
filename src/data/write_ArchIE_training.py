@@ -56,17 +56,61 @@ def main():
         ix = np.sum(features, axis = 1)
         features = features[np.where((ix != 0) & (features[:,-2] != 1))[0],:]
         
-        n_samples = int(np.round(len(features)*dr))
+        pos_features = features[np.where(features[:,-4] == 1)[0], :]
+        neg_features = features[np.where(features[:,-4] == 0)[0], :]
+        
+        n = pos_features.shape[0]
+        
+        if n < neg_features.shape[0]:
+            indices = np.random.choice(range(neg_features.shape[0]), n, replace = False)
+            for ix in indices:
+                f = neg_features[ix]
+                
+                count += 1
 
-        indices = np.random.choice(range(len(features)), n_samples, replace = False)
+                ofile.write('\t'.join(f.astype(str)) + '\n')
+                
+            for ix in range(pos_features.shape[0]):
+                f = pos_features[ix]
+                
+                positive += 1
+                count += 1
 
-        for ix in indices:
-            f = features[ix]
+                ofile.write('\t'.join(f.astype(str)) + '\n')
             
-            positive += f[-4]
-            count += 1
+        elif n > neg_features.shape[0]:
+            n = neg_features.shape[0]
+            
+            indices = np.random.choice(range(pos_features.shape[0]), n, replace = False)
+            for ix in indices:
+                f = pos_features[ix]
+                
+                positive += 1
+                count += 1
 
-            ofile.write('\t'.join(f.astype(str)) + '\n')
+                ofile.write('\t'.join(f.astype(str)) + '\n')
+            
+            for ix in range(neg_features.shape[0]):
+                f = neg_features[ix]
+                
+                count += 1
+
+                ofile.write('\t'.join(f.astype(str)) + '\n')
+        else:
+            for ix in range(neg_features.shape[0]):
+                f = neg_features[ix]
+                
+                count += 1
+
+                ofile.write('\t'.join(f.astype(str)) + '\n')
+            
+            for ix in range(pos_features.shape[0]):
+                f = pos_features[ix]
+                
+                positive += 1
+                count += 1
+
+                ofile.write('\t'.join(f.astype(str)) + '\n')
 
     print(positive)
     print(count)
