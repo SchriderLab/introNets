@@ -74,7 +74,7 @@ def main():
     indices = []
     
     logging.info('predicting...')
-    for key in keys[:5]:
+    for key in keys:
         f = np.array(ifile[key]['f'])[:,:,:-4]
         pos = np.array(ifile[key]['pos']).astype(np.int32)
         y = np.array(ifile[key]['y'])
