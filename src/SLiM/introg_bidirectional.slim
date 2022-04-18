@@ -30,6 +30,8 @@ initialize()
 	if (donorPop == 1)
 	{
 		rMigProb = runif(1, 0.1, 0.5);
+		cat("migProb: " + rMigProb + "\n");
+		
 		defineConstant("migProb12", rMigProb);
 		defineConstant("migProb21", 0);
 	}
@@ -43,6 +45,9 @@ initialize()
 	{
 	    rMigProb12 = runif(1, 0.1, 0.5);
 	    rMigProb21 = runif(1, 0.1, 0.5);
+	    cat("migProb12: " + rMigProb12 + "\n");
+	    cat("migProb21: " + rMigProb21 + "\n");
+	    
 		defineConstant("migProb12", rMigProb12/2);
 		defineConstant("migProb21", rMigProb21/2);
 	}
