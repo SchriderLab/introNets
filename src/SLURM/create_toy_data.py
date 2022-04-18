@@ -53,14 +53,15 @@ def main():
     args = parse_args()
     
     # scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability
-    cmd = 'sbatch --mem=4G -t 02:00:00 --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} > {9} && gzip {4} {9}"'
+    cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} > {9} && gzip {4} {9}"'
     
     for ix in range(int(args.n_jobs)):
         ofile_ms = os.path.join(args.odir, '{0:05d}.ms'.format(ix))
         ofile_introg = os.path.join(args.odir, '{0:05d}_introg.log'.format(ix))
+        ofile_log = os.path.join(args.odir, '{0:05d}_introg.out'.format(ix))
         
         cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
-                          args.donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms)
+                          args.donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, ofile_log)
         
         os.system(cmd_)
         
