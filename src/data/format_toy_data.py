@@ -23,7 +23,7 @@ from scipy.optimize import linear_sum_assignment
 from scipy.interpolate import interp1d
 
 from format_unet_data_h5 import Formatter, remove_singletons
-from data_functions import load_data_slim
+from data_functions import load_data_slim, read_slim_out
             
 def parse_args():
     # Argument Parser
@@ -65,6 +65,7 @@ def main():
 
     ms_files = sorted(glob.glob(os.path.join(args.idir, '*.ms.gz')))
     log_files = sorted(glob.glob(os.path.join(args.idir, '*log.gz')))
+    out_files = sorted(glob.glob(os.path.join(args.idir, '*out')))
     
     chunk_size = int(args.chunk_size)
     
@@ -79,6 +80,9 @@ def main():
             
             ms = ms_files[ix]
             log = log_files[ix]
+            out = out_files[ix]
+            
+            mt, mp = read_slim_out(out)
             
             x, _, y, _ = load_data_slim(ms, log, n_ind)
                 
@@ -89,29 +93,37 @@ def main():
                           pop_sizes = pop_sizes, shape = out_shape)
             x, y = f.format(zero = args.zero)
         
-            comm.send([x, y], dest = 0)
+            comm.send([x, y, mt, mp], dest = 0)
     else:
         n_received = 0
         current_chunk = 0
 
         X = []
         Y = []
-        
+        mts = []
+        mps = []
         while n_received < len(ms_files):
-            x, y = comm.recv(source = MPI.ANY_SOURCE)
+            x, y, mt, mp = comm.recv(source = MPI.ANY_SOURCE)
             
             X.extend(x)
             Y.extend(y)
+            mts.extend(mt)
+            mps.extend(mp)
             
             n_received += 1
             
             while len(X) > chunk_size:
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
+                ofile.create_dataset('{0}/mt'.format(current_chunk), data = np.array(mts[-chunk_size:], dtype = np.float32), compression = 'lzf')
+                ofile.create_dataset('{0}/mp'.format(current_chunk), data = np.array(mps[-chunk_size:], dtype = np.float32), compression = 'lzf')
+                
                 ofile.flush()
                 
                 del X[-chunk_size:]
                 del Y[-chunk_size:]
+                del mps[-chunk_size:]
+                del mts[-chunk_size:]
 
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 

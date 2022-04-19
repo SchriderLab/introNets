@@ -6,6 +6,26 @@ import gzip
 from scipy.spatial.distance import pdist
 from calc_stats_ms import N_ton, distance_vector, min_dist_ref, s_star_ind, num_private, label
 
+def batch_dot(W, x):
+    # dot product for a batch of examples
+    return np.einsum("ijk,ki->ji", np.tile(W, (len(x), 1, 1)), x.T).T
+
+def read_slim_out(ifile):
+    ifile = open(ifile, 'r')
+    
+    lines = ifile.readlines()
+
+    migProbs = []
+    migTimes = []
+    for line in lines:
+        line = line.replace('\n', '').replace(',', '')
+        if 'migTime' in line:
+            migTimes.append(float(line.split(' ')[-1]))
+        elif 'migProbs' in line:
+            migTimes.append(tuple(map(float, line.split(' ')[-2:])))
+            
+    return migProbs, migTimes
+
 def get_feature_vector(mutation_positions, genotypes, ref_geno, arch):
     n_samples = len(genotypes[0])
 
