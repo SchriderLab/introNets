@@ -93,11 +93,6 @@ def main():
     counter = 0
     
     for j in range(int(args.n_jobs)):
-        odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
-        counter += 1
-        
-        os.system('mkdir -p {}'.format(odir))
-        
         if args.model == 'dros':
             for ix in range(df.shape[0]):
                 # size of the populations
@@ -108,7 +103,13 @@ def main():
                 
                 P, ll = parameters_df(df, ix, 1., 0., 0., n)
     
+                print(ll)
                 if ll > -2000:
+                    odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+                    counter += 1
+                    
+                    os.system('mkdir -p {}'.format(odir))
+                    
                     # replace mean migTime and the rest with a uniformly random distribution around it
                     migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
                     migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
@@ -139,6 +140,17 @@ def main():
                         cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
                     elif args.direction == 'none_wtrees':
                         cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    
+                    cmd = "echo '{0}' && {0}".format(cmd)
+                    print('simulating via the recommended parameters...')
+                    sys.stdout.flush()
+                    
+                    if args.slurm:
+                        fout = os.path.join(odir, 'slurm.out')
+                        cmd = slurm_cmd.format(fout, cmd)
+                        
+                    os.system(cmd)
+        
         elif args.model == 'archie':
             T = 5e-4 * L
             R = 4e-4 * L
@@ -148,15 +160,15 @@ def main():
             
             cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
         
-        cmd = "echo '{0}' && {0}".format(cmd)
-        print('simulating via the recommended parameters...')
-        sys.stdout.flush()
-        
-        if args.slurm:
-            fout = os.path.join(odir, 'slurm.out')
-            cmd = slurm_cmd.format(fout, cmd)
+            cmd = "echo '{0}' && {0}".format(cmd)
+            print('simulating via the recommended parameters...')
+            sys.stdout.flush()
             
-        os.system(cmd)
+            if args.slurm:
+                fout = os.path.join(odir, 'slurm.out')
+                cmd = slurm_cmd.format(fout, cmd)
+                
+            os.system(cmd)
             
 if __name__ == '__main__':
     main()
