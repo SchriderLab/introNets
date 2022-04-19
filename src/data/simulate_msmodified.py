@@ -91,66 +91,72 @@ def main():
     L = int(args.window_size)
     
     counter = 0
-    for ix in range(df.shape[0]):
-        for j in range(int(args.n_jobs)):
-            odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
-            counter += 1
-            
-            os.system('mkdir -p {}'.format(odir))
-            
-            if args.model == 'dros':
+    
+    for j in range(int(args.n_jobs)):
+        odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+        counter += 1
+        
+        os.system('mkdir -p {}'.format(odir))
+        
+        if args.model == 'dros':
+            for ix in range(df.shape[0]):
                 # size of the populations
                 SIZE_A = 20
                 SIZE_B = 14
                 
+                L = 10000
+                
                 P, ll = parameters_df(df, ix, 1., 0., 0., n)
-
-                # replace mean migTime and the rest with a uniformly random distribution around it
-                migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
-                migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
-                rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
-                
-                P[:,-1] = migTime
-                P[:,-3] = migTime
-                
-                P[:, 1] = P[:,0] / rho
-                P[:,-2] = migProb
-            
-                if ('ba' in args.direction) or ('ab' in args.direction):
-                    writeTbsFile(np.concatenate([P, np.random.randint(0, 2**14, size = (P.shape[0], 3))], axis = 1), os.path.join(odir, 'mig.tbs'))
-                else:
-                    writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
+    
+                if ll > -2000:
+                    # replace mean migTime and the rest with a uniformly random distribution around it
+                    migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
+                    migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
+                    rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
                     
-                if args.direction == 'ab':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                elif args.direction == 'ba':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                elif args.direction == 'none':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                elif args.direction == 'ab_wtrees':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                elif args.direction == 'ba_wtrees':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                elif args.direction == 'none_wtrees':
-                    cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-            elif args.model == 'archie':
-                T = 5e-4 * L
-                R = 4e-4 * L
-                A = 1 - 0.02
+                    P[:,-1] = migTime
+                    P[:,-3] = migTime
+                    
+                    P[:, 1] = P[:,0] / rho
+                    P[:,-2] = migProb
                 
-                seeds = np.random.randint(0, 2**14, size = (3,))
-                
-                cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
+                    if ('ba' in args.direction) or ('ab' in args.direction):
+                        writeTbsFile(np.concatenate([P, np.random.randint(0, 2**14, size = (P.shape[0], 3))], axis = 1), os.path.join(odir, 'mig.tbs'))
+                    else:
+                        writeTbsFile(np.concatenate([P[:,:-3], np.random.randint(0, 2**14, size = (P.shape[0], 1))], axis = 1), os.path.join(odir, 'mig.tbs'))
+                        
+                    # direction + wtrees (if you desire the output as a series of genealogical trees)
+                    # in the case of genealogical trees, we use regular ms as we observed an error in msmodified when trying...
+                    if args.direction == 'ab':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    elif args.direction == 'ba':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    elif args.direction == 'none':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    elif args.direction == 'ab_wtrees':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    elif args.direction == 'ba_wtrees':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    elif args.direction == 'none_wtrees':
+                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+        elif args.model == 'archie':
+            T = 5e-4 * L
+            R = 4e-4 * L
+            A = 1 - 0.02
             
-            cmd = "echo '{0}' && {0}".format(cmd)
-            print('simulating via the recommended parameters...')
-            sys.stdout.flush()
+            seeds = np.random.randint(0, 2**14, size = (3,))
             
-            if args.slurm:
-                fout = os.path.join(odir, 'slurm.out')
-                cmd = slurm_cmd.format(fout, cmd)
-                
-            os.system(cmd)
+            cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
+        
+        cmd = "echo '{0}' && {0}".format(cmd)
+        print('simulating via the recommended parameters...')
+        sys.stdout.flush()
+        
+        if args.slurm:
+            fout = os.path.join(odir, 'slurm.out')
+            cmd = slurm_cmd.format(fout, cmd)
+            
+        os.system(cmd)
             
 if __name__ == '__main__':
     main()
