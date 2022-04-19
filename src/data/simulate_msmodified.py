@@ -115,8 +115,8 @@ def main():
                     migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
                     rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
                     
-                    P[:,-1] = migTime * P[:,-7]
-                    P[:,-3] = migTime * P[:,-7]
+                    P[:,-1] = migTime * P[:,-4]
+                    P[:,-3] = migTime * P[:,-4]
                     
                     P[:, 1] = P[:,0] / rho
                     P[:,-2] = migProb
