@@ -22,7 +22,7 @@ def read_slim_out(ifile):
         if 'migTime' in line:
             migTimes.append(float(line.split(' ')[-1]))
         elif 'migProbs' in line:
-            migTimes.append(tuple(map(float, line.split(' ')[-2:])))
+            migProbs.append(tuple(map(float, line.split(' ')[-2:])))
             
     return migProbs, migTimes
 
