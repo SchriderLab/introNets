@@ -82,48 +82,45 @@ def main():
             log = log_files[ix]
             out = out_files[ix]
             
-            mt, mp = read_slim_out(out)
+            mp, mt = read_slim_out(out)
+            params = np.hstack([mp, mt])
             
             x, _, y, _ = load_data_slim(ms, log, n_ind)
                 
             if args.densify:
                 x, y = remove_singletons(x, y)
             
-            f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
+            f = Formatter(x, y, params, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, y = f.format(zero = args.zero)
+            x, y, params = f.format(zero = args.zero)
         
-            comm.send([x, y, mt, mp], dest = 0)
+            comm.send([x, y, params], dest = 0)
     else:
         n_received = 0
         current_chunk = 0
 
         X = []
         Y = []
-        mts = []
-        mps = []
+        params = []
         while n_received < len(ms_files):
-            x, y, mt, mp = comm.recv(source = MPI.ANY_SOURCE)
+            x, y, p = comm.recv(source = MPI.ANY_SOURCE)
             
             X.extend(x)
             Y.extend(y)
-            mts.extend(mt)
-            mps.extend(mp)
+            params.extend(p)
             
             n_received += 1
             
             while len(X) > chunk_size:
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('{0}/mt'.format(current_chunk), data = np.array(mts[-chunk_size:], dtype = np.float32), compression = 'lzf')
-                ofile.create_dataset('{0}/mp'.format(current_chunk), data = np.array(mps[-chunk_size:], dtype = np.float32), compression = 'lzf')
+                ofile.create_dataset('{0}/params'.format(current_chunk), data = np.array(params[-chunk_size:], dtype = np.float32), compression = 'lzf')
                 
                 ofile.flush()
                 
                 del X[-chunk_size:]
                 del Y[-chunk_size:]
-                del mps[-chunk_size:]
-                del mts[-chunk_size:]
+                del params[-chunk_size:]
 
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
