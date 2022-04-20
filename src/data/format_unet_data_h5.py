@@ -82,12 +82,14 @@ def remove_singletons(x_list, y_list):
     return new_x, new_y
 
 class Formatter(object):
-    def __init__(self, x, y, shape = (2, 32, 64), pop_sizes = [150, 156], 
+    def __init__(self, x, y, p, shape = (2, 32, 64), pop_sizes = [150, 156], 
                  sorting = None, pop = None, seriation_pop = 0):
         # list of x and y arrays
         self.x = deque(x)
         if y is not None:
             self.y = deque(y)
+            
+        self.params = deque(p)
         
         self.seriation_pop = seriation_pop
         self.n_pops = shape[0]
@@ -102,9 +104,11 @@ class Formatter(object):
     def format(self, return_indices = False, continuous = False, zero = False):
         X = []
         Y = []
+        P = []
         
         while len(self.x) > 0:
             x = self.x.pop()
+            p = self.params.pop()
             
             if self.y is not None:
                 y = self.y.pop()
@@ -230,13 +234,14 @@ class Formatter(object):
                 Y.append(y)
             
             X.append(x)
+            P.append(p)
 
         if return_indices and self.y is None:
             return X[0], (x1_indices, x2_indices)
         elif return_indices:
             return X[0], Y[0], (x1_indices, x2_indices)
             
-        return X, Y
+        return X, Y, P
             
             
 def parse_args():
@@ -305,9 +310,9 @@ def main():
                 
             params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
             
-            f = Formatter(x, y, sorting = args.sorting, pop = args.pop, 
+            f = Formatter(x, y, params, sorting = args.sorting, pop = args.pop, 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, y = f.format(zero = args.zero)
+            x, y, params = f.format(zero = args.zero)
         
             comm.send([x, y, params], dest = 0)
     else:
