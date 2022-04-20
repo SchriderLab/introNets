@@ -83,6 +83,9 @@ def main():
             out = out_files[ix]
             
             mp, mt = read_slim_out(out)
+            mp = np.array(mp).reshape(-1, 2)
+            mt = np.array(mt).reshape(-1, 1)
+            
             params = np.hstack([mp, mt])
             
             x, _, y, _ = load_data_slim(ms, log, n_ind)
