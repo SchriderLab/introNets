@@ -6,7 +6,7 @@ import logging
 import glob
 import numpy as np
 
-from data_functions import load_data
+from data_functions import load_data, TwoPopAlignmentFormatter
 
 from mpi4py import MPI
 import h5py
@@ -21,228 +21,6 @@ from scipy.spatial.distance import pdist, cdist
 from scipy.optimize import linear_sum_assignment
 from scipy.interpolate import interp1d
 from collections import deque
-
-def make_continuous(x):
-    x = np.cumsum(x, axis = 1) * 2 * np.pi
-
-    mask = np.zeros(x.shape)
-    ix = list(np.where(np.diff(x) != 0))
-    ix[-1] += 1
-    mask[tuple(ix)] = 1
-    mask[:,-1] = 1
-    
-    x[mask == 0] = 0
-    t = np.array(range(x.shape[-1]))
-    
-    for k in range(len(x)):
-        ix = [0] + list(np.where(x[k] != 0)[0])
-        print(len(ix))
-        
-        t = np.array(range(np.max(ix)))
-        
-        if len(ix) > 3:
-            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
-        elif len(ix) > 2:
-            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'quadratic')(t)
-        elif len(ix) > 1:
-            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'linear')(t)
-            
-    x = np.cos(x)
-    return x
-
-def seriate_x(x):
-    Dx = pdist(x, metric = 'cosine')
-    Dx[np.where(np.isnan(Dx))] = 0.
-    ix = seriate(Dx, timeout = 0)
-
-    return x[ix], ix
-    
-def remove_singletons(x_list, y_list):
-    
-    if not len(x_list) == len(y_list):
-        
-        raise ValueError("training and truth data must have same number of chunks")
-        
-    new_x, new_y = [], []
-        
-    for idx, x in enumerate(x_list):
-        
-        y = y_list[idx]
-        
-        flt = (np.sum(x, axis=0) > 1)
-        
-        x_flt = x[:, flt]
-        
-        y_flt = y[:, flt]
-        
-        new_x.append(x_flt)
-        
-        new_y.append(y_flt)
-        
-    return new_x, new_y
-
-class Formatter(object):
-    def __init__(self, x, y, p, shape = (2, 32, 64), pop_sizes = [150, 156], 
-                 sorting = None, pop = None, seriation_pop = 0):
-        # list of x and y arrays
-        self.x = deque(x)
-        if y is not None:
-            self.y = deque(y)
-            
-        self.params = deque(p)
-        
-        self.seriation_pop = seriation_pop
-        self.n_pops = shape[0]
-        self.pop_size = shape[1]
-        self.n_sites = shape[2]
-        
-        self.pop_sizes = pop_sizes
-        self.sorting = sorting
-        self.pop = pop
-        
-    # return a list of the desired array shapes
-    def format(self, return_indices = False, continuous = False, zero = False):
-        X = []
-        Y = []
-        P = []
-        
-        while len(self.x) > 0:
-            x = self.x.pop()
-            p = self.params.pop()
-            
-            if self.y is not None:
-                y = self.y.pop()
-                
-            if x.shape[1] < self.n_sites:
-                print('not enough sites to begin with!...')
-                continue
-            
-            
-            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
-                print(x.shape, y.shape)
-                
-                print('size mismatch...continuing...')
-                continue
-            
-            # upsample the populations if need be
-            x1_indices = list(range(self.pop_sizes[0]))
-            n = self.pop_size - self.pop_sizes[0]
-            
-            if n > self.pop_sizes[0]:
-                replace = True
-            else:
-                replace = False
-            
-            if n > 0:
-                x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
-            
-            # upsample the second pop (again if needed)
-            x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
-            n = self.pop_size - self.pop_sizes[1]
-            
-            if n > self.pop_sizes[1]:
-                replace = True
-            else:
-                replace = False
-            
-            if n > 0:
-                x2_indices = x2_indices + list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), n, replace = replace))
-            
-            x1 = x[x1_indices, :]
-            x2 = x[x2_indices, :]
-            
-            if continuous:
-                x1 = make_continuous(x1)
-                x2 = make_continuous(x2)
-            
-            if self.y is not None:
-                y1 = y[x1_indices, :]
-                y2 = y[x2_indices, :]
-             
-                if self.pop == "0":
-                    yi = y1
-                elif self.pop == "1":
-                    yi = y2
-                else:
-                    yi = np.concatenate([y1, y2], axis = 0)
-             
-                if not zero:
-                    indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(yi, axis = 0) > 0)[0])))
-                    if len(indices) == 0:
-                        continue
-                else:
-                    indices = list(range(x1.shape[1] - self.n_sites + 1))
-                
-                six = np.random.choice(indices)
-                
-                x1 = x1[:,six:six + self.n_sites]
-                x2 = x2[:,six:six + self.n_sites]
-
-                y1 = y1[:,six:six + self.n_sites]
-                y2 = y2[:,six:six + self.n_sites]
-                
-                if y1.shape[1] != self.n_sites:
-                    print('didnt find the correct number of sites in y...')
-                    continue 
-            
-            if self.sorting == "seriate_match":
-                if self.seriation_pop == 0:
-                    x1, ix1 = seriate_x(x1)
-                    
-                    D = cdist(x1, x2, metric = 'cosine')
-                    D[np.where(np.isnan(D))] = 0.
-                    
-                    i, j = linear_sum_assignment(D)
-                    
-                    x2 = x2[j,:]
-                    
-                    x1_indices = [x1_indices[u] for u in ix1]
-                    x2_indices = [x2_indices[u] for u in j]
-                    
-                    if self.y is not None:
-                        y1 = y1[ix1, :]
-                        y2 = y2[j, :]
-                else:
-                    x2, ix2 = seriate_x(x2)
-                    
-                    D = cdist(x2, x1, metric = 'cosine')
-                    D[np.where(np.isnan(D))] = 0.
-                    
-                    i, j = linear_sum_assignment(D)
-                    
-                    x1 = x1[j,:]
-                    
-                    x1_indices = [x1_indices[u] for u in j]
-                    x2_indices = [x2_indices[u] for u in ix2]
-                    
-                    if self.y is not None:
-                        y1 = y1[j, :]
-                        y2 = y2[ix2, :]
-            
-            x = np.array([x1, x2])
-            
-            if self.y is not None:
-                y = np.array([y1, y2])
-            
-            if self.y is not None:
-                if self.pop:
-                    if self.pop == "0":
-                        y = np.expand_dims(y[0], axis = 0)
-                    elif self.pop == "1":
-                        y = np.expand_dims(y[1], axis = 0)
-                        
-                Y.append(y)
-            
-            X.append(x)
-            P.append(p)
-
-        if return_indices and self.y is None:
-            return X[0], (x1_indices, x2_indices)
-        elif return_indices:
-            return X[0], Y[0], (x1_indices, x2_indices)
-            
-        return X, Y, P
-            
             
 def parse_args():
     # Argument Parser
@@ -253,13 +31,13 @@ def parse_args():
     parser.add_argument("--chunk_size", default = "4")
 
     parser.add_argument("--ofile", default = "None")
-    parser.add_argument("--sorting", default = "None")
+    parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--pop_sizes", default = "150,156")
     parser.add_argument("--out_shape", default = "2,128,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
-    parser.add_argument("--zero", action = "store_true")
+    parser.add_argument("--include_zeros", action = "store_true")
     
     parser.add_argument("--pop", choices = ["0", "1"], help = "only return y values for one pop?")
 
@@ -294,27 +72,18 @@ def main():
             
             idir = idirs[ix]
             
-            try:
-                msFile = os.path.join(idir, '{}.txt'.format(idir.split('/')[-1]))
-                ancFile = os.path.join(idir, '{}.anc'.format(idir.split('/')[-1]))
-                
-                x, y, _ = load_data(msFile, ancFile)
-            except:
-                msFile = os.path.join(idir, 'mig.msOut')
-                ancFile = os.path.join(idir, 'out.anc')
-                
-                x, y, _ = load_data(msFile, ancFile)
-                
-            if args.densify:
-                x, y = remove_singletons(x, y)
+            msFile = os.path.join(idir, 'mig.msOut')
+            ancFile = os.path.join(idir, 'out.anc')
+            
+            x, y, _ = load_data(msFile, ancFile)
                 
             params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
             
-            f = Formatter(x, y, params, sorting = args.sorting, pop = args.pop, 
+            f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, pop = int(args.pop), 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, y, params = f.format(zero = args.zero)
+            f.format(include_zeros = args.include_zeros)
         
-            comm.send([x, y, params], dest = 0)
+            comm.send([f.x, f.y, f.p], dest = 0)
     else:
         n_received = 0
         current_chunk = 0
