@@ -230,7 +230,7 @@ class TwoPopAlignmentFormatter(object):
             else:
                 Y = None
             
-            if self.params is not None:
+            if self.p is not None:
                 P.append(p)
             else:
                 P = None
