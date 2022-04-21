@@ -6,6 +6,244 @@ import gzip
 from scipy.spatial.distance import pdist
 from calc_stats_ms import N_ton, distance_vector, min_dist_ref, s_star_ind, num_private, label
 
+from seriate import seriate
+from scipy.spatial.distance import pdist, cdist
+
+from scipy.optimize import linear_sum_assignment
+from scipy.interpolate import interp1d
+from collections import deque
+
+import logging
+
+def make_continuous(x):
+    x = np.cumsum(x, axis = 1) * 2 * np.pi
+
+    mask = np.zeros(x.shape)
+    ix = list(np.where(np.diff(x) != 0))
+    ix[-1] += 1
+    mask[tuple(ix)] = 1
+    mask[:,-1] = 1
+    
+    x[mask == 0] = 0
+    t = np.array(range(x.shape[-1]))
+    
+    for k in range(len(x)):
+        ix = [0] + list(np.where(x[k] != 0)[0])
+        print(len(ix))
+        
+        t = np.array(range(np.max(ix)))
+        
+        if len(ix) > 3:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'cubic')(t)
+        elif len(ix) > 2:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'quadratic')(t)
+        elif len(ix) > 1:
+            x[k,:len(t)] = interp1d(ix, x[k,ix], kind = 'linear')(t)
+            
+    x = np.cos(x)
+    return x
+
+def seriate_x(x):
+    Dx = pdist(x, metric = 'cosine')
+    Dx[np.where(np.isnan(Dx))] = 0.
+    ix = seriate(Dx, timeout = 0)
+
+    return x[ix], ix
+
+#### TwoPopAlignmentFormatter
+## Class to take MS or SLiM output of alignments from two-pop simulations and filter and format them.
+## this class is to be used after actually reading the files with the I/O functions below.
+# expects:
+    ## x - (list) of numpy arrays of binary alignments
+    ## y - (list or None) of numpy arrays of the segmented alignments 
+    ## p - (list or None) of relevant params (elements are array like) we wish to correspond to the formatted data returned
+    ## shape - (tuple) desired output shape (channels, individuals, sites) or the predictor X variable.  The last two dimensions will match Y
+    ## pop_sizes - (tuple) pop sizes of each population (we expect two here)
+    ## sorting - (str) type of sorting to perform during formatting.  The only supported options r.n. are seriate_match or None
+    ## pop - (int or None) which population to save in the channels output of the Y variable. [0 or 1]
+class TwoPopAlignmentFormatter(object):
+    def __init__(self, x, y = None, p = None, shape = (2, 32, 64), pop_sizes = [150, 156], 
+                 sorting = 'seriate_match', pop = None, seriation_pop = 0):
+        # list of x and y arrays
+        self.x = deque(x)
+        if y is not None:
+            self.y = deque(y)
+        else:
+            self.y = y
+            
+        if p is not None:
+            self.params = deque(p)
+        else:
+            self.params = p
+        
+        self.seriation_pop = seriation_pop
+        self.n_pops = shape[0]
+        self.pop_size = shape[1]
+        self.n_sites = shape[2]
+        
+        self.pop_sizes = pop_sizes
+        self.sorting = sorting
+        self.pop = pop
+        
+        self.iter = 0
+        
+    # splits and upsamples the sub-populations if needed
+    def resample_split(self, x):
+        # upsample the populations if need be
+        x1_indices = list(range(self.pop_sizes[0]))
+        n = self.pop_size - self.pop_sizes[0]
+        
+        if n > self.pop_sizes[0]:
+            replace = True
+        else:
+            replace = False
+        
+        if n > 0:
+            x1_indices = x1_indices + list(np.random.choice(range(self.pop_sizes[0]), n, replace = replace))
+        
+        # upsample the second pop (again if needed)
+        x2_indices = list(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]))
+        n = self.pop_size - self.pop_sizes[1]
+        
+        if n > self.pop_sizes[1]:
+            replace = True
+        else:
+            replace = False
+        
+        if n > 0:
+            x2_indices = x2_indices + list(np.random.choice(range(self.pop_sizes[0], self.pop_sizes[0] + self.pop_sizes[1]), n, replace = replace))
+        
+        x1 = x[x1_indices, :]
+        x2 = x[x2_indices, :]
+        
+        return x1, x2, x1_indices, x2_indices
+
+    # store a list of the desired arrays
+    ## args:
+        # include_zeros: (bool) whether to include random samples that have no-introgression (no positive pixels)
+    def format(self, include_zeros = False):
+        X = []
+        Y = []
+        P = []
+        indices = []
+        
+        while len(self.x) > 0:
+            x = self.x.pop()
+            if self.p is not None:
+                p = self.params.pop()
+            
+            if self.y is not None:
+                y = self.y.pop()
+                
+            if x.shape[1] < self.n_sites:
+                logging.debug('while formatting, found iter {} to have to few sites to format.  Given MS will return a varying amount of segregating sites per sim, this is expected. \n However if you find this to happen too often try increasing the mutation rate or the size of the simulated chromosomes.'.format(self.iter))
+                continue
+            
+            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
+                logging.debug('while formatting, found iter {} to have mismatched shape! \n This could be due to the a misspecification of the expected size for these sims i.e. pop_sizes...'.format(self.iter))
+                continue
+            
+            x1, x2, x1_indices, x2_indices = self.resample_split(x)
+            
+            # in this block we down-sample by randomly selecting a window of the desired size from the simulation replicate
+            if self.y is not None:
+                y1 = y[x1_indices, :]
+                y2 = y[x2_indices, :]
+             
+                if self.pop == 0:
+                    yi = y1
+                elif self.pop == 1:
+                    yi = y2
+                else:
+                    yi = np.concatenate([y1, y2], axis = 0)
+             
+                if not include_zeros:
+                    indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(yi, axis = 0) > 0)[0])))
+                    if len(indices) == 0:
+                        continue
+                else:
+                    indices = list(range(x1.shape[1] - self.n_sites + 1))
+                
+                six = np.random.choice(indices)
+
+                y1 = y1[:,six:six + self.n_sites]
+                y2 = y2[:,six:six + self.n_sites]
+                
+                if y1.shape[1] != self.n_sites:
+                    print('didnt find the correct number of sites in y...')
+                    continue 
+            else:
+                indices = list(range(x1.shape[1] - self.n_sites + 1))
+                six = np.random.choice(indices)
+                
+            x1 = x1[:,six:six + self.n_sites]
+            x2 = x2[:,six:six + self.n_sites]
+                
+            #### do sorting ------
+            if self.sorting == "seriate_match":
+                if self.seriation_pop == 0:
+                    x1, ix1 = seriate_x(x1)
+                    
+                    D = cdist(x1, x2, metric = 'cosine')
+                    D[np.where(np.isnan(D))] = 0.
+                    
+                    i, j = linear_sum_assignment(D)
+                    
+                    x2 = x2[j,:]
+                    
+                    x1_indices = [x1_indices[u] for u in ix1]
+                    x2_indices = [x2_indices[u] for u in j]
+                    
+                    if self.y is not None:
+                        y1 = y1[ix1, :]
+                        y2 = y2[j, :]
+                else:
+                    x2, ix2 = seriate_x(x2)
+                    
+                    D = cdist(x2, x1, metric = 'cosine')
+                    D[np.where(np.isnan(D))] = 0.
+                    
+                    i, j = linear_sum_assignment(D)
+                    
+                    x1 = x1[j,:]
+                    
+                    x1_indices = [x1_indices[u] for u in j]
+                    x2_indices = [x2_indices[u] for u in ix2]
+                    
+                    if self.y is not None:
+                        y1 = y1[j, :]
+                        y2 = y2[ix2, :]
+            
+            x = np.array([x1, x2])
+            
+            if self.y is not None:
+                y = np.array([y1, y2])
+            
+            if self.y is not None:
+                if self.pop:
+                    if self.pop == 0:
+                        y = np.expand_dims(y[0], axis = 0)
+                    elif self.pop == 1:
+                        y = np.expand_dims(y[1], axis = 0)
+                        
+                Y.append(y)
+            else:
+                Y = None
+            
+            if self.params is not None:
+                P.append(p)
+            else:
+                P = None
+            
+            X.append(x)
+            indices.append((x1_indices, x2_indices))
+            
+        self.x = X
+        self.y = Y
+        self.indices = indices
+        self.p = P
+        
+# Numpy version of:
 def batch_dot(W, x):
     # dot product for a batch of examples
     return np.einsum("ijk,ki->ji", np.tile(W, (len(x), 1, 1)), x.T).T
@@ -197,15 +435,15 @@ def split(word):
 # generic function for msmodified
 # ----------------
 def load_data(msFile, ancFile, leave_out_last = False):
-    msFile = open(msFile, 'r')
+    msFile = gzip.open(msFile, 'r')
 
     # no migration case
     try:
-        ancFile = open(ancFile, 'r')
+        ancFile = gzip.open(ancFile, 'r')
     except:
         ancFile = None
 
-    ms_lines = msFile.readlines()
+    ms_lines = [u.decode('utf-8') for u in msFile.readlines()]
 
     if leave_out_last:
         ms_lines = ms_lines[:-1]
@@ -219,7 +457,7 @@ def load_data(msFile, ancFile, leave_out_last = False):
     ms_chunks[-1] += ['\n']
 
     if ancFile is not None:
-        anc_lines = ancFile.readlines()
+        anc_lines = [u.decode('utf-8') for u in ancFile.readlines()]
     else:
         anc_lines = None
         
