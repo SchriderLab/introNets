@@ -72,8 +72,8 @@ def main():
             
             idir = idirs[ix]
             
-            msFile = os.path.join(idir, 'mig.msOut')
-            ancFile = os.path.join(idir, 'out.anc')
+            msFile = os.path.join(idir, 'mig.msOut.gz')
+            ancFile = os.path.join(idir, 'out.anc.gz')
             
             x, y, _ = load_data(msFile, ancFile)
                 
