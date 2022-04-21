@@ -405,11 +405,6 @@ def load_data_slim(msfile, introgressfile, nindv):
     
     return f, pos, target, igD
 
-def seriate_x(x):
-    Dx = pdist(x, metric = 'cosine')
-    Dx[np.where(np.isnan(Dx))] = 0.
-    ix = seriate(Dx)
-
 def load_npz(ifile):
     ifile = np.load(ifile)
     pop1_x = ifile['simMatrix'].T
