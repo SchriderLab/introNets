@@ -72,9 +72,9 @@ class TwoPopAlignmentFormatter(object):
             self.y = y
             
         if p is not None:
-            self.params = deque(p)
+            self.p = deque(p)
         else:
-            self.params = p
+            self.p = p
         
         self.seriation_pop = seriation_pop
         self.n_pops = shape[0]
@@ -130,7 +130,7 @@ class TwoPopAlignmentFormatter(object):
         while len(self.x) > 0:
             x = self.x.pop()
             if self.p is not None:
-                p = self.params.pop()
+                p = self.p.pop()
             
             if self.y is not None:
                 y = self.y.pop()
