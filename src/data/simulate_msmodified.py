@@ -113,7 +113,7 @@ def main():
                     os.system('mkdir -p {}'.format(odir))
                     
                     if args.mt_range != "None":
-                        mt_range = tuple(list(map(int, args.mt_range.split(','))))
+                        mt_range = tuple(list(map(float, args.mt_range.split(','))))
                         
                         # replace mean migTime and the rest with a uniformly random distribution around it
                         migTime = np.random.uniform(mt_range[0], mt_range[1], (P.shape[0], ))
@@ -123,7 +123,7 @@ def main():
                     rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
                     
                     if args.t_range != "None":
-                        t_range = tuple(list(map(int, args.t_range.split(','))))
+                        t_range = tuple(list(map(float, args.t_range.split(','))))
                         
                         T = copy.copy(P[:,-4])
                         
