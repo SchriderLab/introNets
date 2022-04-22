@@ -128,12 +128,15 @@ def main():
                         T = copy.copy(P[:,-4])
                         
                         # rescale alpha1 and alpha2
-                        P[:,[4,5]] *= T
+                        P[:,4] *= T
+                        P[:,5] *= T
                         
                         P[:,-4] = np.random.uniform(t_range[0], t_range[1], (P.shape[0], ))
                         P[:,-4] /= (4*Nref / 15.)
                         
-                        P[:,[4,5]] /= P[:,-4]
+                        # rescale alpha1 and alpha2
+                        P[:,4] /= P[:,-4]
+                        P[:,5] /= P[:,-4]
                     
                     P[:,-1] = migTime * P[:,-4]
                     P[:,-3] = migTime * P[:,-4]

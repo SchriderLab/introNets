@@ -44,6 +44,8 @@ def main():
             odir = os.path.join(args.odir, '{0}_{1}'.format(i, j))
             
             cmd_ = cmd.format('{0},{1}'.format(mt[j], mt[j + 1]), '{0},{1}'.format(st[i], st[i + 1]), odir)
+            
+            print(cmd_)
             os.system(cmd_)
             
     # ${code_blocks}
