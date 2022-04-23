@@ -6,7 +6,7 @@ import logging
 import glob
 import numpy as np
 
-from data_functions import load_data, TwoPopAlignmentFormatter
+from data_functions import load_data, TwoPopAlignmentFormatter, load_data_slim, read_slim_out
 
 from mpi4py import MPI
 import h5py
@@ -61,23 +61,47 @@ def main():
         ofile = h5py.File(args.ofile, 'w')
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*')))]
+    if all([('.' in u) for u in idirs]):
+        ms_files = sorted(glob.glob(os.path.join(args.idir, '*.msOut.gz')))
+        anc_files = sorted(glob.glob(os.path.join(args.idir, '*.log.gz')))
+        log_files = sorted(glob.glob(os.path.join(args.idir, '*.out')))
+
+        idirs = zip(ms_files, anc_files, log_files)
+        slim = True
+    else:
+        slim = False
+        
     chunk_size = int(args.chunk_size)
     
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
+    
+    n_ind = sum(pop_sizes)
 
     if comm.rank != 0:
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
             logging.info('{0}: on {1}...'.format(comm.rank, ix))
             
-            idir = idirs[ix]
-            
-            msFile = os.path.join(idir, 'mig.msOut.gz')
-            ancFile = os.path.join(idir, 'out.anc.gz')
-            
-            x, y, _ = load_data(msFile, ancFile)
+            # are we formatting SLiM or MS data?  
+            # auto-detected above
+            if not slim:
+                idir = idirs[ix]
                 
-            params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
+                msFile = os.path.join(idir, 'mig.msOut.gz')
+                ancFile = os.path.join(idir, 'out.anc.gz')
+                
+                x, y, _ = load_data(msFile, ancFile)
+                params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
+                
+            else:
+                msFile, ancFile, out = idirs[ix]
+                
+                mp, mt = read_slim_out(out)
+                mp = np.array(mp).reshape(-1, 2)
+                mt = np.array(mt).reshape(-1, 1)
+                
+                params = np.hstack([mp, mt])
+                x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
             f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, pop = int(args.pop), 
                           pop_sizes = pop_sizes, shape = out_shape)
@@ -119,3 +143,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    
+# mpirun python3 src/data/format.py --idir /pine/scr/d/d/ddray/dros_sims/AB --out_shape 2,32,128 --pop_sizes 20,14 --ofile /pine/scr/d/d/ddray/dros_sims/AB_n128.hdf5 pop 1

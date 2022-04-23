@@ -403,7 +403,7 @@ def load_data_slim(msfile, introgressfile, nindv):
 
         target.append(np.array(mask_mat, dtype='int8'))
     
-    return f, pos, target, igD
+    return f, pos, target
 
 def load_npz(ifile):
     ifile = np.load(ifile)
