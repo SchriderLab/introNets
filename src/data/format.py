@@ -71,6 +71,10 @@ def main():
     else:
         slim = False
         
+    if comm.rank == 0:
+        print(len(idirs))
+        print(idirs)
+        
     chunk_size = int(args.chunk_size)
     
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
