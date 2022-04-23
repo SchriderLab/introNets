@@ -62,7 +62,7 @@ def main():
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*')))]
     if all([('.' in u) for u in idirs]):
-        ms_files = sorted(glob.glob(os.path.join(args.idir, '*.msOut.gz')))
+        ms_files = sorted(glob.glob(os.path.join(args.idir, '*.ms.gz')))
         anc_files = sorted(glob.glob(os.path.join(args.idir, '*.log.gz')))
         log_files = sorted(glob.glob(os.path.join(args.idir, '*.out')))
 
