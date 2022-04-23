@@ -66,7 +66,7 @@ def main():
         anc_files = sorted(glob.glob(os.path.join(args.idir, '*.log.gz')))
         log_files = sorted(glob.glob(os.path.join(args.idir, '*.out')))
 
-        idirs = zip(ms_files, anc_files, log_files)
+        idirs = list(zip(ms_files, anc_files, log_files))
         slim = True
     else:
         slim = False
