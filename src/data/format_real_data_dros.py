@@ -9,7 +9,7 @@ import configparser
 from mpi4py import MPI
 import sys
 
-from format_unet_data_h5 import Formatter
+from data_functions import TwoPopAlignmentFormatter
 
 def parse_args():
     # Argument Parser
@@ -26,7 +26,7 @@ def parse_args():
     parser.add_argument("--sorting", default = "seriate_match")
     
     parser.add_argument("--pop_sizes", default = "20,14")
-    parser.add_argument("--out_shape", default = "2,32,64")
+    parser.add_argument("--out_shape", default = "2,32,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
 
@@ -50,7 +50,6 @@ def main():
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
     
     w_size = out_shape[-1]
-    
     pop_size = out_shape[1]  
 
     if comm.rank == 0:
@@ -120,13 +119,15 @@ def main():
             x = X[:,ix:ix + w_size]
 
             p = positions[ix:ix + w_size]
-            pi = range(ix, ix + w_size)
+            pi = range(ix,ix + w_size)
 
-            f = Formatter([x], None, sorting = args.sorting, pop = 0, 
+            f = TwoPopAlignmentFormatter([x], None, None, sorting = args.sorting, pop = int(args.pop), 
                           pop_sizes = pop_sizes, shape = out_shape)
-            x, i1 = f.format(True)
+            f.format(include_zeros = args.include_zeros)
+        
+            comm.send([f.x, f.y, f.p], dest = 0)
 
-            comm.send([x, p, pi, i1], dest=0)
+            comm.send([f.x, p, pi, np.array(f.indices, dtype = np.int32)], dest=0)
 
     else:
         X = None
