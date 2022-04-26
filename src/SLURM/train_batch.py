@@ -46,7 +46,7 @@ def main():
         cmd_ = cmd.format(args.config, ifile, args.odir, tag)
         print(cmd_)
         
-        #os.system(cmd_)
+        os.system(cmd_)
 
 if __name__ == '__main__':
     main()
