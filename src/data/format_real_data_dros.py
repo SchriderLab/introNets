@@ -121,12 +121,11 @@ def main():
             p = positions[ix:ix + w_size]
             pi = range(ix,ix + w_size)
 
-            f = TwoPopAlignmentFormatter([x], None, None, sorting = args.sorting, pop = int(args.pop), 
+            f = TwoPopAlignmentFormatter([x], None, None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
             f.format(include_zeros = args.include_zeros)
         
             comm.send([f.x, f.y, f.p], dest = 0)
-
             comm.send([f.x, p, pi, np.array(f.indices, dtype = np.int32)], dest=0)
 
     else:
