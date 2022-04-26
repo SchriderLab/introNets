@@ -125,6 +125,8 @@ def main():
                           pop_sizes = pop_sizes, shape = out_shape)
             f.format()
     
+            print(f.x[0].shape)
+    
             comm.send([f.x, p, pi, np.array(f.indices, dtype = np.int32)], dest=0)
 
     else:
