@@ -123,7 +123,7 @@ def main():
 
             f = TwoPopAlignmentFormatter([x], None, None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
-            f.format(include_zeros = args.include_zeros)
+            f.format()
         
             comm.send([f.x, f.y, f.p], dest = 0)
             comm.send([f.x, p, pi, np.array(f.indices, dtype = np.int32)], dest=0)
