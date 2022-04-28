@@ -107,6 +107,9 @@ def main():
                 params = np.hstack([mp, mt])
                 x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
+            if len(y) == 0:
+                y = None
+                
             f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, pop = int(args.pop), 
                           pop_sizes = pop_sizes, shape = out_shape)
             f.format(include_zeros = args.include_zeros)
@@ -115,12 +118,19 @@ def main():
     else:
         n_received = 0
         current_chunk = 0
+        
+        no_y = False
 
         X = []
         Y = []
         params = []
         while n_received < len(idirs):
             x, y, p = comm.recv(source = MPI.ANY_SOURCE)
+            
+            if y is None:
+                no_y = True
+            else:
+                Y.extend(y)
             
             X.extend(x)
             Y.extend(y)
@@ -129,14 +139,15 @@ def main():
             n_received += 1
             
             while len(X) > chunk_size:
-                ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
-                ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
+                if not no_y:
+                    ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
+                    del Y[-chunk_size:]
+                    
                 ofile.create_dataset('{0}/params'.format(current_chunk), data = np.array(params[-chunk_size:], dtype = np.float32), compression = 'lzf')
-                
+                ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.flush()
                 
                 del X[-chunk_size:]
-                del Y[-chunk_size:]
                 del params[-chunk_size:]
 
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
