@@ -209,7 +209,7 @@ def main():
         val_loss = np.mean(val_losses)
         if val_loss < min_val_loss:
             min_val_loss = val_loss
-            print('saving weights...')
+            logging.info('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
 
             early_count = 0
@@ -220,8 +220,9 @@ def main():
             if early_count > int(args.n_early):
                 break
 
-        if lr_scheduler is None:
+        if lr_scheduler is not None:
             lr_scheduler.step()
+        
         generator.on_epoch_end()
 
         df = pd.DataFrame(history)
