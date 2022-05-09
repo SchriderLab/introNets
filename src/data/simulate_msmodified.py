@@ -117,14 +117,14 @@ def main():
                         
                         # replace mean migTime and the rest with a uniformly random distribution around it
                         migTime = np.random.uniform(mt_range[0], mt_range[1], (P.shape[0], ))
-                    
+                    else:
+                        migTime = np.random.uniform(0., 0.1, (P.shape[0], ))
                     
                     migProb = 1 - np.random.uniform(0., 1.0, (P.shape[0], ))
                     rho = np.random.uniform(0.1, 0.3, (P.shape[0], ))
                     
                     if args.t_range != "None":
                         t_range = tuple(list(map(float, args.t_range.split(','))))
-                        
                         T = copy.copy(P[:,-4])
                         
                         # rescale alpha1 and alpha2
