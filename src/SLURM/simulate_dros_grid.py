@@ -34,7 +34,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    cmd = 'python3 src/data/simulate_msmodified.py --mt_range {0} --t_range {1} --odir {2} --n_jobs 25 --n_samples 100 --slurm --ifile params.txt'
+    cmd = 'python3 src/data/simulate_msmodified.py --mt_range {0} --t_range {1} --odir {2} --n_jobs 10 --n_samples 250 --slurm --ifile params.txt'
     
     st = np.linspace(45000, 105000, 5)
     mt = np.array([0.  , 0.05, 0.1 , 0.15, 0.2 ])
