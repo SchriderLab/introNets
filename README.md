@@ -1,5 +1,20 @@
 # introNets
-Repo to test UNets' ability for inference of introgressed alleles from population genetic alignments.
+Repository for replicating the work in "Detecting introgression at SNP-resolution via
+U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
+
+## Tutorial
+
+### A toy example
+The first example we give in the paper is simple two-population demographic model.
+
+Simulating data (make 1000 examples locally):
+```
+python3 src/data/simulate_slim.py --direction ab --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
+python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
+python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 1 --n_replicates 1000 --local
+```
+
+Removing the "--local" arg would submit the simulation commands to SLURM through ```sbatch```. 
 
 Formatting simulated data (no sorting as of yet):
 ```
