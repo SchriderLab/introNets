@@ -1,5 +1,51 @@
 # introNets
-Repo to test UNets' ability for inference of introgressed alleles from population genetic alignments.
+Repository for replicating the work in "Detecting introgression at SNP-resolution via
+U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
+
+## Tutorial
+
+### A toy example
+The first example we give in the paper is simple two-population demographic model.
+
+Simulating data (make 1000 examples locally):
+```
+python3 src/data/simulate_slim.py --direction ab --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
+python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
+python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 1 --n_replicates 1000 --local
+```
+
+Removing the "--local" arg would submit the simulation commands to SLURM through ```sbatch```. 
+
+Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
+```
+mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128
+```
+
+Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
+We can now train our model:
+```
+python3 src/models/train.py --ifile ab.hdf5 --config training_configs/toy_AB.config --odir ab_training --tag iter1
+```
+
+The ```--config``` option is passed a config file that we include with our repo that has training settings like batch size and learning rate as well as others:
+
+```
+[model_params]
+# the number of channels in the output image
+n_classes = 1 
+
+[training_params]
+batch_size = 16
+n_epochs = 100
+lr = 0.001
+# exponential decay of learning rate
+schedule = exponential
+exp_decay = 0.96
+pos_bce_logits_weight = 0.5
+# whether to label smooth and the upper bound of the uniform random noise used to do so
+label_smooth = True
+label_noise = 0.01
+```
 
 Formatting simulated data (no sorting as of yet):
 ```
