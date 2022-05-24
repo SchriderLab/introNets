@@ -16,6 +16,15 @@ python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 1 --n_r
 
 Removing the "--local" arg would submit the simulation commands to SLURM through ```sbatch```. 
 
+Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
+```
+mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128
+```
+
+Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
+
+
+
 Formatting simulated data (no sorting as of yet):
 ```
 # spread over 24 cores
