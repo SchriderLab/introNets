@@ -7,6 +7,7 @@ import logging
 
 from data_functions import writeTbsFile
 import copy
+import subprocess
 
 # this function creates an array for writing to text that has the ms parameters
 # from a CSV file produced via bootstrapped DADI runs
@@ -50,7 +51,7 @@ def parse_args():
     parser.add_argument("--n_samples", default = "1000", help = "number of alignments to simulate per job")
     parser.add_argument("--n_jobs", default = "1", help = "number of jobs.  If your on a system without SLURM, then this should be left to 1 (default)")
     
-    parser.add_argument("--ifile", default = "None", help = "CSV file of bootstrapped demographic estimates. only applicable for the drosophila case; --model dros")
+    parser.add_argument("--ifile", default = "params.txt", help = "CSV file of bootstrapped demographic estimates. only applicable for the drosophila case; --model dros")
     
     parser.add_argument("--model", default = "dros", help = "model you'd like to simulate. current options our 'archie' and 'dros'")
     parser.add_argument("--direction", default = "ab", help = "directionality of migration. only applicable for the drosophila case; --model dros")
@@ -60,6 +61,8 @@ def parse_args():
     
     parser.add_argument("--mt_range", default = "None")
     parser.add_argument("--t_range", default = "None")
+    
+    parser.add_argument("--trees", action = "store_true")
 
     parser.add_argument("--odir", default = "None", help = "directory for the ms output and logs to be written to")
     args = parser.parse_args()
@@ -102,8 +105,6 @@ def main():
                 # size of the populations
                 SIZE_A = 20
                 SIZE_B = 14
-                
-                L = 10000
                 
                 P, ll, Nref = parameters_df(df, ix, 1., 0., 0., n)
                 if ll > -2000:
@@ -151,29 +152,41 @@ def main():
                         
                     # direction + wtrees (if you desire the output as a series of genealogical trees)
                     # in the case of genealogical trees, we use regular ms as we observed an error in msmodified when trying...
-                    if args.direction == 'ab':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                    elif args.direction == 'ba':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                    elif args.direction == 'none':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                    elif args.direction == 'ab_wtrees':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                    elif args.direction == 'ba_wtrees':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
-                    elif args.direction == 'none_wtrees':
-                        cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs -T < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    if not args.trees:
+                        if args.direction == 'ab':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                        elif args.direction == 'ba':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msmodified/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                        elif args.direction == 'none':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    else:
+                        if args.direction == 'ab':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -L -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 2 tbs -ej tbs 3 1 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                        elif args.direction == 'ba':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -L -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -es tbs 1 tbs -ej tbs 3 2 -seeds tbs tbs tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                        elif args.direction == 'none':
+                            cmd = "cd %s; %s %d %d -t tbs -r tbs %d -T -L -I 2 %d %d -n 1 tbs -n 2 tbs -eg 0 1 tbs -eg 0 2 tbs -ma x tbs tbs x -ej tbs 2 1 -en tbs 1 1 -seed tbs < %s | tee %s" % (odir, os.path.join(os.getcwd(), 'msdir/ms'), SIZE_A + SIZE_B, len(P), L, SIZE_A, SIZE_B, 'mig.tbs', 'mig.msOut')
+                    
+                    # example command:
+                    # 34 1 -t 58.3288 -r 365.8836 10000 -T -L -I 2 20 14 -n 1 18.8855 -n 2 0.05542 -eg 0 1 6.5160 -eg 0 2 -7.5960 -ma x 0.0 0.0 x -ej 0.66698 2 1 -en 0.66698 1 1 -es 0.02080 2 0.343619 -ej 0.02080 3 1 -seeds 12674 8050 3617
                     
                     # print the command, do the command, gzip the outputs
                     cmd = "echo '{0}' && {0} && gzip mig.msOut out.anc".format(cmd)
-                    print('simulating via the recommended parameters...')
+                    print('simulating for parameters: {}'.format(P))
                     sys.stdout.flush()
                     
                     if args.slurm:
                         fout = os.path.join(odir, 'slurm.out')
                         cmd = slurm_cmd.format(fout, cmd)
                         
-                    os.system(cmd)
+                        print(cmd)
+                        os.system(cmd)
+                    else:
+                        print(cmd)
+                        
+                        # New process, connected to the Python interpreter through pipes:
+                        prog = subprocess.Popen(cmd, shell = True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        prog.communicate()
         
         elif args.model == 'archie':
             T = 5e-4 * L
@@ -182,8 +195,16 @@ def main():
             
             seeds = np.random.randint(0, 2**14, size = (3,))
             
-            cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
+            odir = os.path.join(args.odir, 'iter{0:06d}'.format(counter))
+            os.system('mkdir -p {}'.format(odir))
+            counter += 1
         
+            if not args.trees:
+                cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msmodified/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
+            else:
+                cmd = "cd {0}; {1} 202 {2} -t {3} -r {4} {5} -T -I 4 100 100 1 1 g  -en 0 1 1  -es 0.05 1 {6} -ej 0.05 5 3  -ej 0.0625 2 1 -en 0.15 3 0.01 -en 0.153 3 1 -ej 0.175 4 3 -ej 0.3 3 1 -seeds {7} {8} {9} | tee mig.msOut".format(odir, os.path.join(os.getcwd(), 'msdir/ms'), n, T, R, L, A, seeds[0], seeds[1], seeds[2])
+        
+            print(cmd)
             cmd = "echo '{0}' && {0} && gzip mig.msOut out.anc".format(cmd)
             print('simulating via the recommended parameters...')
             sys.stdout.flush()
