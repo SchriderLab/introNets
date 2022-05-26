@@ -14,6 +14,7 @@ from scipy.interpolate import interp1d
 from collections import deque
 
 import logging
+import time
 
 def make_continuous(x):
     x = np.cumsum(x, axis = 1) * 2 * np.pi
@@ -43,8 +44,8 @@ def make_continuous(x):
     x = np.cos(x)
     return x
 
-def seriate_x(x):
-    Dx = pdist(x, metric = 'cosine')
+def seriate_x(x, metric = 'cosine'):
+    Dx = pdist(x, metric = metric)
     Dx[np.where(np.isnan(Dx))] = 0.
     ix = seriate(Dx, timeout = 0)
 
@@ -63,7 +64,7 @@ def seriate_x(x):
     ## pop - (int or None) which population to save in the channels output of the Y variable. [0 or 1]
 class TwoPopAlignmentFormatter(object):
     def __init__(self, x, y = None, p = None, shape = (2, 32, 64), pop_sizes = [150, 156], 
-                 sorting = 'seriate_match', pop = None, seriation_pop = 0):
+                 sorting = 'seriate_match', sorting_metric = 'cosine', pop = None, seriation_pop = 0):
         # list of x and y arrays
         self.x = deque(x)
         if y is not None:
@@ -84,6 +85,7 @@ class TwoPopAlignmentFormatter(object):
         self.pop_sizes = pop_sizes
         self.sorting = sorting
         self.pop = pop
+        self.metric = sorting_metric
         
         self.iter = 0
         
@@ -125,7 +127,10 @@ class TwoPopAlignmentFormatter(object):
         X = []
         Y = []
         P = []
-        indices = []
+        Indices = []
+        
+        t_seriation = []
+        t_matching = []
         
         while len(self.x) > 0:
             x = self.x.pop()
@@ -137,10 +142,6 @@ class TwoPopAlignmentFormatter(object):
                 
             if x.shape[1] < self.n_sites:
                 logging.debug('while formatting, found iter {} to have to few sites to format.  Given MS will return a varying amount of segregating sites per sim, this is expected. \n However if you find this to happen too often try increasing the mutation rate or the size of the simulated chromosomes.'.format(self.iter))
-                continue
-            
-            if x.shape[0] != sum(self.pop_sizes) or y.shape[0] != sum(self.pop_sizes):
-                logging.debug('while formatting, found iter {} to have mismatched shape! \n This could be due to the a misspecification of the expected size for these sims i.e. pop_sizes...'.format(self.iter))
                 continue
             
             x1, x2, x1_indices, x2_indices = self.resample_split(x)
@@ -182,12 +183,19 @@ class TwoPopAlignmentFormatter(object):
             #### do sorting ------
             if self.sorting == "seriate_match":
                 if self.seriation_pop == 0:
-                    x1, ix1 = seriate_x(x1)
+                    # time the seriation operation
+                    t0 = time.time()
                     
-                    D = cdist(x1, x2, metric = 'cosine')
+                    x1, ix1 = seriate_x(x1, self.metric)
+                    t_ser = time.time() - t0
+                    
+                    # time the least cost linear matching
+                    t0 = time.time()
+                    D = cdist(x1, x2, metric = self.metric)
                     D[np.where(np.isnan(D))] = 0.
                     
                     i, j = linear_sum_assignment(D)
+                    t_match = time.time() - t0
                     
                     x2 = x2[j,:]
                     
@@ -198,12 +206,18 @@ class TwoPopAlignmentFormatter(object):
                         y1 = y1[ix1, :]
                         y2 = y2[j, :]
                 else:
-                    x2, ix2 = seriate_x(x2)
+                    # time the seriation operation
+                    t0 = time.time()
                     
-                    D = cdist(x2, x1, metric = 'cosine')
+                    x2, ix2 = seriate_x(x2, self.metric)
+                    t_ser = time.time() - t0
+                    
+                    t0 = time.time()
+                    D = cdist(x2, x1, metric = self.metric)
                     D[np.where(np.isnan(D))] = 0.
                     
                     i, j = linear_sum_assignment(D)
+                    t_match = time.time() - t0
                     
                     x1 = x1[j,:]
                     
@@ -213,6 +227,9 @@ class TwoPopAlignmentFormatter(object):
                     if self.y is not None:
                         y1 = y1[j, :]
                         y2 = y2[ix2, :]
+                
+                t_seriation.append(t_ser)
+                t_matching.append(t_match)
             
             x = np.array([x1, x2])
             
@@ -235,13 +252,15 @@ class TwoPopAlignmentFormatter(object):
             else:
                 P = None
             
-            X.append(x)
-            indices.append((x1_indices, x2_indices))
+            X.append(x)            
+            Indices.append((x1_indices, x2_indices))
             
         self.x = X
         self.y = Y
-        self.indices = indices
+        self.indices = Indices
         self.p = P
+        
+        self.time = (t_seriation, t_matching)
         
 # Numpy version of:
 def batch_dot(W, x):
@@ -286,13 +305,33 @@ def get_feature_vector(mutation_positions, genotypes, ref_geno, arch):
 
     # individual level
     for focal_idx in range(0, n_samples):
+        t0 = time.time()
         calc_N_ton = N_ton(genotypes, n_samples, focal_idx)
+        #print('calc_N_ton: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         dist = distance_vector(genotypes, focal_idx)
+        #print('dist: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         min_d = [min_dist_ref(genotypes, ref_geno, focal_idx)]
+        #print('min_d: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         ss = [s_star_ind(np.array(s_star_haps), np.array(mutation_positions), focal_idx)]
+        #print('ss: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         n_priv = [num_private(np.array(s_star_haps), focal_idx)]
+        #print('n_priv: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         focal_arch = [row[focal_idx] for row in arch]
+        #print('focal_arch: {}'.format(time.time() - t0))
+        
+        t0 = time.time()
         lab = label(focal_arch, mutation_positions, n_sites, 0.7, 0.3)
+        #print('label: {}'.format(time.time() - t0))
 
         output = calc_N_ton + dist + min_d + ss + n_priv + lab
         ret.append(output)
@@ -382,6 +421,7 @@ def load_data_slim(msfile, introgressfile, nindv):
         q = []
         kdx = 1
         for i in L:
+            
             i = [int(j) for j in i[0]]
 
             i = np.array(i, dtype=np.int8)
@@ -429,7 +469,7 @@ def split(word):
 ######
 # generic function for msmodified
 # ----------------
-def load_data(msFile, ancFile, leave_out_last = False):
+def load_data(msFile, ancFile, n = None, leave_out_last = False):
     msFile = gzip.open(msFile, 'r')
 
     # no migration case
@@ -481,6 +521,10 @@ def load_data(msFile, ancFile, leave_out_last = False):
             y = np.zeros(x.shape, dtype = np.uint8)
             
         assert len(pos) == x.shape[1]
+        
+        if n is not None:
+            x = x[:n,:]
+            y = y[:n,:]
             
         X.append(x)
         Y.append(y)

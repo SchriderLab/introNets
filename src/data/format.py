@@ -15,12 +15,7 @@ import h5py
 # where to insert certain parts of the script
 # ${imports}
 
-from seriate import seriate
-from scipy.spatial.distance import pdist, cdist
-
-from scipy.optimize import linear_sum_assignment
-from scipy.interpolate import interp1d
-from collections import deque
+import time
             
 def parse_args():
     # Argument Parser
@@ -32,14 +27,15 @@ def parse_args():
 
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--sorting", default = "seriate_match")
+    parser.add_argument("--metric", default = "cosine")
     
-    parser.add_argument("--pop_sizes", default = "150,156")
+    parser.add_argument("--pop_sizes", default = "64,64")
     parser.add_argument("--out_shape", default = "2,128,128")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
     parser.add_argument("--include_zeros", action = "store_true")
     
-    parser.add_argument("--pop", choices = ["0", "1"], help = "only return y values for one pop?")
+    parser.add_argument("--pop", default = "0", help = "only return y values for one pop?")
 
     args = parser.parse_args()
 
@@ -65,7 +61,7 @@ def main():
         ms_files = sorted(glob.glob(os.path.join(args.idir, '*.ms.gz')))
         anc_files = sorted(glob.glob(os.path.join(args.idir, '*.log.gz')))
         log_files = sorted(glob.glob(os.path.join(args.idir, '*.out')))
-
+        
         idirs = list(zip(ms_files, anc_files, log_files))
         slim = True
     else:
@@ -88,13 +84,19 @@ def main():
             
             # are we formatting SLiM or MS data?  
             # auto-detected above
+            # time the disk-read time
+            t0 = time.time()
             if not slim:
                 idir = idirs[ix]
                 
                 msFile = os.path.join(idir, 'mig.msOut.gz')
                 ancFile = os.path.join(idir, 'out.anc.gz')
                 
-                x, y, _ = load_data(msFile, ancFile)
+                if not (os.path.exists(msFile) and os.path.exists(ancFile)):
+                    logging.info('{0}: have no data for {1}...'.format(comm.rank, idir))    
+                    continue
+                
+                x, y, _ = load_data(msFile, ancFile, n = n_ind)
                 params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
                 
             else:
@@ -107,12 +109,16 @@ def main():
                 params = np.hstack([mp, mt])
                 x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
+            t_disk = time.time() - t0
+            
             if len(y) == 0:
                 y = None
                 
-            f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, pop = int(args.pop), 
+            f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, sorting_metric = args.metric, pop = int(args.pop), 
                           pop_sizes = pop_sizes, shape = out_shape)
             f.format(include_zeros = args.include_zeros)
+            logging.debug('{3}: took an average {0} s to seriate, {1} to match and {2} to read the data...'.format(np.mean(f.time[0]), 
+                                                                                                                   np.mean(f.time[1]), t_disk, comm.rank))
         
             comm.send([f.x, f.y, f.p], dest = 0)
     else:
