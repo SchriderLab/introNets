@@ -68,8 +68,7 @@ def main():
         slim = False
         
     if comm.rank == 0:
-        print(len(idirs))
-        print(idirs)
+        logging.info('found {} directories to read...'.format(len(idirs)))
         
     chunk_size = int(args.chunk_size)
     
@@ -97,8 +96,11 @@ def main():
                     continue
                 
                 x, y, _ = load_data(msFile, ancFile, n = n_ind)
-                params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
                 
+                if os.path.exists(os.path.join(idir, 'mig.tbs')):
+                    params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
+                else:
+                    params = None
             else:
                 msFile, ancFile, out = idirs[ix]
                 
@@ -149,12 +151,14 @@ def main():
                     ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                     del Y[-chunk_size:]
                     
-                ofile.create_dataset('{0}/params'.format(current_chunk), data = np.array(params[-chunk_size:], dtype = np.float32), compression = 'lzf')
+                if len(params) > 0:
+                    ofile.create_dataset('{0}/params'.format(current_chunk), data = np.array(params[-chunk_size:], dtype = np.float32), compression = 'lzf')
+                    del params[-chunk_size:]
+                
                 ofile.create_dataset('{0}/x_0'.format(current_chunk), data = np.array(X[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                 ofile.flush()
                 
                 del X[-chunk_size:]
-                del params[-chunk_size:]
 
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
