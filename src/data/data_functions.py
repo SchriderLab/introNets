@@ -249,8 +249,6 @@ class TwoPopAlignmentFormatter(object):
             
             if self.p is not None:
                 P.append(p)
-            else:
-                P = None
             
             X.append(x)            
             Indices.append((x1_indices, x2_indices))
