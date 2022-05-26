@@ -27,16 +27,20 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--idir", default = "None")
-    
-    parser.add_argument("--pop_sizes", default = "100,100")
-    parser.add_argument("--out_shape", default = "2,112,192")
-    parser.add_argument("--sorting", default = "seriate_match")
-    
-    parser.add_argument("--step_size", default = "8")
-    parser.add_argument("--n_per_dir", default = "100")
+    parser.add_argument("--idir", default = "None", help = "input directory containing MS or SLiM simulations.  See simulate_msmodified.py and simulate_slim.py for how these simulations are formatted, organized etc.")
+    parser.add_argument("--chunk_size", default = "4", help = "number of replicates per h5 key.  chunking data signficantly increases read speed (especially on traditional spinning hdds)")
 
-    parser.add_argument("--ofile", default = "None")
+    parser.add_argument("--ofile", default = "None", help = "hdf5 file to write to")
+    parser.add_argument("--sorting", default = "seriate_match", help = "legacy option.  this or none are the only options implemented currently")
+    parser.add_argument("--metric", default = "cosine", help = "metric to use when matching / seriating alignments")
+    
+    parser.add_argument("--pop_sizes", default = "64,64", help = "pop sizes.  we currently only support two-population scenarios")
+    parser.add_argument("--out_shape", default = "2,128,128", help = "desired output shape.  channels (populations) x individuals x segregating sites")
+    
+    parser.add_argument("--densify", action = "store_true", help = "remove singletons")
+    parser.add_argument("--include_zeros", action = "store_true", help = "used to include replicate windows that have no introgression")
+    
+    parser.add_argument("--pop", default = "0", help = "only return y values for one pop, pop not in [0, 1] == use both populations (bidirectional introgression case)")
     args = parser.parse_args()
 
     if args.verbose:
@@ -58,8 +62,8 @@ def main():
     idirs = [os.path.join(args.idir, u) for u in os.listdir(args.idir) if not '.' in u]
     idirs_ = []
     for idir in idirs:
-        ms = os.path.join(idir, 'mig.msOut')
-        anc = os.path.join(idir, 'out.anc')
+        ms = os.path.join(idir, 'mig.msOut.gz')
+        anc = os.path.join(idir, 'out.anc.gz')
         
         if os.path.exists(ms) and os.path.exists(anc):
             idirs_.append(idir)
@@ -79,14 +83,10 @@ def main():
         for ix in range(comm.rank - 1, len(idirs), comm.size - 1):
             logging.info('working on {}...'.format(idirs[ix]))
             
-            ms = os.path.join(idirs[ix], 'mig.msOut')
-            anc = os.path.join(idirs[ix], 'out.anc')
+            ms = os.path.join(idirs[ix], 'mig.msOut.gz')
+            anc = os.path.join(idirs[ix], 'out.anc.gz')
 
             X, Y, P = load_data(ms, anc)
-            # toss out the last two individuals
-            for k in range(len(X)):
-                X[k] = X[k][:-2,:]
-                Y[k] = Y[k][:-2,:]
             
             X = deque(X)
             Y = deque(Y)

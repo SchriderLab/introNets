@@ -22,20 +22,20 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--idir", default = "None")
-    parser.add_argument("--chunk_size", default = "4")
+    parser.add_argument("--idir", default = "None", help = "input directory containing MS or SLiM simulations.  See simulate_msmodified.py and simulate_slim.py for how these simulations are formatted, organized etc.")
+    parser.add_argument("--chunk_size", default = "4", help = "number of replicates per h5 key.  chunking data signficantly increases read speed (especially on traditional spinning hdds)")
 
-    parser.add_argument("--ofile", default = "None")
-    parser.add_argument("--sorting", default = "seriate_match")
-    parser.add_argument("--metric", default = "cosine")
+    parser.add_argument("--ofile", default = "None", help = "hdf5 file to write to")
+    parser.add_argument("--sorting", default = "seriate_match", help = "legacy option.  this or none are the only options implemented currently")
+    parser.add_argument("--metric", default = "cosine", help = "metric to use when matching / seriating alignments")
     
-    parser.add_argument("--pop_sizes", default = "64,64")
-    parser.add_argument("--out_shape", default = "2,128,128")
+    parser.add_argument("--pop_sizes", default = "64,64", help = "pop sizes.  we currently only support two-population scenarios")
+    parser.add_argument("--out_shape", default = "2,128,128", help = "desired output shape.  channels (populations) x individuals x segregating sites")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
-    parser.add_argument("--include_zeros", action = "store_true")
+    parser.add_argument("--include_zeros", action = "store_true", help = "used to include replicate windows that have no introgression")
     
-    parser.add_argument("--pop", default = "0", help = "only return y values for one pop?")
+    parser.add_argument("--pop", default = "0", help = "only return y values for one pop, pop not in [0, 1] == use both populations (bidirectional introgression case)")
 
     args = parser.parse_args()
 
@@ -169,4 +169,5 @@ def main():
 if __name__ == '__main__':
     main()
     
+# metrics ['euclidean', 'cosine', 'russelrao', 'cityblock', 'dice']
 # mpirun python3 src/data/format.py --idir /pine/scr/d/d/ddray/dros_sims/AB --out_shape 2,32,128 --pop_sizes 20,14 --ofile /pine/scr/d/d/ddray/dros_sims/AB_n128.hdf5 pop 1
