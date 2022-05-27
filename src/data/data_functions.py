@@ -237,11 +237,10 @@ class TwoPopAlignmentFormatter(object):
                 y = np.array([y1, y2])
             
             if self.y is not None:
-                if self.pop:
-                    if self.pop == 0:
-                        y = np.expand_dims(y[0], axis = 0)
-                    elif self.pop == 1:
-                        y = np.expand_dims(y[1], axis = 0)
+                if self.pop == 0:
+                    y = np.expand_dims(y[0], axis = 0)
+                elif self.pop == 1:
+                    y = np.expand_dims(y[1], axis = 0)
                         
                 Y.append(y)
             else:
