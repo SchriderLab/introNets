@@ -122,6 +122,7 @@ def main():
             logging.debug('{3}: took an average {0} s to seriate, {1} to match and {2} to read the data...'.format(np.mean(f.time[0]), 
                                                                                                                    np.mean(f.time[1]), t_disk, comm.rank))
         
+            print(f.y[0].shape)
             comm.send([f.x, f.y, f.p], dest = 0)
     else:
         n_received = 0
