@@ -45,16 +45,23 @@ def main():
     ifile = h5py.File(args.ifile, 'r')
     
     keys = list(ifile.keys())
+    n_keys = len(keys)
+    
     random.shuffle(keys)
     
     y_means = []
     
     for key in keys[:int(args.n_samples)]:
         y = np.array(ifile[key]['y'])
+        chunk_size = y.shape[0]
         
         y_means.append(np.mean(y))
 
-    print((1 - np.mean(y_means)) / np.mean(y_means))
+    ratio = (1 - np.mean(y_means)) / np.mean(y_means)
+    print('info for {}'.format(args.ifile))
+    print('neg / pos ratio: {}'.format(ratio))
+    print('chunk_size: {}'.format(chunk_size))
+    print('n_replicates: {}'.format(n_keys * chunk_size))
     # ${code_blocks}
 
 if __name__ == '__main__':
