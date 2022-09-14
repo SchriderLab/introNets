@@ -46,7 +46,7 @@ pos_bce_logits_weight = 0.5
 label_smooth = True
 label_noise = 0.01
 ```
-### A toy example
+### Simulans vs. Sechelia
 
 Simulating data (1000 replicates per demographic parameter set estimated via DADI):
 ```
