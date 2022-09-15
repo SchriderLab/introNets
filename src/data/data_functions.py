@@ -51,6 +51,109 @@ def seriate_x(x, metric = 'cosine'):
 
     return x[ix], ix
 
+from io import StringIO
+from skbio import read
+from skbio.tree import TreeNode
+import re
+
+def read_ms_tree(ifile, n = 34, L = 10000):
+    ifile = gzip.open(ifile, 'r')
+    
+    ms_lines = ifile.readlines()
+    ms_lines = [u.decode('utf-8') for u in ms_lines]
+    
+    idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
+    ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list) - 1)]
+    ms_chunks[-1].append('\n')
+    
+    ret = dict()
+    
+    # edges in the trees
+    ret['edges'] = []
+    # preorder traversal index lists
+    ret['order'] = []
+    # position
+    ret['positions'] = []
+    # ages of the nodes, back in time
+    ret['ages'] = []
+    # alignment matrix (whole simulation)
+    ret['alignment'] = []
+    for chunk in ms_chunks:
+        c = chunk[1:-1]
+
+        c = [u for u in c if '[' in u]
+        c = [u.replace('\n','') for u in c]
+        
+        align_lines = chunk[-(n + 1):-1]
+        pos_line = [u for u in chunk if 'positions:' in u][0].replace('\n', '')
+
+        pos_ = np.round(np.array(list(map(float, pos_line.split(' ')[1:-1]))) * L).astype(np.int32)
+        
+        align_lines = [u.replace('\n','') for u in align_lines]
+
+        x = [np.array(list(map(int, [u for u in l])), dtype = np.uint8) for l in align_lines]
+        x = np.array(x, dtype = np.float32).T
+        
+        ret['alignment'].append(x)
+    
+        e = []
+        orders = []
+        ages = []
+        positions = []
+        
+        ls = []
+        
+        pos = 0
+        for s in c:
+            f = StringIO(s)  
+            t = read(f, format="newick", into=TreeNode)
+            
+            # get the position of the tree (cumulative sum of the index in brackets)
+            l = int(re.findall('\[(.+?)\]', s)[0].replace('[', '').replace(']',''))
+            
+            p = (pos, pos + l)
+            
+            ls.append(l)
+            
+            p = np.digitize(list(p), [0] + list(pos_)) - 1
+    
+            pos += l
+            positions.append(p)
+
+            edges = []
+            ix = n + 1
+            order = []
+            
+            for node in list(t.levelorder())[::-1]:
+                if node.is_tip():
+                    node.age = 0.
+                else:
+                    c = node.children[0]
+                    node.age = c.age + c.length
+            
+            for node in t.levelorder():
+                if node.name is None:
+                    node.name = ix
+                    ix += 1
+                    
+                node.name = int(node.name) - 1
+                order.append(node.name)
+                
+            A = np.zeros((2*n - 1, 2*n - 1))
+            for node in t.levelorder():
+                edges.extend([(node.name, u.name, u.length) for u in node.children])
+            
+            ages.append([u.age for u in t.levelorder()])
+            orders.append(order)
+            e.append(edges)
+                
+        ret['order'].append(orders)
+        ret['edges'].append(e)
+        ret['positions'].append(positions)
+        ret['ages'].append(ages)
+        
+    return ret
+
 #### TwoPopAlignmentFormatter
 ## Class to take MS or SLiM output of alignments from two-pop simulations and filter and format them.
 ## this class is to be used after actually reading the files with the I/O functions below.
