@@ -46,6 +46,8 @@ pos_bce_logits_weight = 0.5
 label_smooth = True
 label_noise = 0.01
 ```
+## Simuation
+
 ### Simulans vs. Sechelia
 
 Simulating data (1000 replicates per demographic parameter set estimated via DADI):
@@ -60,6 +62,13 @@ Simulating data (1000 replicates per job by default = 25000 replicates):
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --n_jobs 25
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --slurm --n_jobs 25 # on SLURM
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new_wtrees --slurm --n_jobs 25 --trees # with Trees in Newick format
+```
+
+## Formatting
+
+### Simulans vs. Sechelia
+```
+mpirun python3 src/data/format.py --idir dros_sims_ba/ --ofile dros_ba_cosine.hdf5 --pop_sizes 20,14 --out_shape 2,32,128 --sorting seriate_match --metric cosine
 ```
 
 
