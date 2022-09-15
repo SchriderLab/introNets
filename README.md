@@ -69,7 +69,17 @@ python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddra
 ### Simulans vs. Sechelia
 ```
 mpirun python3 src/data/format.py --idir dros_sims_ba/ --ofile dros_ba_cosine.hdf5 --pop_sizes 20,14 --out_shape 2,32,128 --sorting seriate_match --metric cosine
+# SLURM example:
+sbatch -n 24 --mem=64G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir dros_sims_new_BA --ofile dros_ba_cityblock.hdf5 --pop_sizes 20,14 --out_shape 2,32,128 --sorting seriate_match --metric cityblock"
 ```
+
+### ArchIE
+```
+mpirun python3 src/data/format.py --idir archie_sims --ofile archie_euclidean.hdf5 --pop_sizes 100,100 --out_shape 2,112,128 --sorting seriate_match --metric euclidean
+# SLURM example:
+sbatch -n 24 --mem=64G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir archie_sims --ofile archie_euclidean.hdf5 --pop_sizes 100,100 --out_shape 2,112,128 --sorting seriate_match --metric euclidean"
+```
+
 
 
 ### Other notes
