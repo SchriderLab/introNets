@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# -*- coding: utf-8 -*-
 
 import os
 import argparse
@@ -29,15 +28,14 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 import pandas as pd
 import pickle
-# use this format to tell the parsers
-# where to insert certain parts of the script
-# ${imports}
 
 import matplotlib
 matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
 from prettytable import PrettyTable
+
+import time
 
 def count_parameters(model, f):
     table = PrettyTable(["Modules", "Parameters"])
@@ -78,11 +76,12 @@ def parse_args():
         if not os.path.exists(args.odir):
             os.system('mkdir -p {}'.format(args.odir))
             logging.debug('root: made output directory {0}'.format(args.odir))
-    # ${odir_del_block}
 
     return args
 
 def main():
+    start_time = time.time()
+    
     args = parse_args()
 
     if torch.cuda.is_available():
@@ -101,8 +100,12 @@ def main():
     print(model, file = log_file)
     model = model.to(device)
     
+    try:
+        n_steps = int(config.get('training_params', 'n_steps'))
+    except:
+        n_steps = None
+    
     count_parameters(model, log_file)
-    log_file.close()
         
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
@@ -117,7 +120,10 @@ def main():
     # save them for later
     pickle.dump(val_keys, open(os.path.join(args.odir, '{}_val_keys.pkl'.format(args.tag)), 'wb'))
     
-    l = generator.length
+    if n_steps is None:
+        l = generator.length
+    else:
+        l = n_steps
     vl = generator.val_length
 
     criterion = BCEWithLogitsLoss(pos_weight = torch.FloatTensor([float(config.get('training_params', 'pos_bce_logits_weight'))]).to(device))
@@ -136,9 +142,13 @@ def main():
     history['epoch'] = []
     history['loss'] = []
     history['val_loss'] = []
+    history['val_acc'] = []
+    history['epoch_time'] = []
 
     print('training...')
     for ix in range(int(config.get('training_params', 'n_epochs'))):
+        t0 = time.time()
+        
         model.train()
 
         losses = []
@@ -204,7 +214,11 @@ def main():
         history['epoch'].append(ix)
         history['loss'].append(np.mean(losses))
         history['val_loss'].append(np.mean(val_losses))
-        # ${save_extra_history}
+        
+        e_time = time.time() - t0
+        
+        history['epoch_time'].append(e_time)
+        history['val_acc'].append(np.mean(val_accs))
 
         val_loss = np.mean(val_losses)
         if val_loss < min_val_loss:
@@ -228,6 +242,11 @@ def main():
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
 
+    # benchmark the time to train
+    total = time.time() - start_time
+    log_file.write('training complete! \n')
+    log_file.write('training took {} seconds... \n'.format(total))
+    log_file.close()
 
 if __name__ == '__main__':
     main()
