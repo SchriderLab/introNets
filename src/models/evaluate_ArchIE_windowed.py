@@ -54,9 +54,9 @@ def main():
     args = parse_args()
 
     ifile = h5py.File(args.ifile, 'r')
-    keys = list(ifile.keys())
+    keys = sorted(list(ifile.keys()))
     
-    random.shuffle(keys)
+    #random.shuffle(keys)
     
     coefs = np.loadtxt(args.coef, dtype = object)
     coefs = coefs[:,1]
@@ -72,6 +72,8 @@ def main():
     Y = []
     Y_pred = []
     indices = []
+    
+    counter = 0
     
     logging.info('predicting...')
     for key in keys:
@@ -90,8 +92,25 @@ def main():
             y_pred[:,i1:i2] += log_prob
             count[:,i1:i2] += 1.
             
-        y_pred = y_pred[count > 0] / count[count > 0]
-        y = y[count > 0]
+        print(y_pred.shape, count.shape, y.shape)
+        y_pred = y_pred / count
+        y = y
+        
+        y_pred = expit(y_pred)
+        ix = np.random.choice(range(y_pred.shape[1] - 256))
+        
+        fig, axes = plt.subplots(nrows = 2, sharex = True)
+        axes[0].imshow(np.round(y_pred[:,ix:ix + 256]))
+        axes[0].set_ylabel('individuals')
+        
+        axes[1].imshow(y[:,ix:ix + 256])
+        axes[1].set_xlabel('SNPs')
+        axes[1].set_ylabel('individuals')
+        
+        plt.savefig(os.path.join(args.odir, '{0:04d}.eps'.format(counter)))
+        plt.close()
+        
+        counter += 1
         
         # save the indices for take-one-out bootstrapping
         i1 = len(Y)
@@ -101,12 +120,19 @@ def main():
         Y_pred.extend(expit(y_pred).flatten())
         indices.append((i1, i2))
         
+    Y = np.array(Y)
+    Y_pred = np.array(Y_pred)
+    
+    np.savez_compressed(os.path.join(args.odir, 'predictions.npz'), Y = Y, Y_pred = Y_pred)
+        
     logging.info('plotting EPS files...')
     # do this for all the examples:
     cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
     
     precision, recall, thresholds = precision_recall_curve(list(map(int, Y)), Y_pred)
     fpr, tpr, _ = roc_curve(list(map(int, Y)), Y_pred)
+    
+    np.savez(os.path.join(args.odir, 'roc_aupr.npz'), roc = np.array([fpr, tpr]), aupr = np.array([precision, recall]), thresh = thresholds)
     
     fig = plt.figure(figsize=(12, 12))
     ax0 = fig.add_subplot(111)
@@ -127,10 +153,7 @@ def main():
     
     logging.info('bootstrapping metrics...')
     
-    Y = np.array(Y)
-    Y_pred = np.array(Y_pred)
     
-    np.savez_compressed(os.path.join(args.odir, 'predictions.npz'), Y = Y, Y_pred = Y_pred)
     
     result = dict()
     result['rocs'] = []
