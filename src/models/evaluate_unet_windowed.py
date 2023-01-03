@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib
-matplotlib.use('Agg')
+#matplotlib.use('Agg')
 
 import matplotlib.pyplot as plt
+plt.rcParams.update({'font.size': 18})
+
 import numpy as np
 import logging
 import argparse
@@ -16,7 +18,7 @@ import h5py
 import sys
 sys.path.insert(0, os.path.join(os.getcwd(), 'src/models'))
 
-from layers import NestedUNet, NestedUNetV2
+from layers import NestedUNet
 from data_loaders import H5UDataGenerator
 
 from scipy.special import expit
@@ -67,6 +69,31 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+        
+def cm_m(m, filename, labels, figsize=(10,10)):
+    cm = m
+    cm_sum = np.sum(cm, axis=1, keepdims=True)
+    cm_perc = cm / cm_sum.astype(float) * 100
+    annot = np.empty_like(cm).astype(str)
+    nrows, ncols = cm.shape
+    for i in range(nrows):
+        for j in range(ncols):
+            c = cm[i, j]
+            p = cm_perc[i, j]
+            if i == j:
+                s = cm_sum[i]
+                annot[i, j] = '%.1f%%' % (p)
+            elif c == 0:
+                annot[i, j] = ''
+            else:
+                annot[i, j] = '%.1f%%' % (p)
+    cm = pd.DataFrame(cm, index=labels, columns=labels)
+    cm.index.name = 'Actual'
+    cm.columns.name = 'Predicted'
+    fig, ax = plt.subplots(figsize=figsize)
+    sns.heatmap(cm, annot=annot, fmt='', ax=ax)
+    plt.savefig(filename)
+    plt.close()
 
 def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     """
@@ -99,11 +126,11 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
             p = cm_perc[i, j]
             if i == j:
                 s = cm_sum[i]
-                annot[i, j] = '%.1f%%\n%d/%d' % (p, c, s)
+                annot[i, j] = '%.1f%%' % (p)
             elif c == 0:
                 annot[i, j] = ''
             else:
-                annot[i, j] = '%.1f%%\n%d' % (p, c)
+                annot[i, j] = '%.1f%%' % (p)
     cm = pd.DataFrame(cm, index=labels, columns=labels)
     cm.index.name = 'Actual'
     cm.columns.name = 'Predicted'
@@ -158,7 +185,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    model = NestedUNetV2(int(args.n_classes), 2)
+    model = NestedUNet(int(args.n_classes), 2)
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
@@ -184,7 +211,18 @@ def main():
     Y_pred = []
     indices_ = []
     
-    logging.info('predicting...')
+    counter = 0
+    
+    accuracies = []
+    auprs = []
+    rocs = []
+    
+    M = np.zeros((2, 2))
+    
+    fprs = []
+    tprs = []
+    
+    logging.info('predicting on {} keys...'.format(len(keys)))
     for key in keys:
         indices = np.array(ifile[key]['indices'])
         ix = np.array(ifile[key]['ix'])
@@ -206,7 +244,7 @@ def main():
             x_ = torch.FloatTensor(x[c]).to(device)
             
             with torch.no_grad():
-                y_ = model(x_) * G
+                y_ = model(x_)
                 
             y_ = y_.detach().cpu().numpy()
             if len(y_.shape) == 2:
@@ -226,34 +264,65 @@ def main():
             ix_ = ix[k]
             
             y_pred[:,ix_] += y_[ii]
-            count[:,ix_] += Gn[0]
+            count[:,ix_] += 1.
             
             y_ = y[k,ii_u]
             y_ = y_[ii]
             
             y_true[:,ix_] = y_
         
-        y_pred = expit(y_pred / count)
+        y_pred = expit(y_pred / count)        
+        counter += 1
         
-        """
-        fig, axes = plt.subplots(nrows = 3)
-        axes[0].imshow(np.round(y_pred))
-        axes[1].imshow(y_pred)
-        axes[2].imshow(y_true)
-        plt.show()
-        """
+        if (counter + 1) % 10 == 0:
+            print(counter)
         
         # save the indices for take-one-out bootstrapping
         i1 = len(Y)
         i2 = i1 + len(y.flatten())
         
-        Y.extend(y_true[:100,:].flatten())
-        Y_pred.extend(y_pred[:100,:].flatten())
-        indices_.append((i1, i2))
+        y_pred = y_pred.flatten()
+        y_pred_round = np.round(y_pred.flatten())
+        y_true = y_true.flatten()
         
+        ii = np.where((y_pred_round == y_true) & (y_true == 0))[0]
+        M[0,0] += len(ii)
+        
+        ii = np.where((y_pred_round == y_true) & (y_true == 1))[0]
+        M[1,1] += len(ii)
+        
+        ii = np.where((y_pred_round != y_true) & (y_true == 0))[0]
+        M[0,1] += len(ii)
+        
+        ii = np.where((y_pred_round != y_true) & (y_true == 1))[0]
+        M[1,0] += len(ii)
+        
+        accuracies.append(accuracy_score(y_true, y_pred_round))
+        auprs.append(average_precision_score(y_true, y_pred))
+        
+        try:
+            rocs.append(roc_auc_score(y_true, y_pred))
+            """
+            fpr, tpr, _ = roc_curve(list(map(int, y_true)), y_pred)
+        
+            fprs.append(fpr)
+            tprs.append(tpr)
+        
+            print(len(fpr), len(tpr))
+            """
+        except:
+            rocs.append(np.nan)
+        
+        
+        
+    print(np.nanmean(accuracies), np.nanstd(accuracies) * 1.96 / np.sqrt(1000))
+    print(np.nanmean(auprs), np.nanstd(auprs) * 1.96 / np.sqrt(1000))  
+    print(np.nanmean(rocs), np.nanstd(rocs) * 1.96 / np.sqrt(1000)) 
+    
     logging.info('plotting EPS files...')
     # do this for all the examples:
-    cm_analysis(Y, np.round(Y_pred), os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
+    cm_m(M, os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
+    sys.exit()
     
     precision, recall, thresholds = precision_recall_curve(list(map(int, Y)), Y_pred)
     fpr, tpr, _ = roc_curve(list(map(int, Y)), Y_pred)
