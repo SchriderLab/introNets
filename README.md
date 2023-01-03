@@ -46,7 +46,9 @@ pos_bce_logits_weight = 0.5
 label_smooth = True
 label_noise = 0.01
 ```
-## Simuation
+# Replication of results shown in publication:
+
+## Simulation
 
 ### Simulans vs. Sechelia
 
