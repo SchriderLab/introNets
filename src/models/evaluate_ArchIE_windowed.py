@@ -92,6 +92,8 @@ def main():
             y_pred[:,i1:i2] += log_prob
             count[:,i1:i2] += 1.
             
+        count[count == 0] = 1.
+            
         print(y_pred.shape, count.shape, y.shape)
         y_pred = y_pred / count
         y = y
