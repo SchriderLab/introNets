@@ -27,7 +27,7 @@ We can now train our model:
 python3 src/models/train.py --ifile ab.hdf5 --config training_configs/toy_AB.config --odir ab_training --tag iter1
 ```
 
-The ```--config``` option is passed a config file that we include with our repo that has training settings like batch size and learning rate as well as others:
+The training script will save the best weights, according to validation loss, and record the training and validation loss metrics as well as accuracy to a CSV in the output directory ```--odir```.  The ```--config``` option is passed a config file that we include with our repo that has training settings like batch size and learning rate as well as others:
 
 ```
 [model_params]
