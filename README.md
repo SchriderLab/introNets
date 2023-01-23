@@ -2,6 +2,30 @@
 Repository for replicating the work in "Detecting introgression at SNP-resolution via
 U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
 
+## Dependencies
+
+### General
+
+The project is written entirely in Python 3.x.  In order to build the simulators for the repo you'll need ```gcc``` and ```make``` which for Linux systems are included in the package ```build-essential```.
+
+### SLiM
+
+SLiM can be installed as follows:
+
+```
+git clone https://github.com/MesserLab/SLiM.git
+cd SLiM/
+mkdir build
+cd build/
+cmake ..
+make
+```
+The scripts expect this binary to be at ```SLiM/build/slim```.
+
+### msmodified
+
+The msmodified binary is provided by https://github.com/sriramlab/ArchIE.git.  The scripts in this repo expected it to be located in the folder at ```msmodified/ms```.  It can built locally if the pre-built binary throws errors.
+
 ## Tutorial
 
 ### A toy example
@@ -19,6 +43,16 @@ Removing the "--local" arg would submit the simulation commands to SLURM through
 Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
 ```
 mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128
+```
+
+We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles may be heavily un-balanced.
+
+```
+python3 src/data/get_h5_stats.py --ifile ab.hdf5
+```
+This prints to the console:
+```
+
 ```
 
 Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
