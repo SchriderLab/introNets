@@ -82,6 +82,17 @@ mpirun python3 src/data/format.py --idir archie_sims --ofile archie_euclidean.hd
 sbatch -n 24 --mem=64G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir archie_sims --ofile archie_euclidean.hdf5 --pop_sizes 100,100 --out_shape 2,112,128 --sorting seriate_match --metric euclidean"
 ```
 
+## Training
+
+### Simulans vs. Sechelia
+```
+python3 src/models/train.py --config training_configs/dros_ab.config --ifile dros_ba_cosine.hdf5 --odir training_results/dros_ab_i1
+```
+
+### ArchIE
+```
+python3 src/models/train.py --config training_configs/archie.config --ifile archie_euclidean.hdf5 --odir training_results/archie_i1
+```
 
 
 ### Other notes
