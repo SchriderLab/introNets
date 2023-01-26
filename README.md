@@ -86,10 +86,10 @@ label_noise = 0.01
 
 ### Simulans vs. Sechelia
 
-Simulating data (1000 replicates per demographic parameter set estimated via DADI):
+Simulating data (1000 replicates per demographic parameter set estimated via DADI) at kb window size (default = 50000):
 ```
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want --slurm # if within a SLURM cluster
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --window_size 10000
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --windows_size 10000 --slurm # if within a SLURM cluster
 ```
 
 ### ArchIE
@@ -97,7 +97,7 @@ Simulating data (1000 replicates per job by default = 25000 replicates):
 ```
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --n_jobs 25
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --slurm --n_jobs 25 # on SLURM
-python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new_wtrees --slurm --n_jobs 25 --trees # with Trees in Newick format
+python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new_wtrees --slurm --n_jobs 25 --trees # with Trees in Newick format. WARNING: trees are very large as MS outputs them in text format and even though they are gzipped this may take up large amounts of disk space.
 ```
 
 ## Formatting
