@@ -2,6 +2,30 @@
 Repository for replicating the work in "Detecting introgression at SNP-resolution via
 U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
 
+## Dependencies
+
+### General
+
+The project is written entirely in Python 3.x.  In order to build the simulators for the repo you'll need ```gcc``` and ```make``` which for Linux systems are included in the package ```build-essential```.
+
+### SLiM
+
+SLiM can be installed as follows:
+
+```
+git clone https://github.com/MesserLab/SLiM.git
+cd SLiM/
+mkdir build
+cd build/
+cmake ..
+make
+```
+The scripts expect this binary to be at ```SLiM/build/slim```.
+
+### msmodified
+
+The msmodified binary is provided by https://github.com/sriramlab/ArchIE.git.  The scripts in this repo expected it to be located in the folder at ```msmodified/ms```.  It can built locally if the pre-built binary throws errors.
+
 ## Tutorial
 
 ### A toy example
@@ -19,6 +43,16 @@ Removing the "--local" arg would submit the simulation commands to SLURM through
 Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
 ```
 mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128
+```
+
+We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles may be heavily un-balanced.
+
+```
+python3 src/data/get_h5_stats.py --ifile ab.hdf5
+```
+This prints to the console:
+```
+
 ```
 
 Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
@@ -52,10 +86,10 @@ label_noise = 0.01
 
 ### Simulans vs. Sechelia
 
-Simulating data (1000 replicates per demographic parameter set estimated via DADI):
+Simulating data (1000 replicates per demographic parameter set estimated via DADI) at kb window size (default = 50000):
 ```
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want --slurm # if within a SLURM cluster
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --window_size 10000
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --windows_size 10000 --slurm # if within a SLURM cluster
 ```
 
 ### ArchIE
@@ -63,7 +97,7 @@ Simulating data (1000 replicates per job by default = 25000 replicates):
 ```
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --n_jobs 25
 python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new --slurm --n_jobs 25 # on SLURM
-python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new_wtrees --slurm --n_jobs 25 --trees # with Trees in Newick format
+python3 src/data/simulate_msmodified.py --model archie --odir /pine/scr/d/d/ddray/archie_sims_new_wtrees --slurm --n_jobs 25 --trees # with Trees in Newick format. WARNING: trees are very large as MS outputs them in text format and even though they are gzipped this may take up large amounts of disk space.
 ```
 
 ## Formatting
