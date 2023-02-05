@@ -45,7 +45,7 @@ def main():
         logging.info('0: working on key {}...'.format(ii))
         
         try:
-            features = np.array(ifile[str(ii)]['features'])
+            features = np.array(ifile[str(ii)]['f'])
         except:
             break
         
