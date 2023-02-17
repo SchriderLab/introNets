@@ -22,9 +22,9 @@ def parse_args():
     parser.add_argument("--st", default = "4", help = "split time coefficient (see .slim file)")
     parser.add_argument("--mt", default = "0.25", help = "migration time coefficient (see .slim file)")
     parser.add_argument("--mp", default = "1", help = "migration probability (legacy isn't actually used...)")
-    parser.add_argument("--phys_len", default = "3000", help = "length of simulated chromosome in base pairs")
+    parser.add_argument("--phys_len", default = "10000", help = "length of simulated chromosome in base pairs")
     parser.add_argument("--direction", default="ab", help = "directionality of migration.")
-    parser.add_argument("--local", action="store_true", help = "whether to run locally (no SLURM)")
+    parser.add_argument("--slurm", action="store_true", help = "whether to run locally (no SLURM)")
 
     parser.add_argument("--n_per_pop", default = "64", help = "number of sampled individuals in each population")
 
@@ -54,7 +54,7 @@ def parse_args():
 def main():
     args = parse_args()
     
-    if not args.local:
+    if args.slurm:
         # SLURM job submission
         # scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability
         cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} > {9} && gzip {4} {9}"'
@@ -78,7 +78,7 @@ def main():
         ofile_introg = os.path.join(args.odir, '{0:05d}_introg.log'.format(ix))
         ofile_log = os.path.join(args.odir, '{0:05d}_introg.out'.format(ix))
         
-        if not args.local:
+        if args.slurm:
             cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
                               donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, ofile_log)
             
