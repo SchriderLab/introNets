@@ -23,7 +23,11 @@ The scripts expect this binary to be at ```SLiM/build/slim```.
 
 ### msmodified
 
-msmodified is again included as a submodule with https://github.com/sriramlab/ArchIE.git.  It can built locally according to the instructions in the folder ArchIE/msmodified if the pre-built binary throws errors.
+msmodified is again included as a submodule with https://github.com/sriramlab/ArchIE.git.  It can built locally in the folder ArchIE/msmodified if the pre-built binary throws errors: 
+
+```
+gcc -o ms ms.c streec.c rand1.c -lm
+```
 
 ## Tutorial
 
