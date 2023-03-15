@@ -44,6 +44,8 @@ Then we can format the simulations we just created (seriate and match the popula
 mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128 --pop 1
 ```
 
+Optionally, you may specify ```--metric``` which defaults to the cosine distance.  This is the distance metric which is used to sort and match the populations.
+
 We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles may be heavily un-balanced.
 
 ```
