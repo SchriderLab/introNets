@@ -10,10 +10,9 @@ The project is written entirely in Python 3.x.  In order to build the simulators
 
 ### SLiM
 
-SLiM can be installed as follows:
+SLiM is included as a submodule, but needs to be built:
 
 ```
-git clone https://github.com/MesserLab/SLiM.git
 cd SLiM/
 mkdir build
 cd build/
@@ -24,7 +23,7 @@ The scripts expect this binary to be at ```SLiM/build/slim```.
 
 ### msmodified
 
-The msmodified binary is provided by https://github.com/sriramlab/ArchIE.git.  The scripts in this repo expected it to be located in the folder at ```msmodified/ms```.  It can built locally if the pre-built binary throws errors.
+msmodified is again included as a submodule with https://github.com/sriramlab/ArchIE.git.  It can built locally according to the instructions in the folder ArchIE/msmodified if the pre-built binary throws errors.
 
 ## Tutorial
 
@@ -42,7 +41,7 @@ Removing the "--local" arg would submit the simulation commands to SLURM through
 
 Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
 ```
-mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128
+mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128 --pop 1
 ```
 
 We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles may be heavily un-balanced.
@@ -52,7 +51,10 @@ python3 src/data/get_h5_stats.py --ifile ab.hdf5
 ```
 This prints to the console:
 ```
-
+info for ab.hdf5
+neg / pos ratio: 2.1853107954852296
+chunk_size: 4
+n_replicates: 36
 ```
 
 Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
