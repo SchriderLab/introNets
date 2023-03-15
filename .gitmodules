@@ -1,0 +1,9 @@
+[submodule "SLiM"]
+	path = SLiM
+	url = https://github.com/MesserLab/SLiM.git
+[submodule "msmodified"]
+	path = msmodified
+	url = https://github.com/sriramlab/ArchIE.git
+[submodule "ArchIE"]
+	path = ArchIE
+	url = https://github.com/sriramlab/ArchIE.git

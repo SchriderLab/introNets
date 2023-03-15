@@ -37,7 +37,7 @@ def parse_args():
         logging.basicConfig(level=logging.INFO)
 
     if not os.path.exists(args.odir):
-        os.mkdir(args.odir)
+        os.system('mkdir -p {}'.format(args.odir))
         logging.debug('root: made output directory {0}'.format(args.odir))
     else:
         os.system('rm -rf {0}'.format(os.path.join(args.odir, '*')))
@@ -57,21 +57,21 @@ def main():
     if args.slurm:
         # SLURM job submission
         # scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability
-        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} > {9} && gzip {4} {9}"'
+        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} | tee {9} && gzip {4} {9}"'
     else:
-        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} > {9} && gzip {4} {9}'
+        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} | tee {9} && gzip {4} {9}'
 
     # for compatibiltiy with notation in SLiM script
     # we assume if a custom script is used it is a two-population demography with such options (or it ignores them)
     # if you need custom args you'll have to modify the above command etc.
     if args.direction == "ab":
-        donor_pop = "0"
-    elif args.direction == "ba":
         donor_pop = "1"
-    elif args.direction == "bi":
+    elif args.direction == "ba":
         donor_pop = "2"
-    else:
+    elif args.direction == "bi":
         donor_pop = "3"
+    else:
+        donor_pop = "0"
         
     for ix in range(int(args.n_jobs)):
         ofile_ms = os.path.join(args.odir, '{0:05d}.ms'.format(ix))
