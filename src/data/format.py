@@ -90,11 +90,7 @@ def main():
                 
                 msFile = os.path.join(idir, 'mig.msOut.gz')
                 ancFile = os.path.join(idir, 'out.anc.gz')
-                
-                if not (os.path.exists(msFile) and os.path.exists(ancFile)):
-                    logging.info('{0}: have no data for {1}...'.format(comm.rank, idir))    
-                    continue
-                
+                                
                 x, y, _ = load_data(msFile, ancFile, n = n_ind)
                 
                 if os.path.exists(os.path.join(idir, 'mig.tbs')):
