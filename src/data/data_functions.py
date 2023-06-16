@@ -569,14 +569,12 @@ def split(word):
 ######
 # generic function for msmodified
 # ----------------
-def load_data(msFile, ancFile, n = None, leave_out_last = False):
+def load_data(msFile, ancFile = None, n = None, leave_out_last = True):
     msFile = gzip.open(msFile, 'r')
 
     # no migration case
-    try:
-        ancFile = gzip.open(ancFile, 'r')
-    except:
-        ancFile = None
+    if ancFile is not None:
+        ancFile = open(ancFile, 'r')
 
     ms_lines = [u.decode('utf-8') for u in msFile.readlines()]
 
@@ -632,15 +630,13 @@ def load_data(msFile, ancFile, n = None, leave_out_last = False):
         
     return X, Y, P
 
-def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_pop_size = 32, filter_zeros = False):
+def load_data_dros(msFile, ancFile = None, n_sites = None, up_sample = False, up_sample_pop_size = 32, filter_zeros = False):
     params = np.loadtxt(os.path.join(os.path.realpath(msFile).replace(msFile.split('/')[-1], ''), 'mig.tbs'), delimiter = ' ')
     msFile = open(msFile, 'r')
 
     # no migration case
-    try:
+    if ancFile is not None:
         ancFile = open(ancFile, 'r')
-    except:
-        ancFile = None
 
     ms_lines = msFile.readlines()
 
@@ -671,10 +667,11 @@ def load_data_dros(msFile, ancFile, n_sites = 256, up_sample = False, up_sample_
         else:
             y = np.zeros(x.shape, dtype = np.uint8)
                     
-        n = x.shape[1]
-        
-        x = np.pad(x, ((0, 0), (0, n_sites - n)))
-        y = np.pad(y, ((0, 0), (0, n_sites - n)))
+        if n_sites is not None:
+            n = x.shape[1]
+            
+            x = np.pad(x, ((0, 0), (0, n_sites - n)))
+            y = np.pad(y, ((0, 0), (0, n_sites - n)))
         
         if filter_zeros:
             if np.sum(y) > 0:
