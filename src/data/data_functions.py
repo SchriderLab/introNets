@@ -574,7 +574,7 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True):
 
     # no migration case
     if ancFile is not None:
-        ancFile = open(ancFile, 'r')
+        ancFile = gzip.open(ancFile, 'r')
 
     ms_lines = [u.decode('utf-8') for u in msFile.readlines()]
 
