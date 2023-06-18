@@ -283,7 +283,6 @@ main(argc,argv)
 		  int prevpos = -1;
 		  for (j =  0 ;j < segsites; j++){
 			  int pos = (int)(posit[j]*pars.cp.nsites);
-			  if (pos == prevpos) continue;
 			  prevpos = pos;
               double recombrate = (pars.cp.r)/(4.0*10000*pars.cp.nsites);
               double gpos = pos * recombrate;
