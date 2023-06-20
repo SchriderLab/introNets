@@ -224,10 +224,11 @@ class ResBlock(nn.Module):
 
 # in V2 I replace the VGG Block with Residual convolution blocks with the ELU activation function
 class NestedUNet(nn.Module):
-    def __init__(self, num_classes, input_channels=3, deep_supervision=False, **kwargs):
+    def __init__(self, num_classes, input_channels=3, filter_multiplier = 1, deep_supervision=False, **kwargs):
         super().__init__()
 
         nb_filter = [32, 64, 128, 256, 512]
+        nb_filter = list(map(int, [u * filter_multiplier for u in nb_filter]))
 
         self.deep_supervision = deep_supervision
 
@@ -263,7 +264,6 @@ class NestedUNet(nn.Module):
             self.final4 = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
         else:
             self.final = nn.Conv2d(nb_filter[0], num_classes, kernel_size=1)
-
 
     def forward(self, input):
         x0_0 = self.conv0_0(input)
