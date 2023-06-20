@@ -98,7 +98,7 @@ def main():
     config.write(log_file)
     log_file.write('\n')
     
-    model = NestedUNet(int(config.get('model_params', 'n_classes')), 2, filter_multiplier = int(args.filter_multiplier))
+    model = NestedUNet(int(config.get('model_params', 'n_classes')), 2, filter_multiplier = float(args.filter_multiplier))
     print(model, file = log_file)
     model = model.to(device)
     
