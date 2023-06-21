@@ -141,7 +141,7 @@ def main():
     Y = []
     Y_pred = []
     
-    print('predicting... on {} mini-batches...'.format(generator.length))
+    print('predicting... on {} mini-batches...'.format(N))
     for ix in range(N):
         with torch.no_grad():
             x, y = generator.get_batch()
@@ -250,9 +250,9 @@ def main():
     Y_pred_bin = np.digitize(Y_pred, p_bins)
     for k in range(len(Y)):
         if Y[k] == 0:
-            count_neg[Y_pred_bin[k] - 1] += 1
+            count_neg[min([Y_pred_bin[k] - 1, count_neg.shape[0] - 1])] += 1
         else:
-            count_pos[Y_pred_bin[k] - 1] += 1
+            count_pos[min([Y_pred_bin[k] - 1, count_neg.shape[0] - 1])] += 1
     
     count = count_pos / (count_neg + count_pos)
     
