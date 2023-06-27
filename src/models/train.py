@@ -61,6 +61,7 @@ def parse_args():
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
     parser.add_argument("--device", default = "0", help = "index of the GPU to use if available")
     parser.add_argument("--n_early", default = "10")
+    parser.add_argument("--small", action = "store_true")
     
     parser.add_argument("--filter_multiplier", default = "1")
 
@@ -98,7 +99,7 @@ def main():
     config.write(log_file)
     log_file.write('\n')
     
-    model = NestedUNet(int(config.get('model_params', 'n_classes')), 2, filter_multiplier = float(args.filter_multiplier))
+    model = NestedUNet(int(config.get('model_params', 'n_classes')), 2, filter_multiplier = float(args.filter_multiplier), small = args.small)
     print(model, file = log_file)
     model = model.to(device)
     
