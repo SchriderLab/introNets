@@ -188,7 +188,7 @@ def writeIntrogressedAlleles(repIndex, introgressedAlleles, physLen, outF):
     outF.write("End rep {}\n".format(repIndex))
 
 if __name__ == '__main__': 
-    scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability = sys.argv[1:]
+    scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS = sys.argv[1:]
     numReps = int(numReps)
     physLen = int(physLen)
     donorPop = int(donorPop)
@@ -204,7 +204,7 @@ if __name__ == '__main__':
         sys.stderr.write("starting rep {}\n".format(repIndex))
         seed = random.randint(0, 2**32-1)
     
-        slimCmd = "SLiM/build/slim -seed {} -d physLen={} -d sampleSizePerSubpop={} -d donorPop={} -d st={} -d mt={} -d mp={} {}".format(seed, physLen, nPerPop, donorPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, scriptName)
+        slimCmd = "SLiM/build/slim -seed {} -d physLen={} -d sampleSizePerSubpop={} -d donorPop={} -d st={} -d mt={} -d mp={} -d introS={} {}".format(seed, physLen, nPerPop, donorPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS, scriptName)
         sys.stderr.write(slimCmd)
     
     
