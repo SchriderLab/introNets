@@ -60,6 +60,7 @@ def addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1):
                 elif mutType in ["m1","m2"]:
                     tempIdToPos[tempId]=pos
                 else:
+                    print(tempId, permId, mutType, pos, selCoeff, domCoeff, originSubpop, originGen, numCopies)
                     sys.exit("Encountered mutation type other than m1, m2, or m3. ARRRRGGGGHHHHHHH!!!!!!\n")
                 idMapping[tempId]=permId
                 mutTypes[tempId]=mutType
