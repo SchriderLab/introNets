@@ -53,6 +53,9 @@ def addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1):
             else:
                 tempId, permId, mutType, pos, selCoeff, domCoeff, originSubpop, originGen, numCopies = line.strip().split()
                 pos, originSubpop, originGen = int(pos), int(originSubpop.lstrip("p")), int(originGen)
+                if mutType == "m4":
+                    mutType = "m3"
+                
                 if mutType == "m3":
                     if not pos in locs:
                         locs[pos] = {}
