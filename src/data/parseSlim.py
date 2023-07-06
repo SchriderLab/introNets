@@ -17,16 +17,6 @@ def emitMsEntry(positions, segsites, haps, numReps, out, isFirst=True):
     for hap in haps:
         out.write("".join([str(x) for x in hap]) + "\n")
 
-def emitMsEntry(positions, segsites, haps, numReps, isFirst=True):
-    if isFirst:
-        print("slim {} {}".format(len(haps), numReps))
-        print("blah")
-    print("\n//")
-    print("segsites: {}".format(segsites))
-    print("positions: "+ " ".join([str(x) for x in positions]))
-    for hap in haps:
-        print("".join([str(x) for x in hap]))
-
 import sys        
 
 def readSampleOutFromSlimRun(output, numSamples, sampleSize1):
@@ -80,7 +70,6 @@ def parse_args():
     parser.add_argument("--n_per_pop", default = "64")
     parser.add_argument("--phys_len", default = "1000000")
 
-
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
 
@@ -105,6 +94,8 @@ def main():
     physLen = int(args.phys_len)
     
     for ifile in ifiles:
+        logging.info('working on file {}...'.format(ifile))
+        
         introgLogFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.log'))
         msOutFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.log'))
 
@@ -142,6 +133,7 @@ def main():
         outF.close()
         outF_ms.close()
         
+        logging.info('gzipping the output...')
         os.system('gzip {} {}'.format(introgLogFileName, msOutFileName))
 
     # ${code_blocks}
