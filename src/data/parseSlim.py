@@ -97,7 +97,7 @@ def main():
         logging.info('working on file {}...'.format(ifile))
         
         introgLogFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.log'))
-        msOutFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.log'))
+        msOutFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.ms'))
 
         ifile = gzip.open(ifile, 'r')
         output = [u.decode('utf-8') for u in ifile.readlines()]
