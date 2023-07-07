@@ -497,7 +497,7 @@ def get_gz_file(filename, splitchar = 'NA', buffered = False):
             return (i.strip().split() for i in gzip.open(filename, 'rt'))
         else: return (i.strip().split(splitchar) for i in gzip.open(filename, 'rt'))
 
-def load_data_slim(msfile, introgressfile, nindv):
+def load_data_slim(msfile, introgressfile, nindv, region = None):
     ig = list(get_gz_file(introgressfile))
     igD = {}
     for x in ig:
@@ -543,6 +543,13 @@ def load_data_slim(msfile, introgressfile, nindv):
 
         target.append(np.array(mask_mat, dtype='int8'))
     
+    pos = np.array(pos, dtype = np.float32).flatten() / np.max(pos)
+    
+    if region is not None:
+        ii = np.where((pos >= region[0]) & (pos <= region[1]))[0]
+        f = f[:,ii]
+        target = target[:,ii]
+    
     return f, pos, target
 
 def load_npz(ifile):
@@ -569,7 +576,7 @@ def split(word):
 ######
 # generic function for msmodified
 # ----------------
-def load_data(msFile, ancFile = None, n = None, leave_out_last = True):
+def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = None):
     msFile = gzip.open(msFile, 'r')
 
     # no migration case
@@ -623,6 +630,12 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True):
         if n is not None:
             x = x[:n,:]
             y = y[:n,:]
+            
+        if region is not None:
+            ii = np.where((pos >= region[0]) & (pos <= region[1]))[0]
+            x = x[:,ii]
+            y = y[:,ii]
+            pos = pos[ii]
             
         X.append(x)
         Y.append(y)
