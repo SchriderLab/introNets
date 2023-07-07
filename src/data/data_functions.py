@@ -532,7 +532,7 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
         q = q.astype("int8")
         
         pos_int = np.array(p, dtype='float')
-
+        pos_int /= np.max(pos_int)
         
 
         mask_mat = []
