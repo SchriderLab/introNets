@@ -62,6 +62,9 @@ def main():
         anc_files = sorted(glob.glob(os.path.join(args.idir, '*.log.gz')))
         log_files = sorted(glob.glob(os.path.join(args.idir, '*.out')))
         
+        if len(log_files) == 0:
+            log_files = [None for k in range(len(ms_files))]
+        
         idirs = list(zip(ms_files, anc_files, log_files))
         slim = True
     else:
@@ -100,11 +103,15 @@ def main():
             else:
                 msFile, ancFile, out = idirs[ix]
                 
-                mp, mt = read_slim_out(out)
-                mp = np.array(mp).reshape(-1, 2)
-                mt = np.array(mt).reshape(-1, 1)
+                if out is not None:
+                    mp, mt = read_slim_out(out)
+                    mp = np.array(mp).reshape(-1, 2)
+                    mt = np.array(mt).reshape(-1, 1)
+                    
+                    params = np.hstack([mp, mt])
+                else:
+                    params = np.zeros(2)
                 
-                params = np.hstack([mp, mt])
                 x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
             t_disk = time.time() - t0
