@@ -530,10 +530,10 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
         q = np.array(q)
 
         q = q.astype("int8")
-        f.append(np.array(q))
+        
         pos_int = np.array(p, dtype='float')
 
-        pos.append(pos_int)
+        
 
         mask_mat = []
         breakD = igD[gdx]
@@ -541,14 +541,18 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
             mask = binary_digitizer(pos_int, breakD[indv])
             mask_mat.append(mask)
 
-        target.append(np.array(mask_mat, dtype='int8'))
-    
-    pos = np.array(pos, dtype = np.float32).flatten() / np.max(pos)
-    
-    if region is not None:
-        ii = np.where((pos >= region[0]) & (pos <= region[1]))[0]
-        f = f[:,ii]
-        target = target[:,ii]
+        mask_mat = np.array(mask_mat, dtype='int8')
+        if region is not None:
+            ii = np.where((pos_int >= region[0]) & (pos_int <= region[1]))[0]
+            q = q[:,ii]
+            mask_mat = mask_mat[:,ii]
+            pos_int = pos_int[ii]
+        
+        f.append(q)
+        pos.append(pos_int)
+        target.append(mask_mat)
+        
+
     
     return f, pos, target
 
