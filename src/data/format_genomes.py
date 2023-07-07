@@ -100,6 +100,7 @@ def main():
             while len(X) > 0:
                 x = X.pop()
                 y = Y.pop()
+                logging.info('x_shape: {}'.format(x.shape))
                 
                 logging.info('have {} windows...'.format(len(range(0, x.shape[1] - window_size, step_size))))
                 
