@@ -7,6 +7,9 @@ import glob
 from runAndParseSlim import buildMutationPosMapping, removeMonomorphic, buildPositionsList, writeIntrogressedAlleles, addMutationsAndGenomesFromSample
 import gzip
 
+from mpi4py import MPI
+
+
 def emitMsEntry(positions, segsites, haps, numReps, out, isFirst=True):
     if isFirst:
         out.write("slim {} {}\n".format(len(haps), numReps))
@@ -90,10 +93,16 @@ def parse_args():
 def main():
     args = parse_args()
     
+    # configure MPI
+    comm = MPI.COMM_WORLD
+    
     ifiles = glob.glob(os.path.join(args.idir, '*.out.gz'))
     physLen = int(args.phys_len)
     
-    for ifile in ifiles:
+    
+    for ix in range(comm.rank, len(ifiles), comm.size):
+        ifile = ifiles[ix]        
+        
         logging.info('working on file {}...'.format(ifile))
         
         introgLogFileName = os.path.join(args.odir, ifile.split('/')[-1].replace('.out.gz', '.log'))
