@@ -226,7 +226,7 @@ def main():
     for key in keys:
         indices = np.array(ifile[key]['indices'])
         ix = np.array(ifile[key]['ix'])
-        x = np.array(ifile[key]['x_0'])
+        x = np.array(ifile[key]['x_0']).squeeze()
         y = np.squeeze(np.array(ifile[key]['y']))
         
         l = np.max(ix) + 1
