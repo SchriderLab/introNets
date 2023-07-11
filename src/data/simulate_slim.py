@@ -57,9 +57,9 @@ def main():
     if args.slurm:
         # SLURM job submission
         # scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability
-        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} | tee {9} && gzip {4} {9}"'
+        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} 0.0 | tee {9} && gzip {4} {9}"'
     else:
-        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} | tee {9} && gzip {4} {9}'
+        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} 0.0 | tee {9} && gzip {4} {9}'
 
     # for compatibiltiy with notation in SLiM script
     # we assume if a custom script is used it is a two-population demography with such options (or it ignores them)
