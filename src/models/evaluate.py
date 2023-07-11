@@ -131,6 +131,7 @@ def main():
         ab_platt = None
     
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4, val_prop = 0, label_smooth = False)
+    
     if args.n_samples == "None":
         N = generator.length
     else:
@@ -145,6 +146,9 @@ def main():
     for ix in range(N):
         with torch.no_grad():
             x, y = generator.get_batch()
+            
+            print(x.shape)
+            print(y.shape)
             
             if y is None:
                 break
