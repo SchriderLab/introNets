@@ -147,8 +147,9 @@ def main():
         with torch.no_grad():
             x, y = generator.get_batch()
             
-            print(x.shape)
-            print(y.shape)
+            if len(x.shape) > 4:
+                x = torch.squeeze(x)
+                y = torch.squeeze(y)
             
             if y is None:
                 break
