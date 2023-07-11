@@ -243,6 +243,7 @@ def main():
         for c in chunks(ii, bs):
             x_ = torch.FloatTensor(x[c]).to(device)
             
+            print(x_.shape)
             with torch.no_grad():
                 y_ = model(x_)
                 
@@ -344,6 +345,7 @@ def main():
     plt.savefig(os.path.join(args.odir, 'precision_recall.eps'))
     plt.close()
     
+    """
     logging.info('bootstrapping metrics...')
     
     Y = np.array(Y)
@@ -367,9 +369,7 @@ def main():
     print('auroc: {0} +- {1}'.format(np.mean(rocs), np.std(rocs) / np.sqrt(len(rocs)) * 1.96))
     print('aupr: {0} +- {1}'.format(np.mean(prs), np.std(prs) / np.sqrt(len(rocs)) * 1.96))
     print('accuracy: {0} +- {1}'.format(np.mean(accs), np.std(accs) / np.sqrt(len(rocs)) * 1.96))
-        
-        
-        
+    """
 
 if __name__ == '__main__':
     main()
