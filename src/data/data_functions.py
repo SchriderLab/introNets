@@ -540,14 +540,14 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
             mask_mat.append(mask)
 
         mask_mat = np.array(mask_mat, dtype='int8')
+        if len(pos_int) > 0:
+            pos_int /= np.max(pos_int)
         if region is not None:
             ii = np.where((pos_int >= region[0]) & (pos_int <= region[1]))[0]
             q = q[:,ii]
             mask_mat = mask_mat[:,ii]
             pos_int = pos_int[ii]
     
-        pos_int /= np.max(pos_int)
-        
         f.append(q)
         pos.append(pos_int)
         target.append(mask_mat)
