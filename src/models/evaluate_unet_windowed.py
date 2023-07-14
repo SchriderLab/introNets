@@ -233,9 +233,9 @@ def main():
         n = indices.shape[-1]
         
         # get an array to store the results and the count
-        y_pred = np.zeros((100, l), dtype = np.float32)
-        y_true = np.zeros((100, l), dtype = np.float32)
-        count = np.zeros((100, l), dtype = np.float32)
+        y_pred = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
+        y_true = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
+        count = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
     
         ii = list(range(x.shape[0]))
         
@@ -254,24 +254,28 @@ def main():
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
-        print(indices.shape)
-        for k in range(y_pred_.shape[0]):
-            ii = indices[k,0,:]
-            ii_u = uni(ii)
-
-            y_ = y_pred_[k][ii_u]
-            ii = [ii[u] for u in ii_u]
-            ii = np.argsort(ii)
-            
-            ix_ = ix[k]
-            
-            y_pred[:,ix_] += y_[ii]
-            count[:,ix_] += 1.
-            
-            y_ = y[k,ii_u]
-            y_ = y_[ii]
-            
-            y_true[:,ix_] = y_
+        if len(y_pred_.shape) == 4:
+            y_pred_ = y_pred_[:,0,:,:]
+        
+        print(ix.shape)
+        for j in range(x.shape[-3]):
+            for k in range(y_pred_.shape[0]):
+                ii = indices[k,j,:]
+                ii_u = uni(ii)
+    
+                y_ = y_pred_[k][j][ii_u]
+                ii = [ii[u] for u in ii_u]
+                ii = np.argsort(ii)
+                
+                ix_ = ix[k,j]
+                
+                y_pred[j,:,ix_] += y_[ii]
+                count[j,:,ix_] += 1.
+                
+                y_ = y[k,ii_u]
+                y_ = y_[ii]
+                
+                y_true[j,:,ix_] = y_
         
         y_pred = expit(y_pred / count)        
         counter += 1
