@@ -254,11 +254,9 @@ def main():
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
-        print(y_pred_.shape)
-        if len(y_pred_.shape) == 4:
-            y_pred_ = y_pred_[:,0,:,:]
+        if len(indices.shape) == 4:
+            indices = indices[:,0,:,:]
         
-        print(ix.shape, indices.shape, y_pred_.shape)
         for j in range(x.shape[-3]):
             for k in range(y_pred_.shape[0]):
                 ii = indices[k,j,:]
