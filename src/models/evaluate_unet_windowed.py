@@ -274,7 +274,7 @@ def main():
                 y_pred[j][:,ix_] += y_[ii]
                 count[j][:,ix_] += 1.
                 
-                y_ = y[k,ii_u]
+                y_ = y[k,j,ii_u]
                 y_ = y_[ii]
                 
                 y_true[j][:,ix_] = y_
