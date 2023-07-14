@@ -271,13 +271,13 @@ def main():
                 
                 ix_ = ix[k]
                 
-                y_pred[j,:,ix_] += y_[ii]
-                count[:,ix_] += 1.
+                y_pred[j][:,ix_] += y_[ii]
+                count[j][:,ix_] += 1.
                 
                 y_ = y[k,ii_u]
                 y_ = y_[ii]
                 
-                y_true[:,ix_] = y_
+                y_true[j][:,ix_] = y_
         
         y_pred = expit(y_pred / count)        
         counter += 1
