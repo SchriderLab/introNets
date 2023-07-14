@@ -248,10 +248,10 @@ def main():
                 y_ = model(x_)
                 
             y_ = y_.detach().cpu().numpy()
-            if len(y_.shape) == 2:
+            if x_.shape[0] == 1:
                 y_ = np.expand_dims(y_, 0)
             
-            print(y_.shape)
+            
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
