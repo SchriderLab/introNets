@@ -265,6 +265,7 @@ def main():
     
                 print(len(ii_u))
                 y_ = y_pred_[k][j][ii_u]
+                print(y_.shape)
                 ii = [ii[u] for u in ii_u]
                 ii = np.argsort(ii)
                 
