@@ -254,6 +254,7 @@ def main():
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
+        print(y_pred_.shape)
         if len(y_pred_.shape) == 4:
             y_pred_ = y_pred_[:,0,:,:]
         
