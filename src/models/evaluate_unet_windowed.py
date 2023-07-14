@@ -263,6 +263,7 @@ def main():
                 ii = indices[k,j,:]
                 ii_u = uni(ii)
     
+                print(len(ii_u))
                 y_ = y_pred_[k][j][ii_u]
                 ii = [ii[u] for u in ii_u]
                 ii = np.argsort(ii)
