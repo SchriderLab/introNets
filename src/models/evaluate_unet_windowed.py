@@ -254,6 +254,7 @@ def main():
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
+        print(indices.shape)
         for k in range(y_pred_.shape[0]):
             ii = indices[k,0,:]
             ii_u = uni(ii)
