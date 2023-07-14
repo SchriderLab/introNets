@@ -257,7 +257,7 @@ def main():
         if len(indices.shape) == 4:
             indices = indices[:,0,:,:]
         
-        print(y_pred.shape, y_pred_.shape)
+        print(y_pred.shape, y_pred_.shape, y.shape)
         for j in range(x.shape[-3]):
             for k in range(y_pred_.shape[0]):
                 ii = indices[k,j,:]
