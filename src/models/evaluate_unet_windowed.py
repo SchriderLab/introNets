@@ -257,7 +257,7 @@ def main():
         if len(y_pred_.shape) == 4:
             y_pred_ = y_pred_[:,0,:,:]
         
-        print(ix.shape)
+        print(ix.shape, indices.shape, y_pred_.shape)
         for j in range(x.shape[-3]):
             for k in range(y_pred_.shape[0]):
                 ii = indices[k,j,:]
@@ -267,15 +267,15 @@ def main():
                 ii = [ii[u] for u in ii_u]
                 ii = np.argsort(ii)
                 
-                ix_ = ix[k,j]
+                ix_ = ix[k]
                 
                 y_pred[j,:,ix_] += y_[ii]
-                count[j,:,ix_] += 1.
+                count[:,ix_] += 1.
                 
                 y_ = y[k,ii_u]
                 y_ = y_[ii]
                 
-                y_true[j,:,ix_] = y_
+                y_true[:,ix_] = y_
         
         y_pred = expit(y_pred / count)        
         counter += 1
