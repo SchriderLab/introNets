@@ -251,6 +251,7 @@ def main():
             if len(y_.shape) == 2:
                 y_ = np.expand_dims(y_, 0)
             
+            print(y_.shape)
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
