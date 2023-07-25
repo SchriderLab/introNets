@@ -331,7 +331,7 @@ def main():
     logging.info('plotting EPS files...')
     # do this for all the examples:
     cm_m(M, os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
-    sys.exit()
+    #sys.exit()
     
     precision, recall, thresholds = precision_recall_curve(list(map(int, Y)), Y_pred)
     fpr, tpr, _ = roc_curve(list(map(int, Y)), Y_pred)
