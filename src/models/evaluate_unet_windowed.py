@@ -294,6 +294,9 @@ def main():
         y_pred_round = np.round(y_pred.flatten())
         y_true = y_true.flatten()
         
+        Y.extend(y_true)
+        Y_pred.extend(y_pred)
+        
         ii = np.where((y_pred_round == y_true) & (y_true == 0))[0]
         M[0,0] += len(ii)
         
