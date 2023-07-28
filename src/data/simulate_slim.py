@@ -22,7 +22,7 @@ def parse_args():
     parser.add_argument("--st", default = "4", help = "split time coefficient (see .slim file)")
     parser.add_argument("--mt", default = "0.25", help = "migration time coefficient (see .slim file)")
     parser.add_argument("--mp", default = "1", help = "migration probability (legacy isn't actually used...)")
-    parser.add_argument("--sel_co", default = "0.0")
+    parser.add_argument("--sel_co", default = 0.0)
     
     parser.add_argument("--phys_len", default = "10000", help = "length of simulated chromosome in base pairs")
     parser.add_argument("--direction", default="ab", help = "directionality of migration.")
