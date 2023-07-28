@@ -22,6 +22,8 @@ def parse_args():
     parser.add_argument("--st", default = "4", help = "split time coefficient (see .slim file)")
     parser.add_argument("--mt", default = "0.25", help = "migration time coefficient (see .slim file)")
     parser.add_argument("--mp", default = "1", help = "migration probability (legacy isn't actually used...)")
+    parser.add_argument("--sel_co", default = "0.0")
+    
     parser.add_argument("--phys_len", default = "10000", help = "length of simulated chromosome in base pairs")
     parser.add_argument("--direction", default="ab", help = "directionality of migration.")
     parser.add_argument("--slurm", action="store_true", help = "whether to run locally (no SLURM)")
@@ -57,9 +59,9 @@ def main():
     if args.slurm:
         # SLURM job submission
         # scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability
-        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} 0.0 | tee {9} && gzip {4} {9}"'
+        cmd = 'sbatch --mem=4G -t 02:00:00 -o {10} --wrap "python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} {10} | tee {9} && gzip {4} {9}"'
     else:
-        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} 0.0 | tee {9} && gzip {4} {9}'
+        cmd = 'python3 src/data/runAndParseSlim.py {0} {1} {2} {3} {4} {5} {6} {7} {8} {10} | tee {9} && gzip {4} {9}'
 
     # for compatibiltiy with notation in SLiM script
     # we assume if a custom script is used it is a two-population demography with such options (or it ignores them)
@@ -80,13 +82,13 @@ def main():
         
         if args.slurm:
             cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
-                              donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, ofile_log)
+                              donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, ofile_log, args.sel_co)
             
             # submit via SLURM
             os.system(cmd_)
         else:
             cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
-                              donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms)
+                              donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, args.sel_co)
         
             # save the paramaters for later (done automatically via slurm) (they are written to the standard error of the ran script)
             cmd_ = '{0}'.format(cmd_)
