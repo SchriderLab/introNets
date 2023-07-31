@@ -243,7 +243,6 @@ def main():
         for c in chunks(ii, bs):
             x_ = torch.FloatTensor(x[c]).to(device)
             
-            print(x_.shape)
             with torch.no_grad():
                 y_ = model(x_)
                 
@@ -258,15 +257,12 @@ def main():
         if len(indices.shape) == 4:
             indices = indices[:,0,:,:]
         
-        print(y_pred.shape, y_pred_.shape, y.shape, x.shape)
         for j in range(x.shape[-3]):
             for k in range(y_pred_.shape[0]):
                 ii = indices[k,j,:]
                 ii_u = uni(ii)
     
-                print(len(ii_u))
                 y_ = y_pred_[k][j][ii_u]
-                print(y_.shape)
                 ii = [ii[u] for u in ii_u]
                 ii = np.argsort(ii)
                 
