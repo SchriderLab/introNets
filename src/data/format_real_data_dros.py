@@ -10,6 +10,7 @@ from mpi4py import MPI
 import sys
 
 from data_functions import TwoPopAlignmentFormatter
+import time
 
 def parse_args():
     # Argument Parser
@@ -115,6 +116,7 @@ def main():
     chunk_size = int(args.chunk_size)
 
     if comm.rank == 0:
+        t0 = time.time()
         logging.info('beginning to format with {} processes...'.format(comm.size))
 
     if comm.rank != 0:
@@ -195,6 +197,7 @@ def main():
                 ofile.create_dataset('{0}/i1'.format(current_chunk), data = np.array([u[0] for u in indices[-chunk_size:]], dtype = np.uint8), compression = 'lzf')
                 ofile.create_dataset('{0}/i2'.format(current_chunk), data = np.array([u[1] for u in indices[-chunk_size:]], dtype = np.uint8), compression = 'lzf')
 
+        logging.info('took {} seconds...'.format(time.time() - t0))
         ofile.close()
         
 if __name__ == '__main__':
