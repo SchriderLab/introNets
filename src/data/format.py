@@ -29,6 +29,8 @@ def parse_args():
     parser.add_argument("--sorting", default = "seriate_match", help = "legacy option.  this or none are the only options implemented currently")
     parser.add_argument("--metric", default = "cosine", help = "metric to use when matching / seriating alignments")
     
+    parser.add_argument("--region", default = "None", help = "specify a region of the simulated chromosomes to crop to before formatting further.  as a tuple a,b s.t. a,b in [0,1] and a > b")
+    
     parser.add_argument("--pop_sizes", default = "64,64", help = "pop sizes.  we currently only support two-population scenarios")
     parser.add_argument("--out_shape", default = "2,128,128", help = "desired output shape.  channels (populations) x individuals x segregating sites")
     
@@ -54,6 +56,7 @@ def main():
     comm = MPI.COMM_WORLD
     
     if comm.rank == 0:
+        t0 = time.time()
         ofile = h5py.File(args.ofile, 'w')
 
     idirs = [u for u in sorted(glob.glob(os.path.join(args.idir, '*')))]
@@ -75,6 +78,9 @@ def main():
         
     chunk_size = int(args.chunk_size)
     
+    if "," in args.region:
+        region = tuple(map(float, args.region.split(',')))
+    
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
     
@@ -94,7 +100,7 @@ def main():
                 msFile = os.path.join(idir, 'mig.msOut.gz')
                 ancFile = os.path.join(idir, 'out.anc.gz')
                                 
-                x, y, _ = load_data(msFile, ancFile, n = n_ind)
+                x, y, pos = load_data(msFile, ancFile, n = n_ind, region = region)
                 
                 if os.path.exists(os.path.join(idir, 'mig.tbs')):
                     params = list(np.loadtxt(os.path.join(idir, 'mig.tbs')))
@@ -166,7 +172,8 @@ def main():
                 logging.info('0: wrote chunk {0}'.format(current_chunk))
                 
                 current_chunk += 1
-                
+        
+        logging.info('0: took {} seconds to process {} chunks...'.format(time.time() - t0, current_chunk + 1))
         ofile.close()
 
 if __name__ == '__main__':
