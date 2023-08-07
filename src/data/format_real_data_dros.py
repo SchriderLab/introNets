@@ -99,7 +99,7 @@ def main():
         shape = X.shape
 
         n_files = X.shape[1] - w_size
-        print(n_files)
+        logging.info('have {} windows'.format(n_files))
 
     else:
         X = None
@@ -113,6 +113,9 @@ def main():
     comm.Barrier()
 
     chunk_size = int(args.chunk_size)
+
+    if comm.rank == 0:
+        logging.info('beginning to format with {} processes...'.format(comm.size))
 
     if comm.rank != 0:
         for ix in range(comm.rank - 1, X.shape[1] - w_size, comm.size - 1):
