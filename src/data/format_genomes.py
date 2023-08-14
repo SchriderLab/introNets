@@ -114,7 +114,7 @@ def main():
                     x_ = x[:,ix:ix + window_size]
                     y_ = y[:,ix:ix + window_size]
                     
-                    f = TwoPopAlignmentFormatter([x_], [y_], sorting = args.sorting, pop = -1, 
+                    f = TwoPopAlignmentFormatter([x_], [y_], sorting = args.sorting, pop = int(args.pop), 
                                   pop_sizes = pop_sizes, shape = out_shape)
                     f.format(include_zeros = True)
                     
