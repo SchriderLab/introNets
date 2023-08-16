@@ -167,7 +167,7 @@ def read_ms_tree(ifile, n = 34, L = 10000):
     ## pop - (int or None) which population to save in the channels output of the Y variable. [0 or 1]
 class TwoPopAlignmentFormatter(object):
     def __init__(self, x, y = None, p = None, shape = (2, 32, 64), pop_sizes = [150, 156], 
-                 sorting = 'seriate_match', sorting_metric = 'cosine', pop = None, seriation_pop = 0):
+                 sorting = 'seriate_match', sorting_metric = 'cosine', pop = None, seriation_pop = 0, unphased = False):
         # list of x and y arrays
         self.x = deque(x)
         if y is not None:
@@ -189,6 +189,7 @@ class TwoPopAlignmentFormatter(object):
         self.sorting = sorting
         self.pop = pop
         self.metric = sorting_metric
+        self.unphased = unphased
         
         self.iter = 0
         
@@ -334,9 +335,17 @@ class TwoPopAlignmentFormatter(object):
                 t_seriation.append(t_ser)
                 t_matching.append(t_match)
             
+            if self.unphased:
+                x1 = x1[:len(x1) // 2] + x1[len(x1) // 2:]
+                x2 = x2[:len(x2) // 2] + x2[len(x2) // 2:]
+            
             x = np.array([x1, x2])
             
             if self.y is not None:
+                if self.unphased:
+                   y1 = np.bitwise_or(y1[:len(y1) // 2], y1[len(y1) // 2:])
+                   y2 = np.bitwise_or(y2[:len(y2) // 2], y2[len(y2) // 2:])
+                   
                 y = np.array([y1, y2])
             
             if self.y is not None:

@@ -38,6 +38,7 @@ def parse_args():
     parser.add_argument("--include_zeros", action = "store_true", help = "used to include replicate windows that have no introgression")
     
     parser.add_argument("--pop", default = "0", help = "only return y values for one pop, pop not in [0, 1] == use both populations (bidirectional introgression case)")
+    parser.add_argument("--unphased", action = "store_true")
 
     args = parser.parse_args()
 
@@ -126,7 +127,7 @@ def main():
                 y = None
                 
             f = TwoPopAlignmentFormatter(x, y, params, sorting = args.sorting, sorting_metric = args.metric, pop = int(args.pop), 
-                          pop_sizes = pop_sizes, shape = out_shape)
+                          pop_sizes = pop_sizes, shape = out_shape, unphased = args.unphased)
             f.format(include_zeros = args.include_zeros)
             logging.debug('{3}: took an average {0} s to seriate, {1} to match and {2} to read the data...'.format(np.mean(f.time[0]), 
                                                                                                                    np.mean(f.time[1]), t_disk, comm.rank))
