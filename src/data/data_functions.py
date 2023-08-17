@@ -226,8 +226,7 @@ class TwoPopAlignmentFormatter(object):
             x1 = x1[:len(x1) // 2] + x1[len(x1) // 2:]
             x2 = x2[:len(x2) // 2] + x2[len(x2) // 2:]
             
-            x1_indices = x1_indices[:len(x1_indices) // 2]
-            x2_indices = x2_indices[:len(x2_indices) // 2]
+            
         
         return x1, x2, x1_indices, x2_indices
 
