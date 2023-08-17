@@ -222,6 +222,13 @@ class TwoPopAlignmentFormatter(object):
         x1 = x[x1_indices, :]
         x2 = x[x2_indices, :]
         
+        if self.unphased:
+            x1 = x1[:len(x1) // 2] + x1[len(x1) // 2:]
+            x2 = x2[:len(x2) // 2] + x2[len(x2) // 2:]
+            
+            x1_indices = x1_indices[:len(x1_indices) // 2]
+            x2_indices = x2_indices[:len(x2_indices) // 2]
+        
         return x1, x2, x1_indices, x2_indices
 
     # store a list of the desired arrays
@@ -277,6 +284,11 @@ class TwoPopAlignmentFormatter(object):
                 if y1.shape[1] != self.n_sites:
                     print('didnt find the correct number of sites in y...')
                     continue 
+                
+                if self.unphased:
+                    y1 = np.bitwise_or(y1[:len(y1) // 2], y1[len(y1) // 2:])
+                    y2 = np.bitwise_or(y2[:len(y2) // 2], y2[len(y2) // 2:])
+                
             else:
                 indices = list(range(x1.shape[1] - self.n_sites + 1))
                 six = np.random.choice(indices)
@@ -335,17 +347,9 @@ class TwoPopAlignmentFormatter(object):
                 t_seriation.append(t_ser)
                 t_matching.append(t_match)
             
-            if self.unphased:
-                x1 = x1[:len(x1) // 2] + x1[len(x1) // 2:]
-                x2 = x2[:len(x2) // 2] + x2[len(x2) // 2:]
-            
             x = np.array([x1, x2])
             
             if self.y is not None:
-                if self.unphased:
-                   y1 = np.bitwise_or(y1[:len(y1) // 2], y1[len(y1) // 2:])
-                   y2 = np.bitwise_or(y2[:len(y2) // 2], y2[len(y2) // 2:])
-                   
                 y = np.array([y1, y2])
             
             if self.y is not None:
