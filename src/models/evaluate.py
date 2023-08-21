@@ -160,8 +160,6 @@ def main():
 
             x = x.to(device)
             y = y.to(device)
-            
-            print(x.shape, y.sahpe)
 
             y_pred = model(x)
             
