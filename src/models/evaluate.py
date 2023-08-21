@@ -132,10 +132,14 @@ def main():
     
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4, val_prop = 0, label_smooth = False)
     
+    print(generator.length)
     if args.n_samples == "None":
         N = generator.length
     else:
         N = int(args.n_samples)
+    
+    if N > generator.length:
+        N = generator.length
     
     counter = 0
     
@@ -156,6 +160,8 @@ def main():
 
             x = x.to(device)
             y = y.to(device)
+            
+            print(x.shape, y.sahpe)
 
             y_pred = model(x)
             
@@ -240,6 +246,7 @@ def main():
                 plt.close()
             
             
+    print(len(Y))
     print('plotting...')
     # what probability bin do they fall in?
     p_bins = np.linspace(0., 1., 15)
