@@ -274,11 +274,13 @@ class TwoPopAlignmentFormatter(object):
                 if not include_zeros:
                     indices = list(set(range(x1.shape[1] - self.n_sites)).intersection(list(np.where(np.sum(yi, axis = 0) > 0)[0])))
                     if len(indices) == 0:
+                        logging.debug('no introgression in this sim...skipping it...')
                         continue
                 else:
                     indices = list(range(x1.shape[1] - self.n_sites + 1))
                 
                 six = np.random.choice(indices)
+                logging.debug('chose random starting index: {}'.format(six))
 
                 y1 = y1[:,six:six + self.n_sites]
                 y2 = y2[:,six:six + self.n_sites]
@@ -369,6 +371,9 @@ class TwoPopAlignmentFormatter(object):
             
             X.append(x)            
             Indices.append((x1_indices, x2_indices))
+            
+            logging.debug('x1 ix: {}'.format(x1_indices))
+            logging.debug('x2 ix: {}'.format(x2_indices))
             
         self.x = X
         self.y = Y
