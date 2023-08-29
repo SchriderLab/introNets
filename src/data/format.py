@@ -134,8 +134,7 @@ def main():
         
             
             logging.debug('shapes {}'.format([u.shape for u in f.x]))
-        
-            comm.send([f.x, f.y, f.p], dest = 0)
+            comm.send([f.x[1:], f.y[1:], f.p[1:]], dest = 0)
     else:
         n_received = 0
         current_chunk = 0
