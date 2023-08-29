@@ -11,6 +11,8 @@ from data_functions import load_data, TwoPopAlignmentFormatter, load_data_slim, 
 from mpi4py import MPI
 import h5py
 
+import matplotlib.pyplot as plt
+
 # use this format to tell the parsers
 # where to insert certain parts of the script
 # ${imports}
@@ -49,6 +51,8 @@ def parse_args():
         logging.basicConfig(level=logging.INFO)
 
     return args
+
+from collections import deque
 
 def main():
     args = parse_args()
@@ -121,6 +125,8 @@ def main():
                 
                 x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
+                assert len(x) == len(y)
+            
             t_disk = time.time() - t0
             
             if len(y) == 0:
@@ -131,10 +137,9 @@ def main():
             f.format(include_zeros = args.include_zeros)
             logging.debug('{3}: took an average {0} s to seriate, {1} to match and {2} to read the data...'.format(np.mean(f.time[0]), 
                                                                                                                    np.mean(f.time[1]), t_disk, comm.rank))
-        
             
             logging.debug('shapes {}'.format([u.shape for u in f.x]))
-            comm.send([f.x[1:], f.y[1:], f.p[1:]], dest = 0)
+            comm.send([f.x, f.y, f.p], dest = 0)
     else:
         n_received = 0
         current_chunk = 0
@@ -147,13 +152,11 @@ def main():
         while n_received < len(idirs):
             x, y, p = comm.recv(source = MPI.ANY_SOURCE)
             
+            X.extend(x)
             if y is None:
                 no_y = True
             else:
                 Y.extend(y)
-            
-            X.extend(x)
-            Y.extend(y)
             
             if p is not None:
                 params.extend(p)
