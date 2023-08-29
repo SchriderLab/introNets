@@ -117,7 +117,7 @@ def main():
                     
                     params = np.hstack([mp, mt])
                 else:
-                    params = np.zeros(2)
+                    params = None
                 
                 x, _, y = load_data_slim(msFile, ancFile, n_ind)
             
@@ -131,6 +131,9 @@ def main():
             f.format(include_zeros = args.include_zeros)
             logging.debug('{3}: took an average {0} s to seriate, {1} to match and {2} to read the data...'.format(np.mean(f.time[0]), 
                                                                                                                    np.mean(f.time[1]), t_disk, comm.rank))
+        
+            
+            logging.debug('shapes {}'.format([u.shape for u in f.x]))
         
             comm.send([f.x, f.y, f.p], dest = 0)
     else:
@@ -152,16 +155,18 @@ def main():
             
             X.extend(x)
             Y.extend(y)
-            params.extend(p)
+            
+            if p is not None:
+                params.extend(p)
             
             n_received += 1
             
-            while len(X) > chunk_size:
+            while len(X) >= chunk_size:
                 if not no_y:
                     ofile.create_dataset('{0}/y'.format(current_chunk), data = np.array(Y[-chunk_size:], dtype = np.uint8), compression = 'lzf')
                     del Y[-chunk_size:]
                     
-                if len(params) > 0:
+                if len(params) >= chunk_size:
                     ofile.create_dataset('{0}/params'.format(current_chunk), data = np.array(params[-chunk_size:], dtype = np.float32), compression = 'lzf')
                     del params[-chunk_size:]
                 
