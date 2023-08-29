@@ -244,6 +244,8 @@ class TwoPopAlignmentFormatter(object):
         
         while len(self.x) > 0:
             x = self.x.pop()
+            logging.debug('have initial shape of {}...'.format(x.shape))
+            
             if self.p is not None:
                 p = self.p.pop()
             
@@ -255,6 +257,7 @@ class TwoPopAlignmentFormatter(object):
                 continue
             
             x1, x2, x1_indices, x2_indices = self.resample_split(x)
+            logging.debug('have shapes {}, {}'.format(x1.shape, x2.shape))
             
             # in this block we down-sample by randomly selecting a window of the desired size from the simulation replicate
             if self.y is not None:
@@ -540,7 +543,6 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
             q.append(i)
 
         q = np.array(q)
-
         q = q.astype("int8")
         
         pos_int = np.array(p, dtype='float')
@@ -552,14 +554,7 @@ def load_data_slim(msfile, introgressfile, nindv, region = None):
             mask_mat.append(mask)
 
         mask_mat = np.array(mask_mat, dtype='int8')
-        if len(pos_int) > 0:
-            pos_int /= np.max(pos_int)
-        if region is not None:
-            ii = np.where((pos_int >= region[0]) & (pos_int <= region[1]))[0]
-            q = q[:,ii]
-            mask_mat = mask_mat[:,ii]
-            pos_int = pos_int[ii]
-    
+
         f.append(q)
         pos.append(pos_int)
         target.append(mask_mat)
