@@ -18,7 +18,7 @@ import torch.distributed as dist
 import copy
 
 from layers import LexStyleNet
-from data_loaders import H5DisDataGenerator_i2
+from data_loaders import H5DisDataGenerator
 import h5py
 
 import numpy as np
@@ -41,7 +41,6 @@ def parse_args():
 
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
 
-    parser.add_argument("--devices", default = "0")
     parser.add_argument("--n_plateau", default = "5")
     parser.add_argument("--rl_factor", default = "0.5")
     parser.add_argument("--n_epochs", default = "100")
@@ -152,19 +151,16 @@ def main():
         ifiles[t] = f
 
     logging.info('reading data keys...')
-    generator = H5DisDataGenerator_i2(ifiles, batch_size = int(args.batch_size))
+    generator = H5DisDataGenerator(ifiles, batch_size = int(args.batch_size))
 
     logging.info('creating model...')
-    # ${code_blocks}
-    device_strings = ['cuda:{}'.format(u) for u in args.devices.split(',')]
-    device = torch.device(device_strings[0])
-
-    model = resnet34()
-    if len(device_strings) > 1:
-        model = nn.DataParallel(model, device_ids = list(map(int, args.devices.split(',')))).to(device)
-        model = model.to(device)
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
     else:
-        model = model.to(device)
+        device = torch.device('cpu')
+    
+    model = resnet34()
+    model = model.to(device)
         
     print(model)
     d_model = count_parameters(model)
@@ -196,7 +192,7 @@ def main():
         accuracies = []
 
         ij = 0
-        for ij in range(1000):
+        for ij in range(generator.length):
             optimizer.zero_grad()
             x, y = generator.get_batch()
             
