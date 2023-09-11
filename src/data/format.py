@@ -85,6 +85,8 @@ def main():
     
     if "," in args.region:
         region = tuple(map(float, args.region.split(',')))
+    else:
+        region = None
     
     pop_sizes = tuple(list(map(int, args.pop_sizes.split(','))))
     out_shape = tuple(list(map(int, args.out_shape.split(','))))
