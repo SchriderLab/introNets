@@ -106,7 +106,10 @@ def main():
                 
                 msFile = os.path.join(idir, 'mig.msOut.gz')
                 ancFile = os.path.join(idir, 'out.anc.gz')
-                                
+                
+                if not os.path.exists(ancFile):
+                    ancFile = None
+                
                 x, y, pos = load_data(msFile, ancFile, n = n_ind, region = region)
                 
                 if os.path.exists(os.path.join(idir, 'mig.tbs')):
