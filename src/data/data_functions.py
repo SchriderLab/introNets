@@ -234,10 +234,16 @@ class TwoPopAlignmentFormatter(object):
     ## args:
         # include_zeros: (bool) whether to include random samples that have no-introgression (no positive pixels)
     def format(self, include_zeros = False):
+        logging.debug('formatting {} random windows...'.format(len(self.x)))
+        if self.y is not None:
+            assert len(self.x) == len(self.y), 'y and x are not the same length!'
+        
         X = []
         Y = []
         P = []
         Indices = []
+        
+        self.six = []
         
         t_seriation = []
         t_matching = []
@@ -257,6 +263,8 @@ class TwoPopAlignmentFormatter(object):
                 continue
             
             x1, x2, x1_indices, x2_indices = self.resample_split(x)
+            print(x1_indices, x2_indices)
+            
             logging.debug('have shapes {}, {}'.format(x1.shape, x2.shape))
             
             # in this block we down-sample by randomly selecting a window of the desired size from the simulation replicate
@@ -299,7 +307,14 @@ class TwoPopAlignmentFormatter(object):
                 
             x1 = x1[:,six:six + self.n_sites]
             x2 = x2[:,six:six + self.n_sites]
-                
+            
+            ys1 = np.sum(y1, axis = 0)
+            ys2 = np.sum(y2, axis = 0)
+            
+            x_sfs = np.sum(x1, axis = 0) + np.sum(x2, axis = 0)
+            
+            print(self.y is not None)
+            
             #### do sorting ------
             if self.sorting == "seriate_match":
                 if self.seriation_pop == 0:
@@ -353,8 +368,13 @@ class TwoPopAlignmentFormatter(object):
             
             x = np.array([x1, x2])
             
+            assert (np.sum(x, axis = 0).sum(axis = 0) == x_sfs).all()
+            
+            self.six.append(six)
             if self.y is not None:
                 y = np.array([y1, y2])
+            
+            assert (np.sum(y[0], axis = 0) == ys1).all() and (np.sum(y[1], axis = 0) == ys2).all()
             
             if self.y is not None:
                 if self.pop == 0:
@@ -607,7 +627,7 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = 
     if ancFile is not None:
         idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
     else:
-        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
+        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines) - 1]
 
     ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list) - 1)]
     ms_chunks[-1] += ['\n']
