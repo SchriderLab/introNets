@@ -624,11 +624,8 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = 
     if leave_out_last:
         ms_lines = ms_lines[:-1]
 
-    if ancFile is not None:
-        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
-    else:
-        idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines) - 1]
-
+    idx_list = [idx for idx, value in enumerate(ms_lines) if '//' in value] + [len(ms_lines)]
+    
     ms_chunks = [ms_lines[idx_list[k]:idx_list[k+1]] for k in range(len(idx_list) - 1)]
     ms_chunks[-1] += ['\n']
 
@@ -643,7 +640,7 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = 
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
         
-        x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:-1]], dtype = np.uint8)
+        x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:3 + n]], dtype = np.uint8)
         # destroy the perfect information regarding
         # which allele is the ancestral one
         for k in range(x.shape[1]):
@@ -662,10 +659,6 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = 
             y = np.zeros(x.shape, dtype = np.uint8)
             
         assert len(pos) == x.shape[1]
-        
-        if n is not None:
-            x = x[:n,:]
-            y = y[:n,:]
             
         if region is not None:
             ii = np.where((pos >= region[0]) & (pos <= region[1]))[0]
