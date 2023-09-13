@@ -132,20 +132,20 @@ def main():
                 indices = np.array(indices, dtype = np.int32)
                 positions = np.array(positions, dtype = np.int32)
                 
-                comm.send([X_, Y_, indices, positions], dest = 0)
+                comm.send([ix, X_, Y_, indices, positions], dest = 0)
                 
     else:
         n_received = 0
         current_chunk = 0
 
         while n_received < len(ms_files):
-            x, y, indices, pi = comm.recv(source = MPI.ANY_SOURCE)
+            ix, x, y, indices, pi = comm.recv(source = MPI.ANY_SOURCE)
             logging.info('writing set {}...'.format(current_chunk))
             
-            ofile.create_dataset('{}/x_0'.format(current_chunk), data = x, compression = 'lzf')
-            ofile.create_dataset('{}/y'.format(current_chunk), data = y, compression = 'lzf')
-            ofile.create_dataset('{}/indices'.format(current_chunk), data = indices, compression = 'lzf')
-            ofile.create_dataset('{}/ix'.format(current_chunk), data = pi, compression = 'lzf')
+            ofile.create_dataset('{}/x_0'.format(ix), data = x, compression = 'lzf')
+            ofile.create_dataset('{}/y'.format(ix), data = y, compression = 'lzf')
+            ofile.create_dataset('{}/indices'.format(ix), data = indices, compression = 'lzf')
+            ofile.create_dataset('{}/ix'.format(ix), data = pi, compression = 'lzf')
             
             current_chunk += 1
             n_received += 1
