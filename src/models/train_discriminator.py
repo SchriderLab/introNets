@@ -149,6 +149,8 @@ def main():
         t = f.split('/')[-1].split('.')[0]
         
         ifiles[t] = f
+        
+    print(ifiles)
 
     logging.info('reading data keys...')
     generator = H5DisDataGenerator(ifiles, batch_size = int(args.batch_size))
