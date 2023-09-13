@@ -48,6 +48,8 @@ def parse_args():
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
+    
+    parser.add_argument("--in_channels", default = "2")
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -161,7 +163,7 @@ def main():
     else:
         device = torch.device('cpu')
     
-    model = resnet34()
+    model = resnet34(in_channels = int(args.in_channels))
     model = model.to(device)
         
     print(model)
