@@ -108,11 +108,11 @@ def main():
                 Y_ = []
                 indices = []
                 positions = []
-                for ix in range(0, x.shape[1] - window_size, step_size):
+                for ij in range(0, x.shape[1] - window_size, step_size):
                     pi = list(range(ix,ix + window_size))
                     
-                    x_ = x[:,ix:ix + window_size]
-                    y_ = y[:,ix:ix + window_size]
+                    x_ = x[:,ij:ij + window_size]
+                    y_ = y[:,ij:ij + window_size]
                     
                     f = TwoPopAlignmentFormatter([x_], [y_], sorting = args.sorting, pop = int(args.pop), 
                                   pop_sizes = pop_sizes, shape = out_shape)
