@@ -146,7 +146,7 @@ def main():
     _ = glob.glob(os.path.join(args.idir, '*.hdf5'))
     
     for f in _:
-        t = f.split('/')[-1].split('_')[0]
+        t = f.split('/')[-1].split('.')[0]
         
         ifiles[t] = f
 
