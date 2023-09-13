@@ -263,7 +263,6 @@ class TwoPopAlignmentFormatter(object):
                 continue
             
             x1, x2, x1_indices, x2_indices = self.resample_split(x)
-            print(x1_indices, x2_indices)
             
             logging.debug('have shapes {}, {}'.format(x1.shape, x2.shape))
             
@@ -312,8 +311,6 @@ class TwoPopAlignmentFormatter(object):
             ys2 = np.sum(y2, axis = 0)
             
             x_sfs = np.sum(x1, axis = 0) + np.sum(x2, axis = 0)
-            
-            print(self.y is not None)
             
             #### do sorting ------
             if self.sorting == "seriate_match":
@@ -612,7 +609,7 @@ def split(word):
 ######
 # generic function for msmodified
 # ----------------
-def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = None):
+def load_data(msFile, ancFile = None, n = None, leave_out_last = False, region = None):
     msFile = gzip.open(msFile, 'r')
 
     # no migration case
@@ -639,7 +636,7 @@ def load_data(msFile, ancFile = None, n = None, leave_out_last = True, region = 
     P = []
     for chunk in ms_chunks:
         pos = np.array([u for u in chunk[2].split(' ')[1:-1] if u != ''], dtype = np.float32)
-        
+
         x = np.array([list(map(int, split(u.replace('\n', '')))) for u in chunk[3:3 + n]], dtype = np.uint8)
         # destroy the perfect information regarding
         # which allele is the ancestral one
