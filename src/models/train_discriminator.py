@@ -148,7 +148,7 @@ def main():
     for f in _:
         t = f.split('/')[-1].split('.')[0]
         
-        ifiles[t] = f
+        ifiles[t] = [f]
         
     print(ifiles)
 
