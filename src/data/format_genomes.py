@@ -109,7 +109,7 @@ def main():
                 indices = []
                 positions = []
                 for ij in range(0, x.shape[1] - window_size, step_size):
-                    pi = list(range(ix,ix + window_size))
+                    pi = list(range(ij,ij + window_size))
                     
                     x_ = x[:,ij:ij + window_size]
                     y_ = y[:,ij:ij + window_size]
