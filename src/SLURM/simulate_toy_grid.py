@@ -15,6 +15,8 @@ def parse_args():
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
     parser.add_argument("--odir", default = "None")
+    
+    parser.add_argument("--direction", default = "ab")
     args = parser.parse_args()
 
     if args.verbose:
@@ -34,7 +36,7 @@ def parse_args():
 def main():
     args = parse_args()
 
-    cmd = 'python3 src/data/simulate_slim.py --st {0} --mt {1} --odir {2} --n_jobs 250'
+    cmd = 'python3 src/data/simulate_slim.py --st {0} --mt {1} --odir {2} --n_jobs 250 --slurm --direction {3}'
     
     st = np.linspace(2., 6., 5)
     mt = np.linspace(0.125, 0.375, 5)
@@ -43,7 +45,7 @@ def main():
         for j in range(len(mt)):
             odir = os.path.join(args.odir, '{0}_{1}'.format(i, j))
             
-            cmd_ = cmd.format(st[i], mt[j], odir)
+            cmd_ = cmd.format(st[i], mt[j], odir, args.direction)
             os.system(cmd_)
             
     # ${code_blocks}
