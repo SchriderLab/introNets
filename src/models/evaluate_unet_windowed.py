@@ -28,6 +28,7 @@ import seaborn as sns
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, average_precision_score, confusion_matrix, accuracy_score
 import pandas as pd
 import random
+from scipy.interpolate import interp1d
 
 def gaussian(window_size, sigma):
     def gauss_fcn(x):
@@ -149,11 +150,19 @@ def parse_args():
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--ifile", default = "None")
-    parser.add_argument("--weights", default = "None") # weights of the pre-trained model
-    parser.add_argument("--n_classes", default = "1")
-    parser.add_argument("--sigma", default = "30")
-    parser.add_argument("--n", default = "192")
+    parser.add_argument("--ifile", default = "None", help = "h5 file with formatted genomes in it to predict on. produced with src/data/format_genomes.py")
+    parser.add_argument("--weights", default = "None", help = "weights of the pretrained model") 
+    parser.add_argument("--n_classes", default = "1", help = "how many populations (image channels) to return in the y-prediction. must match the number trained upon")
+    parser.add_argument("--sigma", default = "30", help = "std of the gaussian window if smoothing the predictions (use --smooth)")
+    parser.add_argument("--n", default = "128", help = "size of the sliding window.  must be the same as passed to format_genomes and the training routine")
+    
+    parser.add_argument("--smooth", action = "store_true", help = "whether to use a guassian kernel to smooth the predictions. puts less weight on the pixels toward the edges of the prediction in the position axis")
+
+    parser.add_argument("--pop", default = "None", help = "use to specify the pop that's being predicted")
+    parser.add_argument("--plot", action = "store_true")
+    parser.add_argument("--n_to_plot", default = "None")
+    
+    parser.add_argument("--save_pred", action = "store_true")
 
     parser.add_argument("--odir", default = "None")
     args = parser.parse_args()
@@ -168,7 +177,8 @@ def parse_args():
         if not os.path.exists(args.odir):
             os.system('mkdir -p {}'.format(args.odir))
             logging.debug('root: made output directory {0}'.format(args.odir))
-    # ${odir_del_block}
+        else:
+            os.system('rm -rf {}'.format(os.path.join(args.odir, '*')))
 
     return args
 
@@ -204,9 +214,6 @@ def main():
     G = G.view(1, 1, int(args.n)).to(device)
     Gn = G.detach().cpu().numpy()
     
-    plt.plot(Gn.flatten())
-    plt.show()
-    
     Y = []
     Y_pred = []
     indices_ = []
@@ -219,8 +226,22 @@ def main():
     
     M = np.zeros((2, 2))
     
-    fprs = []
-    tprs = []
+    if args.save_pred:
+        os.system('mkdir -p {}'.format(os.path.join(args.odir, 'preds')))
+    
+    if args.pop != "None":
+        pop = int(args.pop)
+    else:
+        pop = None
+        
+    pr_thresholds = np.linspace(0., 1., 100)
+    roc_thresholds = np.linspace(0., 2., 100)
+    
+    fpr_ = np.zeros((100,))
+    tpr_ = np.zeros((100,))
+    
+    recall_ = np.zeros((100,))
+    precision_ = np.zeros((100,))
     
     logging.info('predicting on {} keys...'.format(len(keys)))
     for key in keys:
@@ -228,15 +249,21 @@ def main():
         ix = np.array(ifile[key]['ix'])
         x = np.array(ifile[key]['x_0']).squeeze()
         y = np.squeeze(np.array(ifile[key]['y']))
+        pos = np.array(ifile[key]['pos'])
+         
         
         l = np.max(ix) + 1
         n = indices.shape[-1]
         
+        # single channel case
+        if len(y.shape) == 3:
+            y = np.expand_dims(y, 1)
+        
         # get an array to store the results and the count
-        y_pred = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
-        y_true = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
-        count = np.zeros((x.shape[-3], x.shape[-2], l), dtype = np.float32)
-    
+        y_pred = np.zeros((y.shape[-3], y.shape[-2], l), dtype = np.float32)
+        y_true = np.zeros((y.shape[-3], y.shape[-2], l), dtype = np.float32)
+        count = np.zeros((y.shape[-3], y.shape[-2], l), dtype = np.float32)
+        
         ii = list(range(x.shape[0]))
         
         y_pred_ = []
@@ -246,6 +273,9 @@ def main():
             with torch.no_grad():
                 y_ = model(x_)
                 
+                if args.smooth:
+                    y_ = y_ * G
+                
             y_ = y_.detach().cpu().numpy()
             if x_.shape[0] == 1:
                 y_ = np.expand_dims(y_, 0)
@@ -254,33 +284,54 @@ def main():
             y_pred_.append(y_)
             
         y_pred_ = np.concatenate(y_pred_)
+        
+        if len(y_pred_.shape) == 3:
+            y_pred_ = np.expand_dims(y_pred_, 1)
+        
         if len(indices.shape) == 4:
             indices = indices[:,0,:,:]
         
-        for j in range(x.shape[-3]):
+        if pop is not None:
+            indices = indices[:,[pop],:]
+        
+        for j in range(y.shape[-3]):
             for k in range(y_pred_.shape[0]):
+                # the seriated order
                 ii = indices[k,j,:]
+                # list of the index of unique individuals if there was upsampling
                 ii_u = uni(ii)
-    
+
+                # go down to only those unique individuals
                 y_ = y_pred_[k][j][ii_u]
+                
+                # used to sort back
                 ii = [ii[u] for u in ii_u]
                 ii = np.argsort(ii)
                 
                 ix_ = ix[k]
-                
                 y_pred[j][:,ix_] += y_[ii]
-                count[j][:,ix_] += 1.
+                
+                if args.smooth:
+                    count[j][:,ix_] += Gn.flatten()
+                else:
+                    count[j][:,ix_] += 1.
                 
                 y_ = y[k,j,ii_u]
                 y_ = y_[ii]
                 
                 y_true[j][:,ix_] = y_
         
-        y_pred = expit(y_pred / count)        
-        counter += 1
+
+        ii_ = np.where(count != 0)[-1]
+
+        y_pred = y_pred[:,:,ii_]
+        count = count[:,:,ii_]
+        y_true = y_true[:,:,ii_]
         
-        if (counter + 1) % 10 == 0:
-            print(counter)
+        y_pred = expit(y_pred / count)        
+        
+        if args.save_pred:
+            np.savez_compressed(os.path.join(os.path.join(args.odir, 'preds'), '{0:03d}.npz'.format(int(key))), y_pred = y_pred, y = y_true, pos = pos)
         
         # save the indices for take-one-out bootstrapping
         i1 = len(Y)
@@ -289,9 +340,6 @@ def main():
         y_pred = y_pred.flatten()
         y_pred_round = np.round(y_pred.flatten())
         y_true = y_true.flatten()
-        
-        Y.extend(y_true)
-        Y_pred.extend(y_pred)
         
         ii = np.where((y_pred_round == y_true) & (y_true == 0))[0]
         M[0,0] += len(ii)
@@ -305,22 +353,37 @@ def main():
         ii = np.where((y_pred_round != y_true) & (y_true == 1))[0]
         M[1,0] += len(ii)
         
-        accuracies.append(accuracy_score(y_true, y_pred_round))
+        """
+        accuracies.append(np.mean(np.abs(y_true - y_pred_round)))
         auprs.append(average_precision_score(y_true, y_pred))
         
         try:
             rocs.append(roc_auc_score(y_true, y_pred))
-            """
-            fpr, tpr, _ = roc_curve(list(map(int, y_true)), y_pred)
+            
+            fpr, tpr, thresholds_roc = roc_curve(list(map(int, y_true)), y_pred)
+            precision, recall, thresholds_pr = precision_recall_curve(list(map(int, y_true)), y_pred)
         
-            fprs.append(fpr)
-            tprs.append(tpr)
-        
-            print(len(fpr), len(tpr))
-            """
+            fpr = [0.] + list(fpr) + [1.]
+            tpr = [0.] + list(tpr) + [1.]
+            thresholds_roc = [0.] + list(thresholds_roc) + [2.]
+            
+            recall = [0.] + list(recall)
+            precision = [1.] + list(precision)
+            thresholds_pr = [0.] + list(thresholds_pr) + [1.]
+
+    
+            fpr_ += interp1d(thresholds_roc, fpr)(roc_thresholds)
+            tpr_ += interp1d(thresholds_roc, tpr)(roc_thresholds)
+            
+            recall_ += interp1d(thresholds_pr, recall)(pr_thresholds)
+            precision_ += interp1d(thresholds_pr, precision)(pr_thresholds)
+            
+            counter += 1
         except:
             rocs.append(np.nan)
-        
+        """
+        if (counter + 1) % 10 == 0:
+            print(counter)
         
         
     print(np.nanmean(accuracies), np.nanstd(accuracies) * 1.96 / np.sqrt(1000))
@@ -330,10 +393,12 @@ def main():
     logging.info('plotting EPS files...')
     # do this for all the examples:
     cm_m(M, os.path.join(args.odir, 'confusion_matrix.eps'), ['not introgressed', 'introgressed'])
-    #sys.exit()
     
-    precision, recall, thresholds = precision_recall_curve(list(map(int, Y)), Y_pred)
-    fpr, tpr, _ = roc_curve(list(map(int, Y)), Y_pred)
+    recall = recall_ / counter
+    precision = precision_ / counter
+    
+    fpr = fpr_ / counter
+    tpr = tpr_ / counter
     
     fig = plt.figure(figsize=(12, 12))
     ax0 = fig.add_subplot(111)
