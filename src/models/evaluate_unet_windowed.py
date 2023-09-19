@@ -382,8 +382,10 @@ def main():
         except:
             rocs.append(np.nan)
         """
-        if (counter + 1) % 10 == 0:
+        if (counter + 1) % 2 == 0:
             logging.info('on {}...'.format(counter))
+        
+        counter += 1
         
         
     print(np.nanmean(accuracies), np.nanstd(accuracies) * 1.96 / np.sqrt(1000))
