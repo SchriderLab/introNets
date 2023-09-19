@@ -333,6 +333,7 @@ def main():
         if args.save_pred:
             np.savez_compressed(os.path.join(os.path.join(args.odir, 'preds'), '{0:03d}.npz'.format(int(key))), y_pred = y_pred, y = y_true, pos = pos)
         
+        """
         # save the indices for take-one-out bootstrapping
         i1 = len(Y)
         i2 = i1 + len(y.flatten())
@@ -353,7 +354,6 @@ def main():
         ii = np.where((y_pred_round != y_true) & (y_true == 1))[0]
         M[1,0] += len(ii)
         
-        """
         accuracies.append(np.mean(np.abs(y_true - y_pred_round)))
         auprs.append(average_precision_score(y_true, y_pred))
         
