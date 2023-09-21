@@ -67,7 +67,7 @@ def main():
         rec_rate_mid = df['avgRecRateCentral100kb'][args.prefix + '_{}.slim'.format(ix)]
         rec_rate = df['avgRecRateFull1Mb'][args.prefix + '_{}.slim'.format(ix)]
         
-        y = np.load(ifile)['y_true']
+        y = np.load(ifile)['y']
         y_pred = np.round(np.load(ifile)['y_pred'])
         
         pos = np.load(ifile)['pos']
