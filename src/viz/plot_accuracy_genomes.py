@@ -46,7 +46,6 @@ def parse_args():
 
     return args
 
-from sklearn.metric import accuracy_score
 
 def main():
     args = parse_args()
