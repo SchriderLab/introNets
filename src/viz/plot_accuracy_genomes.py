@@ -46,6 +46,8 @@ def parse_args():
 
     return args
 
+from sklearn.metric import accuracy_score
+
 def main():
     args = parse_args()
     
@@ -74,8 +76,9 @@ def main():
 
         ii = np.where((pos >= 450000) & (pos <= 550000))
         
-        acc_m = np.mean(np.abs(y[:,:,ii] - y_pred[:,:,ii]))
-        acc = np.mean(np.abs(y - y_pred))
+        acc = len(np.where((y_pred == y))[0]) / np.prod(y.shape)
+        acc_m = len(np.where((y_pred[:,:,ii] == y[:,:,ii]))[0]) / np.prod(y[:,:,ii].shape)
+
         
         result['r_mid'].append(rec_rate_mid)
         result['r'].append(rec_rate)
