@@ -39,7 +39,7 @@ def main():
     args = parse_args()
 
     idirs = os.listdir(args.idir)
-    cmd = 'sbatch -n 32 --mem=32G --partition=dschridelab --constraint=rhel8 -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir {0} --out_shape {1} --pop_sizes {2} --ofile {3} --pop {4}"'
+    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir {0} --out_shape {1} --pop_sizes {2} --ofile {3} --pop {4}"'
 
     for idir in idirs:
         idir_ = os.path.join(args.idir, idir)
