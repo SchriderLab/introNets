@@ -104,6 +104,7 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
         y_true = [ymap[yi] for yi in y_true]
         labels = [ymap[yi] for yi in labels]
     cm = confusion_matrix(y_true, y_pred)
+    
     cm_sum = np.sum(cm, axis=1, keepdims=True)
     cm_perc = cm / cm_sum.astype(float) * 100
     annot = np.empty_like(cm).astype(str)
@@ -157,6 +158,7 @@ def main():
 
     logging.info('reading data keys...')
     generator = H5DisDataGenerator(ifiles, batch_size = int(args.batch_size))
+    
 
     logging.info('creating model...')
     if torch.cuda.is_available():
@@ -279,7 +281,7 @@ def main():
             print('saving weights...')
             torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
             
-            cm_analysis(Y, Y_pred, os.path.join(args.odir, '{}_best.png'.format(args.tag)), ['AB', 'BA', 'none'])
+            cm_analysis(Y, Y_pred, os.path.join(args.odir, '{}_best.png'.format(args.tag)), sorted(generator.classes))
 
             early_count = 0
         else:
