@@ -16,6 +16,8 @@ def parse_args():
     parser.add_argument("--out_shape", default = "2,64,128")
     parser.add_argument("--pop_sizes", default = "64,64")
     parser.add_argument("--pop", default = "1")
+    
+    parser.add_argument("--include_zeros", action = "store_true")
     # ${args}
 
     parser.add_argument("--odir", default = "None")
@@ -39,7 +41,10 @@ def main():
     args = parse_args()
 
     idirs = os.listdir(args.idir)
-    cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir {0} --out_shape {1} --pop_sizes {2} --ofile {3} --pop {4}"'
+    if not args.include_zeros:
+        cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir {0} --out_shape {1} --pop_sizes {2} --ofile {3} --pop {4}"'
+    else:
+        cmd = 'sbatch -n 24 --mem=32G -t 2-00:00:00 --wrap "mpirun python3 src/data/format.py --idir {0} --out_shape {1} --pop_sizes {2} --ofile {3} --pop {4} --include_zeros"'
 
     for idir in idirs:
         idir_ = os.path.join(args.idir, idir)
