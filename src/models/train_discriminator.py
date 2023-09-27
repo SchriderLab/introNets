@@ -40,6 +40,7 @@ def parse_args():
     parser.add_argument("--idir", default = "None")
 
     parser.add_argument("--weights", default = "None", help = "weights to load (optional)")
+    parser.add_argument("--n_classes", default = "3")
 
     parser.add_argument("--n_plateau", default = "5")
     parser.add_argument("--rl_factor", default = "0.5")
@@ -163,7 +164,7 @@ def main():
     else:
         device = torch.device('cpu')
     
-    model = resnet34(in_channels = int(args.in_channels))
+    model = resnet34(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
     model = model.to(device)
         
     print(model)
