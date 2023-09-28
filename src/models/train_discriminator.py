@@ -53,6 +53,7 @@ def parse_args():
     parser.add_argument("--loss", default = "bce")
     
     parser.add_argument("--in_channels", default = "2")
+    parser.add_argument("--n_steps", default = "1500")
     # ${args}
 
     parser.add_argument("--odir", default = "training_output")
@@ -195,6 +196,11 @@ def main():
     history['loss'] = []
     history['val_loss'] = []
     # ${define_extra_history}
+    
+    if int(args.n_steps) == -1:
+        n_steps = generator.length
+    else:
+        n_steps = int(args.n_steps)
 
     print('training...')
     for ix in range(int(args.n_epochs)):
@@ -204,7 +210,7 @@ def main():
         accuracies = []
 
         ij = 0
-        for ij in range(1):
+        for ij in range(n_steps):
             optimizer.zero_grad()
             x, y = generator.get_batch()
             
