@@ -204,7 +204,7 @@ def main():
         accuracies = []
 
         ij = 0
-        for ij in range(1000):
+        for ij in range(1):
             optimizer.zero_grad()
             x, y = generator.get_batch()
             
@@ -254,6 +254,8 @@ def main():
                 x = x.to(device)
                 
                 y = y.to(device)
+                print(y)
+                
                 y_pred = model(x)
 
                 loss = criterion(y_pred, y)
