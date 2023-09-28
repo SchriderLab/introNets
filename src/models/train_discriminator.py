@@ -26,7 +26,7 @@ from sklearn.metrics import accuracy_score
 import pandas as pd
 
 import glob
-from torchvision_mod_layers import resnet18, resnet34, resnet50
+from torchvision_mod_layers import resnet18, resnet34, resnet50, resnext50_32x4d
 
 # use this format to tell the parsers
 # where to insert certain parts of the script
@@ -170,7 +170,7 @@ def main():
     else:
         device = torch.device('cpu')
     
-    model = resnet18(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
+    model = resnext50_32x4d(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
     model = model.to(device)
         
     
