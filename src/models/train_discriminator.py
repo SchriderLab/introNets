@@ -46,6 +46,8 @@ def parse_args():
     parser.add_argument("--rl_factor", default = "0.5")
     parser.add_argument("--n_epochs", default = "100")
     parser.add_argument("--n_early", default = "10")
+    
+    parser.add_argument("--lr", default = "0.001")
 
     parser.add_argument("--batch_size", default = "16")
     parser.add_argument("--loss", default = "bce")
@@ -129,6 +131,7 @@ def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
     plt.close()
 
 from prettytable import PrettyTable
+import time
 
 def count_parameters(model):
     table = PrettyTable(["Modules", "Parameters"])
@@ -144,6 +147,7 @@ def count_parameters(model):
 
 def main():
     args = parse_args()
+    t0 = time.time()
     
     ifiles = dict()
     
@@ -166,9 +170,10 @@ def main():
     else:
         device = torch.device('cpu')
     
-    model = resnet34(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
+    model = resnet18(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
     model = model.to(device)
         
+    
     print(model)
     d_model = count_parameters(model)
         
@@ -179,7 +184,7 @@ def main():
     model.train()
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr = 0.001)
+    optimizer = optim.Adam(model.parameters(), lr = float(args.lr))
     #scheduler = ReduceLROnPlateau(optimizer, factor = float(args.rl_factor), patience = int(args.n_plateau))
 
     min_val_loss = np.inf
@@ -296,6 +301,8 @@ def main():
 
         df = pd.DataFrame(history)
         df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
+    
+    logging.info('took {} seconds to train...'.format(time.time() - t0))
     
 if __name__ == '__main__':
     main()
