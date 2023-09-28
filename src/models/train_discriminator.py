@@ -204,7 +204,7 @@ def main():
         accuracies = []
 
         ij = 0
-        for ij in range(generator.length):
+        for ij in range(1000):
             optimizer.zero_grad()
             x, y = generator.get_batch()
             
