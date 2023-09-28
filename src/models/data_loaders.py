@@ -18,7 +18,7 @@ import pickle
 from sklearn.neighbors import kneighbors_graph
 
 class H5DisDataGenerator(object):
-    def __init__(self, ifiles, val_prop = 0.1, chunk_size = 4, batch_size = 32):
+    def __init__(self, ifiles, val_prop = 0.05, chunk_size = 4, batch_size = 32):
         # ifiles is a dictionary pointing to the file names where h5 files corresponding to the class are
         # how many classes / keys?
         self.n_classes = len(ifiles.keys())
@@ -46,12 +46,19 @@ class H5DisDataGenerator(object):
                 
             random.shuffle(self.train_keys[c])
             
+        l = min([len(self.train_keys[u]) for u in self.classes])
+        for c in self.classes:
+            self.train_keys[c] = self.train_keys[c][:l]
+            
+        l = min([len(self.val_keys[u]) for u in self.classes])
+        for c in self.classes:
+            self.val_keys[c] = self.val_keys[c][:l]
+        
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
-        
-        print([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
-        
+
         self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
         self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
+        
         
         self.ix = 0
         self.ix_val = 0
