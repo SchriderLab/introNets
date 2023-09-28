@@ -170,7 +170,7 @@ def main():
     else:
         device = torch.device('cpu')
     
-    model = resnext50_32x4d(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
+    model = resnet34(in_channels = int(args.in_channels), num_classes = int(args.n_classes))
     model = model.to(device)
         
     
