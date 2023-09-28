@@ -46,6 +46,8 @@ class H5DisDataGenerator(object):
             
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
         
+        print([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
+        
         self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
         self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
         
