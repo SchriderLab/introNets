@@ -39,9 +39,9 @@ class H5DisDataGenerator(object):
             for k in range(len(self.key_dict[c])):
                 random.shuffle(self.key_dict[c][k])
                 
-                n_val = len(self.key_dict[c][k]) * val_prop
+                n_val = int(len(self.key_dict[c][k]) * val_prop)
                 
-                self.train_keys[c].extend([(k, u) for u in self.key_dict[c][k][n_val:]])
+                self.train_keys[c].extend([(k,u) for u in self.key_dict[c][k][n_val:]])
                 self.val_keys[c].extend([(k,u) for u in self.key_dict[c][k][:n_val]])
                 
             random.shuffle(self.train_keys[c])
