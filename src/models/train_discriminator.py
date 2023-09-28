@@ -260,8 +260,7 @@ def main():
                 x = x.to(device)
                 
                 y = y.to(device)
-                print(y)
-                
+
                 y_pred = model(x)
 
                 loss = criterion(y_pred, y)
