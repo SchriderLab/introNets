@@ -62,9 +62,6 @@ class H5DisDataGenerator(object):
         self.length = min([len(self.train_keys[u]) // self.n_per_class for u in self.classes])
         self.val_length = min([len(self.val_keys[u]) // self.n_per_class for u in self.classes])
         
-        print([len(self.train_keys[u])for u in self.classes])
-        print([len(self.val_keys[u])for u in self.classes])
-        
         self.ix = 0
         self.ix_val = 0
         
@@ -79,14 +76,14 @@ class H5DisDataGenerator(object):
         X = []
         Y = []
         
+        
         for c in self.classes:
             if not val:
                 keys = self.train_keys[c][self.ix*self.n_per_class : (self.ix + 1)*self.n_per_class]
-                self.ix += 1
+                
             else:
                 keys = self.val_keys[c][self.ix_val*self.n_per_class : (self.ix_val + 1)*self.n_per_class]
-                self.ix_val += 1
-            
+                
             for k, u in keys:
                 x = np.array(self.ifiles[c][k][u]['x_0'], dtype = np.float32)
 
