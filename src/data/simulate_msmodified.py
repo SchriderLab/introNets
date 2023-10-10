@@ -10,6 +10,7 @@ import copy
 import subprocess
 
 MSMOD_PATH = 'msmodified/ms'
+import time
 
 # this function creates an array for writing to text that has the ms parameters
 # from a CSV file produced via bootstrapped DADI runs
@@ -101,6 +102,7 @@ def main():
     L = int(args.window_size)
     
     counter = 0
+    t0 = time.time()
     
     for j in range(int(args.n_jobs)):
         if args.model == 'dros':
@@ -190,6 +192,8 @@ def main():
                         # New process, connected to the Python interpreter through pipes:
                         prog = subprocess.Popen(cmd, shell = True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                         prog.communicate()
+                        
+                    
         
         elif args.model == 'archie':
             T = 5e-4 * L
@@ -217,6 +221,9 @@ def main():
                 cmd = slurm_cmd.format(fout, cmd)
                 
             os.system(cmd)
+        
+        if not args.slurm:
+            logging.info('took {} seconds...'.format(time.time() - t0))
             
 if __name__ == '__main__':
     main()

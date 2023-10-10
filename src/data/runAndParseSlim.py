@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-import sys, os, random, subprocess
+import sys
+import os
+import random
+import subprocess
 import numpy as np
 
 """
@@ -13,6 +16,7 @@ emitMsEntry function just need to be aggregated, converted to numpy arrays, and 
 the script.
 test.lot contains some other information about each rep (including the values of some of the randomly drawn parameters)
 """
+
 
 def parseFixations(fixationLines):
     fixations = []
@@ -29,13 +33,14 @@ def parseFixations(fixationLines):
                 fixations.append((mutType, int(pos)))
     return fixations
 
+
 def addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1):
     mode = 0
     idMapping, mutTypes, tempIdToPos = {}, {}, {}
     introgressedAlleles = []
     fixationLines = []
     for line in sampleText:
-        #sys.stderr.write(line+"\n")
+        # sys.stderr.write(line+"\n")
         if mode == 0:
             if line.startswith("Emitting fixations"):
                 mode = 1
@@ -52,27 +57,30 @@ def addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1):
                 mode = 4
             else:
                 tempId, permId, mutType, pos, selCoeff, domCoeff, originSubpop, originGen, numCopies = line.strip().split()
-                pos, originSubpop, originGen = int(pos), int(originSubpop.lstrip("p")), int(originGen)
+                pos, originSubpop, originGen = int(pos), int(
+                    originSubpop.lstrip("p")), int(originGen)
                 if mutType == "m4":
                     mutType = "m3"
-                
+
                 if mutType == "m3":
                     if not pos in locs:
                         locs[pos] = {}
                     locs[pos][permId] = 1
-                elif mutType in ["m1","m2"]:
-                    tempIdToPos[tempId]=pos
+                elif mutType in ["m1", "m2"]:
+                    tempIdToPos[tempId] = pos
                 else:
-                    print(tempId, permId, mutType, pos, selCoeff, domCoeff, originSubpop, originGen, numCopies)
-                    sys.exit("Encountered mutation type other than m1, m2, or m3. ARRRRGGGGHHHHHHH!!!!!!\n")
-                idMapping[tempId]=permId
-                mutTypes[tempId]=mutType
+                    print(tempId, permId, mutType, pos, selCoeff,
+                          domCoeff, originSubpop, originGen, numCopies)
+                    sys.exit(
+                        "Encountered mutation type other than m1, m2, or m3. ARRRRGGGGHHHHHHH!!!!!!\n")
+                idMapping[tempId] = permId
+                mutTypes[tempId] = mutType
 
         elif mode == 4:
             line = line.strip().split()
             gId, auto = line[:2]
             mutLs = line[2:]
-            
+
             introgressedAlleles.append([])
             for tempId in mutLs:
                 if mutTypes[tempId] == "m1" and len(genomes) >= sampleSize1:
@@ -85,8 +93,10 @@ def addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1):
                 elif fixationType == "m2" and len(genomes) < sampleSize1:
                     introgressedAlleles[-1].append(fixationPos)
 
-            genomes.append(set([idMapping[x] for x in mutLs if mutTypes[x] == "m3"]))
+            genomes.append(set([idMapping[x]
+                           for x in mutLs if mutTypes[x] == "m3"]))
     return introgressedAlleles
+
 
 def readSampleOutFromSlimRun(output, numSamples, sampleSize1):
     totSampleCount = 0
@@ -119,12 +129,15 @@ def readSampleOutFromSlimRun(output, numSamples, sampleSize1):
         elif mode == 1:
             if line.startswith("Done emitting sample"):
                 mode = 0
-                introgressedAlleles = addMutationsAndGenomesFromSample(sampleText, locs, genomes, sampleSize1)
+                introgressedAlleles = addMutationsAndGenomesFromSample(
+                    sampleText, locs, genomes, sampleSize1)
             else:
                 sampleText.append(line)
         if "SEGREGATING" in line:
             sys.stderr.write(line+"\n")
+
     return locs, genomes, introgressedAlleles
+
 
 def buildMutationPosMapping(mutLocs, physLen):
     mutMapping = []
@@ -134,12 +147,14 @@ def buildMutationPosMapping(mutLocs, physLen):
         mutMapping.append((i, pos, pos/physLen, mutId))
     return mutMapping
 
+
 def getFreq(mutId, genomes):
     mutCount = 0
     for genome in genomes:
         if mutId in genome:
             mutCount += 1
     return mutCount
+
 
 def removeMonomorphic(allMuts, genomes):
     newMuts = []
@@ -151,6 +166,7 @@ def removeMonomorphic(allMuts, genomes):
             newLocI += 1
     return newMuts
 
+
 def buildPositionsList(muts, discrete=True):
     positions = []
     for locationIndex, locationDiscrete, locationContinuous, mutId in muts:
@@ -160,15 +176,17 @@ def buildPositionsList(muts, discrete=True):
             positions.append(locationContinuous)
     return positions
 
+
 def emitMsEntry(positions, segsites, haps, numReps, isFirst=True):
     if isFirst:
         print("slim {} {}".format(len(haps), numReps))
         print("blah")
     print("\n//")
     print("segsites: {}".format(segsites))
-    print("positions: "+ " ".join([str(x) for x in positions]))
+    print("positions: " + " ".join([str(x) for x in positions]))
     for hap in haps:
         print("".join([str(x) for x in hap]))
+
 
 def processedIntrogressedAlleles(ls):
     ls.sort()
@@ -185,39 +203,46 @@ def processedIntrogressedAlleles(ls):
         runs.append((runStart, ls[-1]))
     return runs
 
+
 def writeIntrogressedAlleles(repIndex, introgressedAlleles, physLen, outF):
     outF.write("Begin introgressed alleles for rep {}\n".format(repIndex))
     for i in range(len(introgressedAlleles)):
-        outF.write("genome {}: {}\n".format(i, ",".join(["%s-%s"%x for x in processedIntrogressedAlleles(introgressedAlleles[i])])))
+        outF.write("genome {}: {}\n".format(i, ",".join(
+            ["%s-%s" % x for x in processedIntrogressedAlleles(introgressedAlleles[i])])))
     outF.write("End rep {}\n".format(repIndex))
 
-if __name__ == '__main__': 
-    scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS = sys.argv[1:]
+
+if __name__ == '__main__':
+    scriptName, numReps, physLen, donorPop, introgLogFileName, nPerPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS = sys.argv[
+        1:]
     numReps = int(numReps)
     physLen = int(physLen)
     donorPop = int(donorPop)
     splitTimeCoefficient = float(splitTimeCoefficient)
     migrationTimeCoefficient = float(migrationTimeCoefficient)
     migrationProbability = float(migrationProbability)
-    
-    tol=0.5
-    outF=open(introgLogFileName, "wt")
+
+    tol = 0.5
+    outF = open(introgLogFileName, "wt")
 
     for repIndex in range(numReps):
-        #print(repIndex)
+        # print(repIndex)
         sys.stderr.write("starting rep {}\n".format(repIndex))
         seed = random.randint(0, 2**32-1)
-    
-        slimCmd = "SLiM/build/slim -seed {} -d physLen={} -d sampleSizePerSubpop={} -d donorPop={} -d st={} -d mt={} -d mp={} -d introS={} {}".format(seed, physLen, nPerPop, donorPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS, scriptName)
+
+        slimCmd = "SLiM/build/slim -seed {} -d physLen={} -d sampleSizePerSubpop={} -d donorPop={} -d st={} -d mt={} -d mp={} -d introS={} {}".format(
+            seed, physLen, nPerPop, donorPop, splitTimeCoefficient, migrationTimeCoefficient, migrationProbability, introS, scriptName)
         sys.stderr.write(slimCmd)
-    
-    
-        procOut = subprocess.Popen(slimCmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        output, err  = procOut.communicate()
+        print(slimCmd)
+
+        procOut = subprocess.Popen(
+            slimCmd.split(), stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        output, err = procOut.communicate()
         sys.stderr.write("seed: {}\n".format(seed))
-        #print(output.decode("utf-8"))
-    
-        mutations, genomes, introgressedAlleles = readSampleOutFromSlimRun(output, 1, int(nPerPop))
+        # print(output.decode("utf-8"))
+
+        mutations, genomes, introgressedAlleles = readSampleOutFromSlimRun(
+            output, 1, int(nPerPop))
         newMutLocs = []
         for mutPos in mutations:
             if len(mutations[mutPos]) == 1:
@@ -232,14 +257,14 @@ if __name__ == '__main__':
                     newMutLocs.append((mutPos, mutId))
                     #newMutLocs.append((currPos, mutId))
                     #currPos += interval
-    
+
         allMuts = buildMutationPosMapping(newMutLocs, physLen)
         polyMuts = removeMonomorphic(allMuts, genomes)
         positions = buildPositionsList(polyMuts)
         haps = []
         for i in range(len(genomes)):
             haps.append([0]*len(polyMuts))
-    
+
         for i in range(len(genomes)):
             for locI, loc, locCont, mutId in polyMuts:
                 if mutId in genomes[i]:
@@ -248,7 +273,7 @@ if __name__ == '__main__':
             emitMsEntry(positions, len(polyMuts), haps, numReps, isFirst=True)
         else:
             emitMsEntry(positions, len(polyMuts), haps, numReps, isFirst=False)
-    
+
         writeIntrogressedAlleles(repIndex, introgressedAlleles, physLen, outF)
-    
+
     outF.close()

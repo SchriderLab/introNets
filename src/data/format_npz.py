@@ -28,6 +28,8 @@ def parse_args():
     
     parser.add_argument("--pop_sizes", default = "20,14")
     parser.add_argument("--out_shape", default = "2,32,128")
+    parser.add_argument("--step_size", default = "64")
+    parser.add_argument("--keys", default = "simMatrix,sechMatrix")
     
     parser.add_argument("--densify", action = "store_true", help = "remove singletons")
 
@@ -53,19 +55,23 @@ def main():
     w_size = out_shape[-1]
     pop_size = out_shape[1]  
 
+    # expects two keys for the NPZ file
+    # each keys points to a sites x individuals matrix for that population
+    keys = args.keys.split(',')
+
     if comm.rank == 0:
         ifile = np.load(args.ifile)
-        pop1_x = ifile['simMatrix'].T
-        pop2_x = ifile['sechMatrix'].T
+        pop1_x = ifile[keys[0]].T
+        pop2_x = ifile[keys[1]].T
         
         x = np.vstack([pop1_x, pop2_x])
         
         # destroy the perfect information regarding
         # which allele is the ancestral one
         for k in range(x.shape[1]):
-            if np.sum(x[:, k]) > 17:
+            if np.sum(x[:, k]) > x.shape[0] // 2:
                 x[:, k] = 1 - x[:, k]
-            elif np.sum(x[:, k]) == 17:
+            elif np.sum(x[:, k]) == x.shape[0] // 2:
                 if np.random.choice([0, 1]) == 0:
                     x[:, k] = 1 - x[:, k]
         
@@ -99,28 +105,35 @@ def main():
         
         shape = X.shape
 
-        n_files = X.shape[1] - w_size
+        starts = list(range(0, X.shape[1] - w_size, int(args.step_size)))
+        n_files = len(starts)
+        
         logging.info('have {} windows'.format(n_files))
 
     else:
         X = None
         positions = None
+        starts = None
 
     comm.Barrier()
 
     X = comm.bcast(X, root=0)
     positions = comm.bcast(positions, root=0)
+    starts = comm.bcast(starts, root = 0)
 
     comm.Barrier()
 
     chunk_size = int(args.chunk_size)
+    step_size = int(args.step_size)
 
     if comm.rank == 0:
         t0 = time.time()
         logging.info('beginning to format with {} processes...'.format(comm.size))
 
     if comm.rank != 0:
-        for ix in range(comm.rank - 1, X.shape[1] - w_size, comm.size - 1):
+        for ix in range(comm.rank - 1, len(starts), comm.size - 1):
+            ix = starts[ix]
+            
             x = X[:,ix:ix + w_size]
 
             p = positions[ix:ix + w_size]
@@ -129,11 +142,8 @@ def main():
             f = TwoPopAlignmentFormatter([x], None, None, sorting = args.sorting, pop = 0, 
                           pop_sizes = pop_sizes, shape = out_shape)
             f.format()
-    
-            print(f.x[0].shape)
-    
+        
             comm.send([f.x, p, pi, np.array(f.indices, dtype = np.int32)], dest=0)
-
     else:
         X = None
         positions = None

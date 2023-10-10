@@ -4,6 +4,7 @@ import numpy as np
 import logging, argparse
 
 import configparser
+import time
 
 def parse_args():
     # Argument Parser    
@@ -80,11 +81,13 @@ def main():
         ofile_introg = os.path.join(args.odir, '{0:05d}_introg.log'.format(ix))
         ofile_log = os.path.join(args.odir, '{0:05d}_introg.out'.format(ix))
         
+        t0 = time.time()
         if args.slurm:
             cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
                               donor_pop, ofile_introg, args.n_per_pop, args.st, args.mt, args.mp, ofile_ms, ofile_log, args.sel_co)
             
             # submit via SLURM
+            print(cmd_)
             os.system(cmd_)
         else:
             cmd_ = cmd.format(args.slim_file, args.n_replicates, args.phys_len,
@@ -104,6 +107,8 @@ def main():
                 f.write(stderr.decode('utf-8'))
                 
             f.close()
+            
+            print('took {} seconds...'.format(time.time() - t0))
         
 if __name__ == '__main__':
     main()
