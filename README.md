@@ -36,21 +36,21 @@ The first example we give in the paper is simple two-population demographic mode
 
 Simulating data (make 1000 examples locally):
 ```
-python3 src/data/simulate_slim.py --direction ab --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
-python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 1 --n_replicates 1000 --local
-python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 1 --n_replicates 1000 --local
+python3 src/data/simulate_slim.py --direction ab --odir sims/ab --n_jobs 10 --n_replicates 100
+python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 10 --n_replicates 100
+python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 10 --n_replicates 100
 ```
 
-Removing the "--local" arg would submit the simulation commands to SLURM through ```sbatch```. 
+Adding in the arg "--slurm" would submit the simulation commands to SLURM through ```sbatch```. 
 
 Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
 ```
-mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,128,128 --pop 1
+mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --pop 1
 ```
 
-Optionally, you may specify ```--metric``` which defaults to the cosine distance.  This is the distance metric which is used to sort and match the populations.
+Optionally, you may specify ```--metric``` which defaults to the cosine distance.  This is the distance metric which is used to sort and match the populations.  See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html for the possible options.
 
-We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles may be heavily un-balanced.
+We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles is heavily un-balanced.
 
 ```
 python3 src/data/get_h5_stats.py --ifile ab.hdf5
@@ -64,13 +64,7 @@ n_replicates: 36
 ```
 
 Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
-We can now train our model:
-```
-python3 src/models/train.py --ifile ab.hdf5 --config training_configs/toy_AB.config --odir ab_training --tag iter1
-```
-
-The training script will save the best weights, according to validation loss, and record the training and validation loss metrics as well as accuracy to a CSV in the output directory ```--odir```.  The ```--config``` option is passed a config file that we include with our repo that has training settings like batch size and learning rate as well as others:
-
+We can now train our model, but first we need a config file with the proper training parameters where we will specifgy the positive weight for the loss function: 
 ```
 [model_params]
 # the number of channels in the output image
@@ -83,11 +77,18 @@ lr = 0.001
 # exponential decay of learning rate
 schedule = exponential
 exp_decay = 0.96
-pos_bce_logits_weight = 0.5
+pos_bce_logits_weight = 2.1853107954852296
 # whether to label smooth and the upper bound of the uniform random noise used to do so
 label_smooth = True
 label_noise = 0.01
 ```
+
+```
+python3 src/models/train.py --ifile ab.hdf5 --config training_configs/toy_AB.config --odir ab_training --tag iter1
+```
+
+The training script will save the best weights, according to validation loss, and record the training and validation loss metrics as well as accuracy to a CSV in the output directory ```--odir```.  
+
 # Replication of results shown in publication:
 
 ## Simulation
@@ -96,8 +97,8 @@ label_noise = 0.01
 
 Simulating data (1000 replicates per demographic parameter set estimated via DADI) at kb window size (default = 50000):
 ```
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want --window_size 10000
-python3 src/data/simulate_msmodified.py --odir /some/where_you_want --windows_size 10000 --slurm # if within a SLURM cluster
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --window_size 10000 --direction ba
+python3 src/data/simulate_msmodified.py --odir /some/where_you_want --windows_size 10000 --direction ba --slurm # if within a SLURM cluster
 ```
 
 ### ArchIE
@@ -136,10 +137,47 @@ python3 src/models/train.py --config training_configs/dros_ab.config --ifile dro
 python3 src/models/train.py --config training_configs/archie.config --ifile archie_euclidean.hdf5 --odir training_results/archie_i1
 ```
 
+## Training a discriminator (SLiM example)
+### Getting the data
+We need to simulate all the cases we want to distinguish:
+
+```
+python3 src/data/simulate_slim.py --direction ab --odir sims/ab --n_jobs 200 --n_replicates 100
+python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 200 --n_replicates 100
+python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 200 --n_replicates 100
+python3 src/data/simulate_slim.py --direction none --odir sims/bi --n_jobs 200 --n_replicates 100
+```
+And then format each one:
+
+```
+mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile sims/ab.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --pop 1
+mpirun -n 8 python3 src/data/format.py --idir sims/ba --ofile sims/ba.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --pop 0
+mpirun -n 8 python3 src/data/format.py --idir sims/bi --ofile sims/bi.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --pop -1
+mpirun -n 8 python3 src/data/format.py --idir sims/none --ofile sims/none.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --include_zeros```
+```
+
+The "--pop" arg and the "--include_zeros" arg are important here as the program uses these to filter out simulations that do not include the desired introgression case by chance.  
+
+Then we can train a ResNet to distinguish windows:
+
+```
+python3 src/models/train_discriminator.py --idir sims --odir toy_training/disc --n_classes 4 --batch_size 32
+```
+
+
+## Formatting your own examples
+### Data preparation
+If you have a genome that you wish to segement, and a model that you trained on corresponding simulations, first read the data and save it as a numpy array with one key called "positions" which should contain a 1d array of integers that are the base pair positions of each polymorphism.  There should also be exactly two population matrices that contain the genotypes for each individual at each site as binary values (0 or 1).  This routine currently only supports two-population segmentation.  You pass the keys for these population matrices to the Python routine to format the data for inference: 
+
+```
+mpirun -n 6 python3 src/data/format_npz.py --ifile npzs/simulans_sechellia_Scf_X.phased.npz --ofile X.hdf5 --keys simMatrix,sechMatrix --pop_sizes 20,14 --out_shape 2,32,128
+```
+
+
 
 ### Other notes
 
-LL environment:
+SLURM environment (UNC CH's Longleaf cluster):
 
 ```
 [ddray@longleaf-login5 ~]$ module list
