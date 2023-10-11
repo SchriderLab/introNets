@@ -44,18 +44,19 @@ class H5DisDataGenerator(object):
                 self.train_keys[c].extend([(k,u) for u in self.key_dict[c][k][n_val:]])
                 self.val_keys[c].extend([(k,u) for u in self.key_dict[c][k][:n_val]])
                 
+                print(len(self.train_keys[c]))
+                
             random.shuffle(self.train_keys[c])
             
         self.n_per_class = (batch_size // chunk_size) // self.n_classes
+
         
         # balance the number of keys per class and make modulus batch size
         l = min([len(self.train_keys[u]) for u in self.classes]) 
-        l -= l % self.n_per_class
         for c in self.classes:
             self.train_keys[c] = self.train_keys[c][:l]
             
         l = min([len(self.val_keys[u]) for u in self.classes])
-        l -= l % self.n_per_class
         for c in self.classes:
             self.val_keys[c] = self.val_keys[c][:l]
 

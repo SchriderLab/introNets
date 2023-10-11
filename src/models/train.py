@@ -37,7 +37,7 @@ from prettytable import PrettyTable
 
 import time
 
-def count_parameters(model, f):
+def count_parameters(model, f = None):
     table = PrettyTable(["Modules", "Parameters"])
     total_params = 0
     for name, parameter in model.named_parameters():
@@ -95,7 +95,7 @@ def main():
     config = configparser.ConfigParser()
     config.read(args.config)
     
-    log_file = open(os.path.join(args.odir, '{}.log'.format(args.tag)), 'w')
+    log_file = open(os.path.join(args.odir, '{}.log'.format('train')), 'w')
     config.write(log_file)
     log_file.write('\n')
     
@@ -120,8 +120,10 @@ def main():
                                  label_noise = float(config.get('training_params', 'label_noise')), label_smooth = config.getboolean('training_params', 'label_smooth'))
     val_keys = generator.val_keys
     
+    print(set(val_keys).intersection(generator.keys))
+    
     # save them for later
-    pickle.dump(val_keys, open(os.path.join(args.odir, '{}_val_keys.pkl'.format(args.tag)), 'wb'))
+    pickle.dump(val_keys, open(os.path.join(args.odir, 'val_keys.pkl'), 'wb'))
     
     if n_steps is None:
         l = generator.length
@@ -227,7 +229,7 @@ def main():
         if val_loss < min_val_loss:
             min_val_loss = val_loss
             logging.info('saving weights...')
-            torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format(args.tag)))
+            torch.save(model.state_dict(), os.path.join(args.odir, '{0}.weights'.format('best')))
 
             early_count = 0
         else:
@@ -243,7 +245,7 @@ def main():
         generator.on_epoch_end()
 
         df = pd.DataFrame(history)
-        df.to_csv(os.path.join(args.odir, '{}_history.csv'.format(args.tag)), index = False)
+        df.to_csv(os.path.join(args.odir, '{}_history.csv'.format('training')), index = False)
 
     # benchmark the time to train
     total = time.time() - start_time
