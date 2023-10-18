@@ -41,16 +41,42 @@ python3 src/data/simulate_slim.py --direction ba --odir sims/ab --n_jobs 10 --n_
 python3 src/data/simulate_slim.py --direction bi --odir sims/bi --n_jobs 10 --n_replicates 100
 ```
 
-Adding in the arg "--slurm" would submit the simulation commands to SLURM through ```sbatch```. 
+Adding in the arg "--slurm" would submit the simulation commands to SLURM through ```sbatch```. This produces three directories that have 3 * n_jobs files in them.  Each 'job' (locally just sequential simulation runs or via SLURM sbatch submissions) has 3 gzipped output files associated with it for 'n_replicates' simulations each with a random seed: a *.ms.gz file which contains the bi-allelic genotypes for the simulated individuals as well as their SNP positions in an MS style text format, a *_introg.log.gz that contains the introgressed regions for each individual in each simulation like: 
+
+```
+Begin introgressed alleles for rep 0
+genome 0: 606-1548,4482-5122,5304-5315,7368-7620
+genome 1: 3737-4194,5626-6530,8793-9999
+genome 2: 3135-3843,3923-4194,5626-6885
+genome 3: 0-57,1201-2626,4482-5422
+...
+genome 124: 3045-3913,9765-9999
+genome 125: 285-461,3682-3970,8191-9999
+genome 126: 
+genome 127: 3682-3970,7546-7822,8100-9394,9813-9999
+End rep 0
+```
+
+and finally a *_introg.out file that contains the SLiM commands used as well as the migration probabilities and the migration time:
+
+```
+starting rep 0
+SLiM/build/slim -seed 3119194772 -d physLen=10000 -d sampleSizePerSubpop=64 -d donorPop=3 -d st=4.0 -d mt=0.25 -d mp=1.0 -d introS=0.0 src/SLiM/introg_bidirectional.slimseed: 3119194772
+migTime: 11784
+migProb12: 0.205016
+migProb21: 0.45554
+migProbs: 0.102508, 0.22777
+...
+```
 
 Then we can format the simulations we just created (seriate and match the population alignments and create an hdf5 database).  For example:
 ```
 mpirun -n 8 python3 src/data/format.py --idir sims/ab --ofile ab.hdf5 --pop_sizes 64,64 --out_shape 2,64,128 --pop 1
 ```
 
-Optionally, you may specify ```--metric``` which defaults to the cosine distance.  This is the distance metric which is used to sort and match the populations.  See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html for the possible options.
+Optionally, you may specify ```--metric``` which defaults to the cosine distance.  This is the distance metric which is used to sort and match the populations.  See https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.distance.pdist.html for the possible options.  The linear sum assignment between populations is done w.r. to the same metric. We use the h5py format to chunk the data for faster reading when training or evaluating the inference model.  The script takes an argument ```--chunk_size``` that defaults to 4 windows per chunk.  Making the chunk size larger will decrease the read times, but also decrease the randomness of training batches.  
 
-We can calculate some statistics about the hdf5 file.  You may want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases, the number of positive and negative pixels or introgressed alleles is heavily un-balanced.
+We can calculate some statistics about the hdf5 file.  You will want to do this to properly set the positive weight in the binary cross entropy function as in many simulation cases the number of positive and negative pixels or introgressed alleles is heavily un-balanced.
 
 ```
 python3 src/data/get_h5_stats.py --ifile ab.hdf5
@@ -60,7 +86,7 @@ This prints to the console:
 info for ab.hdf5
 neg / pos ratio: 2.1853107954852296
 chunk_size: 4
-n_replicates: 36
+n_replicates: 9991
 ```
 
 Note that we pass the population sizes for the simulations as well as the shape we'd like our formatted input variables to be.
@@ -166,14 +192,24 @@ python3 src/models/train_discriminator.py --idir sims --odir toy_training/disc -
 
 
 ## Formatting your own examples
+### Probability calibration
+
+As neural networks are known to be poorly calibrated and often overly optimistic i.e. the posterior probabilites they return are often biased despite having a high accuracy when rounded to 0 or 1 for binary classification, we also implemented a routine to learn Platt scaling coefficients to correct for bias and return probabilities that are more meaningful in the frequentist sense (i.e. a randomly selected pixel from the population that has a posterior probability of ~0.8 would be correct ~80%  and incorrect ~20% of the time).  You can use gradient descent to find the Platt coefficients like:
+
+```
+python3 src/models/calibrate_probability.py --weights /work/users/d/d/ddray/toy_bi_training/1e5/test.weights --ifile /work/users/d/d/ddray/toy_bi.hdf5 --keys /work/users/d/d/ddray/toy_bi_training/1e5/test_val_keys.pkl --out_channels 2 --ofile platt.npz
+```
+
 ### Data preparation
-If you have a genome that you wish to segement, and a model that you trained on corresponding simulations, first read the data and save it as a numpy array with one key called "positions" which should contain a 1d array of integers that are the base pair positions of each polymorphism.  There should also be exactly two population matrices that contain the genotypes for each individual at each site as binary values (0 or 1).  This routine currently only supports two-population segmentation.  You pass the keys for these population matrices to the Python routine to format the data for inference: 
+If you have a genome that you wish to segement, and a model that you trained on corresponding simulations, first read the data and save it as a numpy array with one key called "positions" which should contain a 1d array of integers that are the base pair positions of each polymorphism.  There should also be exactly two population matrices that contain the genotypes for each individual at each site as binary values (0 or 1).  This routine currently only supports two-population segmentation and no greater (todo).  You pass the keys for these population matrices to the Python routine to format the data for inference: 
 
 ```
 mpirun -n 6 python3 src/data/format_npz.py --ifile npzs/simulans_sechellia_Scf_X.phased.npz --ofile X.hdf5 --keys simMatrix,sechMatrix --pop_sizes 20,14 --out_shape 2,32,128
 ```
 
+### Applying a discriminator (detecting windows with > 0 introgressed pixels and the directionality of those pixels)
 
+### Segmentation (detection of introgressed SNPs)
 
 ### Other notes
 
