@@ -39,32 +39,6 @@ matplotlib.use('Agg')
 import torch.nn.functional as F
 
 import matplotlib.pyplot as plt
-# pos weights for the different iterations:
-## 000: 5.146955817634787
-## 001: 5.469970200977819
-## 002: 6.25023282070848
-
-# i2
-## 000: 8.379942663085659
-## 001: 4.116404380681516
-## 002: 4.449054245190725
-## 003: 5.2208065886452
-
-# for the i4 drosophila sims we got:
-"""
-a, b:
-
-tensor([1.1495], device='cuda:0', requires_grad=True) Parameter containing:
-tensor([-1.0224], device='cuda:0', requires_grad=True)
-"""
-
-# for i1 ArchIE we got:
-"""
-a,b:
-
-tensor([1.0912], device='cuda:0', requires_grad=True) Parameter containing:
-tensor([-3.0797], device='cuda:0', requires_grad=True)
-"""
 
 class ProbCalModel(nn.Module):
     def __init__(self, model):
@@ -99,6 +73,9 @@ def parse_args():
     parser.add_argument("--ofile", default = "None")
     parser.add_argument("--n_samples", default = "100")
     
+    parser.add_argument("--n_epochs", default = "100")
+    parser.add_argument("--out_channels", default = "2")
+    
     args = parser.parse_args()
 
     if args.verbose:
@@ -117,7 +94,7 @@ def main():
     else:
         device = torch.device('cpu')
 
-    model = NestedUNet(1, 2)
+    model = NestedUNet(int(args.out_channels), 2)
     if args.weights != "None":
         checkpoint = torch.load(args.weights, map_location = device)
         model.load_state_dict(checkpoint)
@@ -135,7 +112,7 @@ def main():
     
     min_loss = np.inf
     
-    for ij in range(25):
+    for ij in range(int(args.n_epochs)):
         losses = []
         
         for ix in range(generator.val_length):
