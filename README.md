@@ -29,6 +29,16 @@ msmodified is again included as a submodule with https://github.com/sriramlab/Ar
 gcc -o ms ms.c streec.c rand1.c -lm
 ```
 
+### ms
+
+In order to simulate the cases where no introgression occurs in our test cases or using similar routines, you'll need to compile ms like the following: 
+
+```
+gcc -O3 -o ms ms.c streec.c rand2.c -lm
+```
+
+Using the ```rand2.c``` is necessary to avoid segfaults with our simulation commands for no introgression. 
+
 ## Tutorial
 
 ### A toy example
