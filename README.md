@@ -209,7 +209,39 @@ mpirun -n 6 python3 src/data/format_npz.py --ifile npzs/simulans_sechellia_Scf_X
 
 ### Applying a discriminator (detecting windows with > 0 introgressed pixels and the directionality of those pixels)
 
+```
+python3 src/models/apply_disc.py --ifile X.hdf5 --weight dros_training/disc/best.weights --ofile X_disc.npz
+```
+
+This gives you a single array in the output NPZ that is of the shape (L, n_classes) where the columns have the posterior probabilities of each class.  The classes are in alpha-numeric order, for instance in this case: ('ab', 'ba', 'bi', 'none'). 
+
 ### Segmentation (detection of introgressed SNPs)
+
+```
+python3 src/models/apply_seg.py --ifile X.hdf5 --weights dros_training/ab --ofile X.npz --pop 1 --verbose
+```
+
+This gives you an NPZ with the upsampled predictions for one or both populations (in this case only pop 1) as well as the indices of the up-sampled population which you can use to downsample back to the original pop size: 
+
+```
+Python 3.9.0 (default, Nov 15 2020, 14:28:56) 
+[GCC 7.3.0] :: Anaconda, Inc. on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>> import numpy as np
+>>> X = np.load('X.npz')
+>>> list(X.keys())
+['Y', 'x1i', 'x2i']
+>>> X['Y'].shape
+(32, 1, 897656)
+>>> X['x2i']
+array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 20, 21, 21,
+       33, 26, 30, 24, 27, 28, 26, 33, 33, 33, 33, 31, 26, 21, 30],
+      dtype=int32)
+>>> X['x2i'].shape
+(32,)
+```
+
+Using these two NPZ files you can now accomplish downstream analysis on the regions predicted to be introgressed!
 
 ### Other notes
 
