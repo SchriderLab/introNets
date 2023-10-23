@@ -2,6 +2,9 @@
 Repository for replicating the work in "Detecting introgression at SNP-resolution via
 U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
 
+For questions or comments on the code email: ddray@email.unc.edu.
+I am still updating the documentation and cleaning up the repository to make it more usable.  Stay tuned.
+
 ## Dependencies
 
 ### General
