@@ -130,8 +130,7 @@ def main():
     
     ifile = h5py.File(args.ifile, 'r')
     keys = list(ifile.keys())
-    print(ifile['0']['x_0'].shape)
-    
+
     shape = tuple(ifile['shape'])
     l = shape[-1]
     
@@ -174,19 +173,13 @@ def main():
 
         # let's forward the whole batch through segmentation
         with torch.no_grad():
-            print(X.shape)
             x = torch.FloatTensor(X).to(device)
 
             y_pred = model(x)
             
             # platt scale and apply Gaussian (if specified)
-            
-            # sims i3 line:
-            # y_pred = (y_pred * 1.1138 - 1.3514) * G
             if platt is not None:
                 y_pred = (y_pred * platt[0] + platt[1])
-                
-            print(y_pred.shape)
                 
             if args.smooth:
                 y_pred *= G

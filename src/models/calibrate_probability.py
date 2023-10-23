@@ -74,7 +74,7 @@ def parse_args():
     parser.add_argument("--n_samples", default = "100")
     
     parser.add_argument("--n_epochs", default = "100")
-    parser.add_argument("--out_channels", default = "2")
+    parser.add_argument("--out_channels", default = "1")
     
     args = parser.parse_args()
 
@@ -139,7 +139,10 @@ def main():
         
         print('have loss of {}...'.format(np.mean(losses)))
     
+    
+    
     np.savetxt(args.ofile, np.array(current))
+    
     
 if __name__ == '__main__':
     main()
