@@ -128,7 +128,15 @@ label_noise = 0.01
 python3 src/models/train.py --ifile ab.hdf5 --config training_configs/toy_AB.config --odir ab_training --tag iter1
 ```
 
-The training script will save the best weights, according to validation loss, and record the training and validation loss metrics as well as accuracy to a CSV in the output directory ```--odir```.  
+The training script will save the best weights, according to validation loss, and record the training and validation loss metrics as well as accuracy to a CSV in the output directory ```--odir```.  It randomly splits the dataset into train and validation and also saves the hdf5 keys that make up the validation set as a Python pickle file. 
+
+## Evaluation
+
+You can evaluate the trained network to produce a confusion matrix, example predictions and ground truth plots, the reciever operating characteristic curve and the precision recall curves for a separate set of simulations or the validation set from training:
+
+```
+python3 src/models/evaluate.py --ifile toy_bi_eval.hdf5 --weights toy_bi.weights --odir toy_bi_eval --n_classes 2
+```
 
 # Replication of results shown in publication:
 
