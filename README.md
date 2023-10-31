@@ -1,3 +1,5 @@
+![alt text](https://github.com/SchriderLab/introNets/blob/main/images/ex_pred.png?raw=true)
+
 # introNets
 Repository for replicating the work in "Detecting introgression at SNP-resolution via
 U-Nets and seriation".  In this repo, we provide Python routines to create simulated alignments via MS and SLiM, sort and match populations within alignments, and train a neural network to segment introgressed alleles in either population.
