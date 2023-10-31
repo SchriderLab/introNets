@@ -28,66 +28,25 @@ import seaborn as sns
 from sklearn.metrics import roc_curve, roc_auc_score, precision_recall_curve, average_precision_score, confusion_matrix, accuracy_score
 import pandas as pd
 
-def cm_analysis(y_true, y_pred, filename, labels, ymap=None, figsize=(10,10)):
-    """
-    Generate matrix plot of confusion matrix with pretty annotations.
-    The plot image is saved to disk.
-    args: 
-      y_true:    true label of the data, with shape (nsamples,)
-      y_pred:    prediction of the data, with shape (nsamples,)
-      filename:  filename of figure file to save
-      labels:    string array, name the order of class labels in the confusion matrix.
-                 use `clf.classes_` if using scikit-learn models.
-                 with shape (nclass,).
-      ymap:      dict: any -> string, length == nclass.
-                 if not None, map the labels & ys to more understandable strings.
-                 Caution: original y_true, y_pred and labels must align.
-      figsize:   the size of the figure plotted.
-    """
-    if ymap is not None:
-        y_pred = [ymap[yi] for yi in y_pred]
-        y_true = [ymap[yi] for yi in y_true]
-        labels = [ymap[yi] for yi in labels]
-    cm = confusion_matrix(y_true, y_pred)
-    cm_sum = np.sum(cm, axis=1, keepdims=True)
-    cm_perc = cm / cm_sum.astype(float) * 100
-    annot = np.empty_like(cm).astype(str)
-    nrows, ncols = cm.shape
-    for i in range(nrows):
-        for j in range(ncols):
-            c = cm[i, j]
-            p = cm_perc[i, j]
-            if i == j:
-                s = cm_sum[i]
-                annot[i, j] = '%.1f%%' % (p)
-            elif c == 0:
-                annot[i, j] = ''
-            else:
-                annot[i, j] = '%.1f%%' % (p)
-    cm = pd.DataFrame(cm_perc, index=labels, columns=labels)
-    cm.index.name = 'Actual'
-    cm.columns.name = 'Predicted'
-    fig, ax = plt.subplots(figsize=figsize)
-    sns.heatmap(cm, annot=annot, fmt='', ax=ax)
-    plt.savefig(filename)
-    plt.close()
-
+from train_discriminator import cm_analysis
 
 def parse_args():
     # Argument Parser
     parser = argparse.ArgumentParser()
     # my args
     parser.add_argument("--verbose", action = "store_true", help = "display messages")
-    parser.add_argument("--weights", default = "None") # weights of the pre-trained model
-    parser.add_argument("--ifile", default = "None")
+    parser.add_argument("--weights", default = "None", help = "weights of the pretrained model") # weights of the pre-trained model
+    parser.add_argument("--ifile", default = "None", help = "data to predict on")
     
     parser.add_argument("--odir", default = "None")
-    parser.add_argument("--n_classes", default = "1")
-    parser.add_argument("--n_samples", default = "250")
-    parser.add_argument("--n_to_plot", default = "25")
-    
-    parser.add_argument("--plot_both", action = "store_true")
+    parser.add_argument("--n_classes", default = "1", help = "number of output channels in predicted image, or the number of populations to predict on.  Has to match the weights and input data")
+    parser.add_argument("--n_samples", default = "None", help = "number of random keys in the h5 file to predict.  if left None then use them all")
+    parser.add_argument("--n_to_plot", default = "25", help = "plots some random sample of the x, y, and predicted y variables")
+
     parser.add_argument("--plot_label", default = "2")
+    parser.add_argument("--keys", default = "None")
+    
+    parser.add_argument("--format", default = "png")
     
     parser.add_argument("--platt_scaling", default = "None")
     
@@ -103,12 +62,18 @@ def parse_args():
         if not os.path.exists(args.odir):
             os.system('mkdir -p {}'.format(args.odir))
             logging.debug('root: made output directory {0}'.format(args.odir))
-    # ${odir_del_block}
+        else:
+            os.system('rm -rf {}'.format(os.path.join(args.odir, '*')))
 
     return args
 
 def main():
     args = parse_args()
+    
+    if int(args.n_classes) == 2:
+        args.plot_both = True
+    else:
+        args.plot_both = False
     
     if torch.cuda.is_available():
         device = torch.device('cuda')
@@ -131,8 +96,11 @@ def main():
         ab_platt = None
     
     generator = H5UDataGenerator(h5py.File(args.ifile, 'r'), batch_size = 4, val_prop = 0, label_smooth = False)
+    if args.keys != "None":
+        keys = pickle.load(open(args.keys, 'rb'))
     
-    print(generator.length)
+        generator.keys = keys
+    
     if args.n_samples == "None":
         N = generator.length
     else:
@@ -146,7 +114,9 @@ def main():
     Y = []
     Y_pred = []
     
-    print('predicting... on {} mini-batches...'.format(N))
+    accs = []
+    
+    logging.info('predicting... on {} mini-batches...'.format(N))
     for ix in range(N):
         with torch.no_grad():
             x, y = generator.get_batch()
@@ -170,6 +140,8 @@ def main():
             x = x.detach().cpu().numpy()
             y = y.detach().cpu().numpy()
             y_pred = y_pred.detach().cpu().numpy()
+            
+            accs.append(accuracy_score(y.flatten(), np.round(expit(y_pred.flatten()))))
             
             Y.extend(y.flatten())
             Y_pred.extend(expit(y_pred.flatten()))
@@ -200,7 +172,7 @@ def main():
                     fig.colorbar(im, ax = ax4)
                     ax4.set_title('prob')
                     
-                    plt.savefig(os.path.join(args.odir, '{0:04d}_pred.eps'.format(counter)), dpi = 100)
+                    plt.savefig(os.path.join(args.odir, '{0:04d}_pred.{1}'.format(counter, args.format)), dpi = 100)
                 else:
                     fig = plt.figure(figsize=(16, 6))
                     
@@ -238,14 +210,15 @@ def main():
                     fig.colorbar(im, ax = ax)
                     ax.set_title('prob')
                     
-                    plt.savefig(os.path.join(args.odir, '{0:04d}_pred.eps'.format(counter)), dpi = 100)
+                    plt.savefig(os.path.join(args.odir, '{0:04d}_pred.{1}'.format(counter, args.format)), dpi = 100)
                 
                 counter += 1
                 plt.close()
             
-            
-    print(len(Y))
-    print('plotting...')
+          
+    logging.info('got mean pixel accuracy of {}...'.format(np.mean(accs)))  
+          
+    logging.info('plotting metrics for {} pixels...'.format(len(Y)))
     # what probability bin do they fall in?
     p_bins = np.linspace(0., 1., 15)
     p = np.diff(p_bins) / 2. + p_bins[:-1]
@@ -302,9 +275,11 @@ def main():
     
     ofile = open(os.path.join(args.odir, 'metrics.txt'), 'w')
     
+    acc = accuracy_score(list(map(int, Y)), np.round(Y_pred))
+    
     print('auroc: {}'.format(auroc), file = ofile)
     print('aupr: {}'.format(aupr), file = ofile)
-    print('accuracy: {}'.format(accuracy_score(list(map(int, Y)), np.round(Y_pred))), file = ofile)
+    print('accuracy: {}'.format(acc), file = ofile)
 
 if __name__ == '__main__':
     main()
