@@ -42,7 +42,11 @@ In order to simulate the cases where no introgression occurs in our test cases o
 gcc -O3 -o ms ms.c streec.c rand2.c -lm
 ```
 
-Using the ```rand2.c``` is necessary to avoid segfaults with our simulation commands for no introgression. 
+Using the ```rand2.c``` is necessary to avoid segfaults with our simulation commands for no introgression.
+
+### Data
+
+The _Drosophila_ dataset analyzed in this study, along with Sequence Read Archive IDs for the raw Illumina data, are described here: https://journals.plos.org/plosgenetics/article?id=10.1371/journal.pgen.1007341. The formatted data for input into IntroUNET are found at https://figshare.com/articles/dataset/IntroUNET_data_tgz/25050029, as are IntroUNET's predictions on said data that we produced for the IntroUNET paper as shown in the Jupyter notebook included in this repository.
 
 ## Tutorial
 
