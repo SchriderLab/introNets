@@ -1,0 +1,13 @@
+This directory contains the pipeline for using dadi to optimize the parameters of the "two-population isolation then migration and exponential size change" model we used in the IntroUNET paper. The contents are:
+
+1) dadiIn/, the bootstrapped input sfs files (100 in total) for input to dadi
+
+2) 2popIM.py, the dadi optimization code used for IM-and-growth model mentioned above
+
+3) launch2popIM.sbatch, which can be used to optimize the IM model on each bootstrap input using a SLURM-scheduled compute cluster (first, one may have to modifying paths and partition names as needed)
+
+4) showAllDadiOutput.py, which parses the output of the resulting optimization runs (which it assumes are in a directory called dadiOutput/), and can be used to create the table of parameter combinations that can be fed into the simulate_msmodified.py script using the --ifile flag
+
+Environment notes:
+
+This pipeline requires python version 2.7, with pyOpt version 1.2, and dadi version 1.7
