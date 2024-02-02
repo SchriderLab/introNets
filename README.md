@@ -154,6 +154,8 @@ python3 src/data/simulate_msmodified.py --odir /some/where_you_want --window_siz
 python3 src/data/simulate_msmodified.py --odir /some/where_you_want --windows_size 10000 --direction ba --slurm # if within a SLURM cluster
 ```
 
+Note that the `simulate_msmodified.py` script can also be used to simulate replicates whose parameters are taken from a file (one parameterization for line). An example of this is the `DADI_params.txt` file, which contains the bootstrapped parameter estimates described in the IntroUET paper. (As a side note, our code to perform dadi optimization runs on each of a set of input site frequency spectra can be found in the `dadiBootstrapCode` directory.)
+
 ### ArchIE
 Simulating data (1000 replicates per job by default = 25000 replicates):
 ```
